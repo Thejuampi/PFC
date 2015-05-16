@@ -27,22 +27,77 @@
 \begin{document}
 
 \section{Metodología}
-
+\label{sec:metodologia}
 Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) y la utilización de una metodología del tipo cascada ya que los requerimientos son inmutables. Separando el proyecto en tres etapas:
 
 \begin{itemize}
-\item Diseño y desarrollo de los métodos.
-\item Implementación y Análisis de los métodos.
-\item Cierre
+\item Análisis y desarrollo de los métodos.
+\item Implementación y prueba de los métodos.
+\item Escritura del informe final y cierre.
 \end{itemize}
 
 Cada fase finalizará con la documentación de las tareas realizadas en base a criterios objetivos que así lo determinen. %TODO agregar algunas cuestiones referidas a estos aca
 
 
 \section{Plan de Tareas}
+\label{sec:planTareas}
+En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia}, se establece el siguiente plan de tareas:
 
+\subsection{Análisis y desarrollo de los métodos}
+
+\subsubsection{Análisis de los solvers de Paralution}
+\begin{itemize}
+\item Análisis de la utilización del solver PCG.
+\item Análisis de la utilización del solver PBiCG.
+\end{itemize}
+
+\subsubsection{Compilación de los solvers de Paralution}
+\begin{itemize}
+\item Linkeo y Compilación del solver PCG.
+\item Linkeo y Compilación del solver PBiCG.
+\end{itemize}
+
+\subsubsection{Lectura bibliográfica} %Esto me hace un poco de ruido, no me termina de convencer la organización.
+\begin{itemize}
+\item Leer sobre arquitecturas paralelas.
+\item Leer sobre OpenCL 2.0
+\end{itemize}
+
+\subsubsection{Análisis del método PCG}
+\begin{itemize}
+\item Leer acerca del método PCG.
+\item Leer sobre la interfaz con OpenFOAM\copyright
+\item Diseñar el método sobre OpenCL 2.0
+\end{itemize}
+
+\subsubsection{Desarrollo del método PCG en OpenCL 2.0}
+\begin{itemize}
+\item Desarrollar el método
+\item Optimizar el código
+\item Realizar corridas de prueba y validar los resultados
+\end{itemize}
+
+\subsubsection{Finalizar y Documentar la fase}
+
+\subsection{Implementación y prueba de los métodos}
+\subsubsection{Implementación}
+\begin{itemize}
+\item 
+\item Creación de los archivos de configuración de OpenFOAM\copyright para cada solver.
+\item 
+\end{itemize}
+\subsubsection{Prueba}
+\begin{itemize}
+\item 
+\end{itemize}
+
+\subsection{Escritura del informe final y cierre}
+
+\subsection{Consideraciones}
+Se dedicará un esfuerzo temporal de 20 Horas semanales, divididas a lo largo de la semana, pero sin definir horario fijo ni excepciones, como ser feriados o fines de semanas. Este decisión se debe principalmente a la incertidumbre presente en los horarios de cursado durante el cual se llevará a cabo el proyecto.
+Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícitas en la labor del desarrollo.
 
 \section{Cronograma}
-
+\label{sec:cronograma}
 
 \end{document}

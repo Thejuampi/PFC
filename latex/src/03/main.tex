@@ -29,6 +29,14 @@
 \def \paralution{Paralution\copyright}
 \def \ocl20{OpenCL 2.0}
 
+%
+% h	Establece la posición del elemento flotante «aquí». Ésto es, aproximadamente en el mismo punto donde aparece en el código (sin embargo, no siempre es exacto el posicionamiento)
+% t	Inserta la figura al inicio de la página.
+% b	Inserta la figura al final de la página.
+% p	Inserta los elementos flotantes en una página por separado, que sólo contiene figuras.
+% !	Sobreescribe los parámetros que LATEX usa para determinar una «buena» posición para la imagen.
+% H	Establece el elemento flotante precisamente en el mismo lugar en el que aparece en el código, se requiere importar el paquete float. Es hasta cierto punto equivalente a h!.
+%
 \begin{document}
 
 \input{caratula.tex}
@@ -62,45 +70,45 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 
 \subsubsection{Análisis de los solvers de \paralution}
 \begin{itemize}
-\item Análisis de la utilización del solver PCG. 10 Horas.
-\item Análisis de la utilización del solver PBiCG. 8 Horas.
+\item Análisis de la utilización del solver PCG.
+\item Análisis de la utilización del solver PBiCG.
 \end{itemize}
 
 \subsubsection{Puesta en funcionamieto de los solvers de \paralution}
 \begin{itemize}
-\item Linkear y compilar el solver PCG con \openfoam. 4 Horas.
-\item Linkear y Compilar el solver PBiCG con \openfoam. 4 Horas.
-\item Probar los solvers. 4 Horas.
-\item Documentar los resultados. 16 Horas.
+\item Linkear y compilar el solver PCG con \openfoam.
+\item Linkear y Compilar el solver PBiCG con \openfoam.
+\item Probar los solvers.
+\item Documentar los resultados.
 \item Presentar los resultados. (hito)
 \end{itemize}
 
 \subsubsection{Lectura bibliográfica} %Esto me hace un poco de ruido, no me termina de convencer la organización.
 \begin{itemize}
-\item Leer sobre arquitecturas paralelas. 32 Horas.
-\item Leer sobre \ocl20 64 Horas.
-\item Realización de ejercicios prácticos sobre \ocl20. 16 Horas.
+\item Leer sobre arquitecturas paralelas.
+\item Leer sobre \ocl20.
+\item Realización de ejercicios prácticos sobre \ocl20.
 \end{itemize}
 
 \subsubsection{Análisis del método PCG}
 \begin{itemize}
-\item Leer acerca del método PCG. 12 Horas.
-\item Leer sobre la interfaz con \openfoam. 8 Horas.
-\item Diseñar el método sobre \ocl20. 48 Horas.
+\item Leer acerca del método PCG.
+\item Leer sobre la interfaz con \openfoam.
+\item Diseñar el método sobre \ocl20.
 \end{itemize}
 
 \subsubsection{Desarrollo del método PCG en \ocl20}
 \begin{itemize}
-\item Desarrollar el método. 48 Horas.
-\item Optimizar el código. 48 Horas.
-\item Realizar corridas de prueba y validar los resultados. 12 horas.
+\item Desarrollar el método.
+\item Optimizar el código.
+\item Realizar corridas de prueba y validar los resultados.
 \end{itemize}
 
 \subsubsection{Finalizar y Documentar la fase}
 \begin{itemize}
-\item Recolectar, organizar y clasificar la información. 12 Horas.
-\item Documentar la información. 16 horas.
-\item Entregar la documentación. (Hito)
+\item Recolectar, organizar y clasificar la información.
+\item Documentar la información.
+\item Presentar entregables (Hito)
 \end{itemize}
 
 %******************************************************************
@@ -111,21 +119,21 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 \subsection{Implementación y prueba de los métodos}
 \subsubsection{Implementación}
 \begin{itemize}
-\item Configurar el entorno donde se correrán las simulaciones. 4 Horas.
-\item Obtener los datos de la simulación. 1 Hora.
-\item Crear los archivos de configuración de \openfoam para el solver de \paralution. 4 Horas.
-\item Crear los archivos de configuración de \openfoam para el solver desarrollado. 4 Horas.
+\item Configurar el entorno donde se correrán las simulaciones.
+\item Obtener los datos de la simulación.
+\item Crear los archivos de configuración de \openfoam para el solver de \paralution.
+\item Crear los archivos de configuración de \openfoam para el solver desarrollado.
 \end{itemize}
 \subsubsection{Prueba}
 \begin{itemize}
-\item Correr la simulación con los solvers de \paralution. 12 Horas.
-\item Correr la simulación con el solver desarrollado. 6 Horas.
-\item Verificar y comparar los resultados de la simulación.  8 Horas.
+\item Correr la simulación con los solvers de \paralution.
+\item Correr la simulación con el solver desarrollado.
+\item Verificar y comparar los resultados de la simulación.
 \end{itemize}
 \subsubsection{Finalizar y Documentar la fase}
 \begin{itemize}
-\item Recolectar, organizar y clasificar los resultados. 8 Horas. %Tiempo, consumo energetico, % de utilizacion de hardware, etc.
-\item Documentar los resultados. 12 Horas. %Aca es donde se pretende decidir cual fue la mejor alternativa
+\item Recolectar, organizar y clasificar los resultados. %Tiempo, consumo energetico, % de utilizacion de hardware, etc.
+\item Documentar los resultados. %Aca es donde se pretende decidir cual fue la mejor alternativa
 \item Entregar la documentación y los ejecutables. (Hito)
 \end{itemize}
 
@@ -159,9 +167,49 @@ Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícita
 \section{Cronograma}
 \label{sec:cronograma}
 
+Para su elaboración se tuvieron en cuenta las limitaciones de los recursos humanos asignados al proyecto, requiriendo que las tareas se ejecuten de forma secuencial, y que por lo tanto, solo exista un único camino, coincidente con el camino crítico. Se propone el tres de Agosto de 2015 como fecha de inicio del proyecto, con una carga de 4 horas diarias, de lunes a viernes. Solamente se considera el 25 de Diciembre como feriado no laborable. Se estima el siete de Enero de 2016 como fecha de finalización del mismo, con una duración de 450 horas.
+En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan las relaciones entre tareas y su duración estimada.
+
+\begin{figure}[t]
+\label{fig:gantt}
+\includegraphics[scale=0.25]{gantt.png}
+\caption{Diagrama de Gantt}
+\end{figure}
 
 \section{Entregables}
 \label{sec:entregables}
+
+\begin{enumerate}
+
+\item %PRIMER ENTREGABLA
+\begin{itemize}
+	\item Fecha: 18/08/2015
+	\item Descripción: Informe y Primer Prototipo.
+	\item Contenido: Descripción de la utilización de los solvers de \paralution; Descripción para la compilación de los solvers de \paralution; Resultados preliminares de las pruebas;
+\end{itemize}
+
+\item %SEGUNDO ENTREGABLE
+\begin{itemize}
+	\item Fecha: 19/11/2015
+	\item Descripción: Informe y Segundo Prototipo.
+	\item Contenido: Documento con conceptos sobre arquitecturas paralelas y OpenCL 2.0; Resultados preliminares de la aplicación de OpenCL 2.0; Descripción del método PCG; Descripción de la interfaz con \openfoam; Diseño y código fuente del solver; Resultados de la Optimización; Comparativa sobre casos simples.
+\end{itemize}
+
+\item %TERCER ENTREGABLE
+\begin{itemize}
+	\item Fecha: 11/12/201
+	\item Descripción: Informe y Producto Final.
+	\item Contenido: Documento con los resultados obtenidos de aplicar los métodos sobre la simulación de los automóviles de competición, tiempos requeridos, consumos de energía, comparativa entre los resultados; Ejecutables, Código fuente y archivos de configuración.
+\end{itemize}
+
+\item %CUARTO ENTREGABLE
+\begin{itemize}
+	\item Fecha: 07/01/2016
+	\item Descripción: Informe Final y Producto Final.
+	\item Contenido: Documento con la recopilación de todos los resultados previos. Observaciones, Conclusiones, trabajos futuros.
+\end{itemize}
+
+\end{enumerate}
 
 \mbox{}
 \nocite{*}

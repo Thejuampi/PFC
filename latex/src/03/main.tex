@@ -1,10 +1,11 @@
-\documentclass[a4paper,10pt, oneside]{book}
+%\documentclass[a4paper,10pt, oneside]{book}
+\documentclass[a4paper]{article}
 %\usepackage[latin1]{inputenc}
-\usepackage[spanish]{babel} % Normas tipográficas y opciones del español e ingles
-\usepackage[T1]{fontenc}    		% Codificación de salida
+\usepackage[spanish]{babel} 		% Normas tipográficas y opciones del español e ingles
+%\usepackage[T1]{fontenc}    		% Codificación de salida
 \usepackage[utf8]{inputenc} 		% Codificación de entrada 
 %\usepackage{subfig}
-%\def\spanishoptions{argentina}
+\def\spanishoptions{argentina}
 %\usepackage[spanish]{babel}
 \usepackage{calc}
 \usepackage{fancyhdr}
@@ -24,6 +25,10 @@
 \usepackage{ccaption}
 \usepackage{enumerate}
 
+\def \openfoam{OpenFOAM\copyright}
+\def \paralution{Paralution\copyright}
+
+
 \begin{document}
 
 \section{Metodología}
@@ -36,25 +41,31 @@ Dada la limitación del personal disponible encargada de las tareas del proyecto
 \item Escritura del informe final y cierre.
 \end{itemize}
 
-Cada fase finalizará con la documentación de las tareas realizadas en base a criterios objetivos que así lo determinen. %TODO agregar algunas cuestiones referidas a estos aca
+Cada fase finalizará con la documentación de las tareas realizadas en base a criterios objetivos que así lo determinen. %TODO agregar algunas cuestiones% referidas a estos aca
 
 
 \section{Plan de Tareas}
 \label{sec:planTareas}
 En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia}, se establece el siguiente plan de tareas:
 
+%******************************************************************
+%******************************************************************
+%***************ANALISIS Y DESARROLLO DE LOS METODOS***************
+%******************************************************************
+%******************************************************************
 \subsection{Análisis y desarrollo de los métodos}
 
-\subsubsection{Análisis de los solvers de Paralution}
+\subsubsection{Análisis de los solvers de \paralution}
 \begin{itemize}
 \item Análisis de la utilización del solver PCG.
 \item Análisis de la utilización del solver PBiCG.
 \end{itemize}
 
-\subsubsection{Compilación de los solvers de Paralution}
+\subsubsection{Puesta en funcionamieto de los solvers de \paralution}
 \begin{itemize}
-\item Linkeo y Compilación del solver PCG.
-\item Linkeo y Compilación del solver PBiCG.
+\item Linkear y compilar el solver PCG con \openfoam.
+\item Linkear y Compilar el solver PBiCG con \openfoam.
+\item Probar los solvers.
 \end{itemize}
 
 \subsubsection{Lectura bibliográfica} %Esto me hace un poco de ruido, no me termina de convencer la organización.
@@ -66,33 +77,62 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 \subsubsection{Análisis del método PCG}
 \begin{itemize}
 \item Leer acerca del método PCG.
-\item Leer sobre la interfaz con OpenFOAM\copyright
-\item Diseñar el método sobre OpenCL 2.0
+\item Leer sobre la interfaz con \openfoam.
+\item Diseñar el método sobre OpenCL 2.0.
 \end{itemize}
 
 \subsubsection{Desarrollo del método PCG en OpenCL 2.0}
 \begin{itemize}
-\item Desarrollar el método
-\item Optimizar el código
-\item Realizar corridas de prueba y validar los resultados
+\item Desarrollar el método.
+\item Optimizar el código.
+\item Realizar corridas de prueba y validar los resultados.
 \end{itemize}
 
 \subsubsection{Finalizar y Documentar la fase}
+\begin{itemize}
+\item Recolectar, organizar y clasificar la información.
+\item Documentar la información.
+\item Entregar la documentación. (Hito)
+\end{itemize}
 
+%******************************************************************
+%******************************************************************
+%**************IMPLEMENTACION Y PRUEBA DE LOS METODOS**************
+%******************************************************************
+%******************************************************************
 \subsection{Implementación y prueba de los métodos}
 \subsubsection{Implementación}
 \begin{itemize}
-\item 
-\item Creación de los archivos de configuración de OpenFOAM\copyright para cada solver.
-\item 
+\item Configurar el entorno donde se correrán las simulaciones.
+\item Obtener los datos de la simulación.
+\item Crear los archivos de configuración de \openfoam para el solver de \paralution.
+\item Crear los archivos de configuración de \openfoam para el solver desarrollado.
 \end{itemize}
 \subsubsection{Prueba}
 \begin{itemize}
-\item 
+\item Correr la simulación con los solvers de \paralution.
+\item Correr la simulación con el solver desarrollado.
+\item Verificar y comparar los resultados de la simulación.
+\end{itemize}
+\subsubsection{Finalizar y Documentar la fase}
+\begin{itemize}
+\item Recolectar, organizar y clasificar los resultados.
+\item Documentar los resultados.
+\item Entregar la documentación. (Hito)
 \end{itemize}
 
+%******************************************************************
+%******************************************************************
+%*************ESCRIBIR EL INFORME Y CIERRE DE PROYECTO*************
+%******************************************************************
+%******************************************************************
 \subsection{Escritura del informe final y cierre}
 
+%******************************************************************
+%******************************************************************
+%********************** CONSIDERACIONES ***************************
+%******************************************************************
+%******************************************************************
 \subsection{Consideraciones}
 Se dedicará un esfuerzo temporal de 20 Horas semanales, divididas a lo largo de la semana, pero sin definir horario fijo ni excepciones, como ser feriados o fines de semanas. Este decisión se debe principalmente a la incertidumbre presente en los horarios de cursado durante el cual se llevará a cabo el proyecto.
 Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícitas en la labor del desarrollo.

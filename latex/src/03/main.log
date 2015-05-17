@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2014.12.1)  16 MAY 2015 21:33
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2014.12.1)  17 MAY 2015 01:52
 entering extended mode
 **main.tex
 (C:\dev\git\PFC\latex\src\03\main.tex
@@ -791,43 +791,65 @@ LaTeX Info: Redefining \nameref on input line 32.
 (C:\dev\git\PFC\latex\src\03\main.out) (C:\dev\git\PFC\latex\src\03\main.out)
 \@outlinefile=\write4
 
-[1
+(C:\dev\git\PFC\latex\src\03\caratula.tex
+<logo_UNL.jpg, id=79, 340.27126pt x 340.27126pt>
+File: logo_UNL.jpg Graphic file (type jpg)
+ <use logo_UNL.jpg>
+Package pdftex.def Info: logo_UNL.jpg used on input line 5.
+(pdftex.def)             Requested size: 51.7479pt x 51.7446pt.
+LaTeX Font Info:    Try loading font information for U+msa on input line 25.
 
-{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map}]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 143.
- [2] [3]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 143.
+("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\umsa.fd"
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Try loading font information for U+msb on input line 25.
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\umsb.fd"
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+) [1
+
+{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map} <C:/dev/git/PFC/latex/src/
+03/logo_UNL.jpg>]) (C:\dev\git\PFC\latex\src\03\main.toc)
+\tf@toc=\write5
+pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.36 	\newpage
+               [1] [2] [3] (C:\dev\git\PFC\latex\src\03\main.bbl)
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 172.
+ [4]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 172.
 
 (C:\dev\git\PFC\latex\src\03\main.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 143.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 143.
-
-
-Package rerunfilecheck Warning: File `main.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: 8AB18DF33605A4DF4FC96619EA03E212;1300
-(rerunfilecheck)             After:  44878B14C46B915983FC1AD8740D293D;1308.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 143.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 172.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 172.
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: 5015B0BF83E4976C6C12DEB76FCFC86B;1514.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 172.
  ) 
 Here is how much of TeX's memory you used:
- 7880 strings out of 493921
- 109504 string characters out of 3147285
- 197544 words of memory out of 3000000
- 11059 multiletter control sequences out of 15000+200000
- 5833 words of font info for 21 fonts, out of 3000000 for 9000
+ 7966 strings out of 493921
+ 110851 string characters out of 3147285
+ 197675 words of memory out of 3000000
+ 11105 multiletter control sequences out of 15000+200000
+ 11090 words of font info for 40 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 29i,4n,43p,336b,419s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 29i,4n,43p,327b,419s stack positions out of 5000i,500n,10000p,200000b,50000s
  <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\t
-crm1000.pk> <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec
-\dpi600\tcbx1000.pk><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm
-/cmbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.
-pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb>
-Output written on main.pdf (3 pages, 64998 bytes).
+cti1000.pk> <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec
+\dpi600\tcbx1000.pk> <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jk
+nappen\ec\dpi600\tcrm1000.pk><C:/Program Files/MiKTeX 2.9/fonts/type1/public/am
+sfonts/cm/cmbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/c
+m/cmbx12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmcsc1
+0.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:
+/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Program 
+Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Program Files/MiK
+TeX 2.9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files/MiKTeX 2.9/
+fonts/type1/public/amsfonts/cm/cmti12.pfb>
+Output written on main.pdf (5 pages, 202175 bytes).
 PDF statistics:
- 111 PDF objects out of 1000 (max. 8388607)
- 20 named destinations out of 1000 (max. 500000)
- 129 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 180 PDF objects out of 1000 (max. 8388607)
+ 28 named destinations out of 1000 (max. 500000)
+ 158 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -27,9 +27,14 @@
 
 \def \openfoam{OpenFOAM\copyright}
 \def \paralution{Paralution\copyright}
-
+\def \ocl20{OpenCL 2.0}
 
 \begin{document}
+
+\input{caratula.tex}
+	\tableofcontents	
+	\newpage	
+
 
 \section{Metodología}
 \label{sec:metodologia}
@@ -57,41 +62,44 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 
 \subsubsection{Análisis de los solvers de \paralution}
 \begin{itemize}
-\item Análisis de la utilización del solver PCG.
-\item Análisis de la utilización del solver PBiCG.
+\item Análisis de la utilización del solver PCG. 10 Horas.
+\item Análisis de la utilización del solver PBiCG. 8 Horas.
 \end{itemize}
 
 \subsubsection{Puesta en funcionamieto de los solvers de \paralution}
 \begin{itemize}
-\item Linkear y compilar el solver PCG con \openfoam.
-\item Linkear y Compilar el solver PBiCG con \openfoam.
-\item Probar los solvers.
+\item Linkear y compilar el solver PCG con \openfoam. 4 Horas.
+\item Linkear y Compilar el solver PBiCG con \openfoam. 4 Horas.
+\item Probar los solvers. 4 Horas.
+\item Documentar los resultados. 16 Horas.
+\item Presentar los resultados. (hito)
 \end{itemize}
 
 \subsubsection{Lectura bibliográfica} %Esto me hace un poco de ruido, no me termina de convencer la organización.
 \begin{itemize}
-\item Leer sobre arquitecturas paralelas.
-\item Leer sobre OpenCL 2.0
+\item Leer sobre arquitecturas paralelas. 32 Horas.
+\item Leer sobre \ocl20 64 Horas.
+\item Realización de ejercicios prácticos sobre \ocl20. 16 Horas.
 \end{itemize}
 
 \subsubsection{Análisis del método PCG}
 \begin{itemize}
-\item Leer acerca del método PCG.
-\item Leer sobre la interfaz con \openfoam.
-\item Diseñar el método sobre OpenCL 2.0.
+\item Leer acerca del método PCG. 12 Horas.
+\item Leer sobre la interfaz con \openfoam. 8 Horas.
+\item Diseñar el método sobre \ocl20. 48 Horas.
 \end{itemize}
 
-\subsubsection{Desarrollo del método PCG en OpenCL 2.0}
+\subsubsection{Desarrollo del método PCG en \ocl20}
 \begin{itemize}
-\item Desarrollar el método.
-\item Optimizar el código.
-\item Realizar corridas de prueba y validar los resultados.
+\item Desarrollar el método. 48 Horas.
+\item Optimizar el código. 48 Horas.
+\item Realizar corridas de prueba y validar los resultados. 12 horas.
 \end{itemize}
 
 \subsubsection{Finalizar y Documentar la fase}
 \begin{itemize}
-\item Recolectar, organizar y clasificar la información.
-\item Documentar la información.
+\item Recolectar, organizar y clasificar la información. 12 Horas.
+\item Documentar la información. 16 horas.
 \item Entregar la documentación. (Hito)
 \end{itemize}
 
@@ -103,22 +111,22 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 \subsection{Implementación y prueba de los métodos}
 \subsubsection{Implementación}
 \begin{itemize}
-\item Configurar el entorno donde se correrán las simulaciones.
-\item Obtener los datos de la simulación.
-\item Crear los archivos de configuración de \openfoam para el solver de \paralution.
-\item Crear los archivos de configuración de \openfoam para el solver desarrollado.
+\item Configurar el entorno donde se correrán las simulaciones. 4 Horas.
+\item Obtener los datos de la simulación. 1 Hora.
+\item Crear los archivos de configuración de \openfoam para el solver de \paralution. 4 Horas.
+\item Crear los archivos de configuración de \openfoam para el solver desarrollado. 4 Horas.
 \end{itemize}
 \subsubsection{Prueba}
 \begin{itemize}
-\item Correr la simulación con los solvers de \paralution.
-\item Correr la simulación con el solver desarrollado.
-\item Verificar y comparar los resultados de la simulación.
+\item Correr la simulación con los solvers de \paralution. 12 Horas.
+\item Correr la simulación con el solver desarrollado. 6 Horas.
+\item Verificar y comparar los resultados de la simulación.  8 Horas.
 \end{itemize}
 \subsubsection{Finalizar y Documentar la fase}
 \begin{itemize}
-\item Recolectar, organizar y clasificar los resultados.
-\item Documentar los resultados.
-\item Entregar la documentación. (Hito)
+\item Recolectar, organizar y clasificar los resultados. 8 Horas. %Tiempo, consumo energetico, % de utilizacion de hardware, etc.
+\item Documentar los resultados. 12 Horas. %Aca es donde se pretende decidir cual fue la mejor alternativa
+\item Entregar la documentación y los ejecutables. (Hito)
 \end{itemize}
 
 %******************************************************************
@@ -127,17 +135,38 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 %******************************************************************
 %******************************************************************
 \subsection{Escritura del informe final y cierre}
-
+\subsubsection{Documentación}
+\begin{itemize}
+\item Documentar el solver desarrollado.
+\item Recolectar, organizar y clasificar la información.
+\item Escribir el Informe Final.
+\end{itemize}
+\subsubsection{Entrega del producto}
+\begin{itemize}
+\item Obtener la aceptación de los solvers por parte del CIMEC.
+\item Presentar el producto final.
+\item Entregar el producto final y las conclusiones. (hito)
+\end{itemize}
 %******************************************************************
 %******************************************************************
 %********************** CONSIDERACIONES ***************************
 %******************************************************************
 %******************************************************************
 \subsection{Consideraciones}
-Se dedicará un esfuerzo temporal de 20 Horas semanales, divididas a lo largo de la semana, pero sin definir horario fijo ni excepciones, como ser feriados o fines de semanas. Este decisión se debe principalmente a la incertidumbre presente en los horarios de cursado durante el cual se llevará a cabo el proyecto.
+Se dedicará un esfuerzo temporal de 20 Horas semanales, divididas a lo largo de la semana, donde se espera trabajar de Lunes a Viernes.
 Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícitas en la labor del desarrollo.
 
 \section{Cronograma}
 \label{sec:cronograma}
+
+
+\section{Entregables}
+\label{sec:entregables}
+
+\mbox{}
+\nocite{*}
+\bibliographystyle{amsplain}
+\bibliography{main}
+
 
 \end{document}

@@ -1,5 +1,5 @@
 %\documentclass[a4paper,10pt, oneside]{book}
-\documentclass[a4paper]{article}
+\documentclass[a4paper, 11pt, oneside]{paper}
 %\usepackage[latin1]{inputenc}
 \usepackage[spanish]{babel} 		% Normas tipográficas y opciones del español e ingles
 %\usepackage[T1]{fontenc}    		% Codificación de salida
@@ -9,6 +9,7 @@
 %\usepackage[spanish]{babel}
 \usepackage{calc}
 \usepackage{fancyhdr}
+\usepackage{float}
 \usepackage{graphicx}
 \usepackage{graphics}
 
@@ -37,6 +38,22 @@
 % !	Sobreescribe los parámetros que LATEX usa para determinar una «buena» posición para la imagen.
 % H	Establece el elemento flotante precisamente en el mismo lugar en el que aparece en el código, se requiere importar el paquete float. Es hasta cierto punto equivalente a h!.
 %
+
+%26/05/2015
+%
+%Estimado Juan Pablo,
+%
+%En relación a tu presentación de Metodología y Cronograma de tareas te hago las siguientes sugerencias:
+%
+%- Evitar la mención de la metodología en cascada y explicar en qué consiste cada etapa de la metodología propia definida.
+%- Evitar usar “leer” como tarea
+%- Mejorar la legibilidad de la figura del Gantt
+%- Definir los criterios de aceptación de los entregables
+%- Definir el alcance de los prototipos a presentar en los entregables
+%Saludos
+%
+%Mariel
+
 \begin{document}
 
 \input{caratula.tex}
@@ -46,20 +63,27 @@
 
 \section{Metodología}
 \label{sec:metodologia}
-Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) y la utilización de una metodología del tipo cascada ya que los requerimientos son inmutables. Separando el proyecto en tres etapas:
+Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) a través de una metodología propia definida para el proyecto. Separando el proyecto en tres etapas:
 
-\begin{itemize}
-\item Análisis y desarrollo de los métodos.
-\item Implementación y prueba de los métodos.
-\item Escritura del informe final y cierre.
-\end{itemize}
+%\begin{itemize}
+%\item Análisis y desarrollo de los métodos.
+%\item Implementación y prueba de los métodos.
+%\item Escritura del informe final y cierre.
+%\end{itemize}
 
-Cada fase finalizará con la documentación de las tareas realizadas en base a criterios objetivos que así lo determinen. %TODO agregar algunas cuestiones% referidas a estos aca
+\subsection{Análisis y desarrollo de los métodos}
+En esta primera fase se realizará por un lado, las tareas de análisis de las soluciones de \paralution disponibles en el mercado para \openfoam, su linkeo, compilación, utilización, configuraciones y pruebas en casos simples para verificar su funcionamiento; por otro lado, se realizará un estudio sobre calculo paralelo y el método del gradiente conjugado, su utilización y desarrollo en \ocl20 y pruebas sobre casos simples con el mismo propósito.
+Al finalizar cada una de estas subetapas, se realizará un informe y un prototipo de resolvedor lineal en condiciones de ser utilizado.
 
+\subsection{Implementación y prueba de los métodos}
+En esta segunda fase se configurará el entorno donde correrán las simulaciones y hará uso de los resolvedores lineales desarrollados sobre un caso real de simulación de vehículos de competición. Se registrarán todos los resultados obtenidos en cuanto a tiempo transcurrido, consumo energético y se compararan entre si. Al finalizar se documentarán los resultados en un informe.
+
+\subsection{Escritura del informe final y cierre}
+En esta ultima fase, se realizarán todas las tareas referidas a la escritura del informe final y cierre del proyecto. Se revisarán todos los resultados obtenidos y se elaborarán las conclusiones determinando cual de los métodos es el mejor, teniendo como criterio el tiempo total de corrida de la simulación y su consumo energético.
 
 \section{Plan de Tareas}
 \label{sec:planTareas}
-En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia}, se establece el siguiente plan de tareas:
+En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:metodologia}, se establece el siguiente plan de tareas:
 
 %******************************************************************
 %******************************************************************
@@ -70,30 +94,29 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 
 \subsubsection{Análisis de los solvers de \paralution}
 \begin{itemize}
-\item Análisis de la utilización del solver PCG.
-\item Análisis de la utilización del solver PBiCG.
+\item Análisis de la utilización del resolvedor PCG.
+\item Análisis de la utilización del resolvedor PBiCG.
 \end{itemize}
 
 \subsubsection{Puesta en funcionamieto de los solvers de \paralution}
 \begin{itemize}
-\item Linkear y compilar el solver PCG con \openfoam.
-\item Linkear y Compilar el solver PBiCG con \openfoam.
-\item Probar los solvers.
+\item Linkear y compilar el resolvedor PCG con \openfoam.
+\item Linkear y Compilar el resolvedor PBiCG con \openfoam.
+\item Probar los resolvedores.
 \item Documentar los resultados.
 \item Presentar los resultados. (hito)
 \end{itemize}
 
-\subsubsection{Lectura bibliográfica} %Esto me hace un poco de ruido, no me termina de convencer la organización.
+\subsubsection{Estudio del marco teórico de arquitecturas paralelas y \ocl20} %Esto me hace un poco de ruido, no me termina de convencer la organización.
 \begin{itemize}
-\item Leer sobre arquitecturas paralelas.
-\item Leer sobre \ocl20.
+\item Revisión de literatura sobre arquitecturas paralelas.
+\item Revisión de literatura sobre \ocl20.
 \item Realización de ejercicios prácticos sobre \ocl20.
 \end{itemize}
 
 \subsubsection{Análisis del método PCG}
 \begin{itemize}
-\item Leer acerca del método PCG.
-\item Leer sobre la interfaz con \openfoam.
+\item Revisión de literatura acerca del método PCG.
 \item Diseñar el método sobre \ocl20.
 \end{itemize}
 
@@ -121,20 +144,20 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 \begin{itemize}
 \item Configurar el entorno donde se correrán las simulaciones.
 \item Obtener los datos de la simulación.
-\item Crear los archivos de configuración de \openfoam para el solver de \paralution.
-\item Crear los archivos de configuración de \openfoam para el solver desarrollado.
+\item Crear los archivos de configuración de \openfoam para el resolvedor de \paralution.
+\item Crear los archivos de configuración de \openfoam para el resolvedor desarrollado.
 \end{itemize}
 \subsubsection{Prueba}
 \begin{itemize}
-\item Correr la simulación con los solvers de \paralution.
-\item Correr la simulación con el solver desarrollado.
+\item Correr la simulación con los resolvedores de \paralution.
+\item Correr la simulación con el resolvedor desarrollado.
 \item Verificar y comparar los resultados de la simulación.
 \end{itemize}
 \subsubsection{Finalizar y Documentar la fase}
 \begin{itemize}
 \item Recolectar, organizar y clasificar los resultados. %Tiempo, consumo energetico, % de utilizacion de hardware, etc.
 \item Documentar los resultados. %Aca es donde se pretende decidir cual fue la mejor alternativa
-\item Entregar la documentación y los ejecutables. (Hito)
+\item Entregar la documentación y las configuraciones utilizadas. (Hito)
 \end{itemize}
 
 %******************************************************************
@@ -145,13 +168,13 @@ En base a las etapas expuestas en la sección Metodología\ref{sec:metodologia},
 \subsection{Escritura del informe final y cierre}
 \subsubsection{Documentación}
 \begin{itemize}
-\item Documentar el solver desarrollado.
+\item Documentar el resolvedor desarrollado.
 \item Recolectar, organizar y clasificar la información.
 \item Escribir el Informe Final.
 \end{itemize}
 \subsubsection{Entrega del producto}
 \begin{itemize}
-\item Obtener la aceptación de los solvers por parte del CIMEC.
+\item Obtener la aceptación de los resolvedores por parte del CIMEC.
 \item Presentar el producto final.
 \item Entregar el producto final y las conclusiones. (hito)
 \end{itemize}
@@ -170,10 +193,10 @@ Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícita
 Para su elaboración se tuvieron en cuenta las limitaciones de los recursos humanos asignados al proyecto, requiriendo que las tareas se ejecuten de forma secuencial, y que por lo tanto, solo exista un único camino, coincidente con el camino crítico. Se propone el tres de Agosto de 2015 como fecha de inicio del proyecto, con una carga de 4 horas diarias, de lunes a viernes. Solamente se considera el 25 de Diciembre como feriado no laborable. Se estima el siete de Enero de 2016 como fecha de finalización del mismo, con una duración de 450 horas.
 En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan las relaciones entre tareas y su duración estimada.
 
-\begin{figure}[t]
-\label{fig:gantt}
-\includegraphics[scale=0.25]{gantt.png}
+\begin{figure}[!]
+\includegraphics[width=\textwidth]{gantt.png}
 \caption{Diagrama de Gantt}
+\label{fig:gantt}
 \end{figure}
 
 \section{Entregables}
@@ -185,21 +208,26 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 \begin{itemize}
 	\item Fecha: 18/08/2015
 	\item Descripción: Informe y Primer Prototipo.
-	\item Contenido: Descripción de la utilización de los solvers de \paralution; Descripción para la compilación de los solvers de \paralution; Resultados preliminares de las pruebas;
+	\item Contenido del Informe: Descripción de la utilización de los resolvedores de \paralution; Descripción para la compilación de los resolvedores de \paralution; Resultados preliminares de las pruebas;
+	\item Alcance del prototipo: linkear y compilar los resolvedores lineales PCG y PBiCG de \paralution  en Ubuntu 14.04; Correr casos de prueba simples.
+	\item Criterio de aceptación: El director será quien determine si el prototipo funciona correctamente.
 \end{itemize}
 
 \item %SEGUNDO ENTREGABLE
 \begin{itemize}
 	\item Fecha: 19/11/2015
 	\item Descripción: Informe y Segundo Prototipo.
-	\item Contenido: Documento con conceptos sobre arquitecturas paralelas y OpenCL 2.0; Resultados preliminares de la aplicación de OpenCL 2.0; Descripción del método PCG; Descripción de la interfaz con \openfoam; Diseño y código fuente del solver; Resultados de la Optimización; Comparativa sobre casos simples.
+	\item Contenido del Informe: Documento con conceptos sobre arquitecturas paralelas y OpenCL 2.0; Resultados preliminares de la aplicación de OpenCL 2.0; Descripción del método PCG; Descripción de la interfaz con \openfoam; Diseño y código fuente del resolvedor; Resultados de la Optimización; Comparativa sobre casos simples.
+	\item Alcance del prototipo: Linkear y compilar el resolvedor PCG desarrollado en Ubuntu 14.04; Correr casos de prueba simples.
+	\item Criterio de aceptación: El director será quien determine si el prototipo funciona correctamente.
 \end{itemize}
 
 \item %TERCER ENTREGABLE
 \begin{itemize}
-	\item Fecha: 11/12/201
+	\item Fecha: 11/12/2015
 	\item Descripción: Informe y Producto Final.
 	\item Contenido: Documento con los resultados obtenidos de aplicar los métodos sobre la simulación de los automóviles de competición, tiempos requeridos, consumos de energía, comparativa entre los resultados; Ejecutables, Código fuente y archivos de configuración.
+	\item Criterio de aceptación: Lograr la misma solución con todos los resolvedores.
 \end{itemize}
 
 \item %CUARTO ENTREGABLE
@@ -207,6 +235,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 	\item Fecha: 07/01/2016
 	\item Descripción: Informe Final y Producto Final.
 	\item Contenido: Documento con la recopilación de todos los resultados previos. Observaciones, Conclusiones, trabajos futuros.
+	\item Criterio de aceptación: Deberá poseer todos los resultados previamente alcanzados, con sus respectivas conclusiones. Las observaciones y los trabajos futuros serán opcionales.
 \end{itemize}
 
 \end{enumerate}

@@ -7,6 +7,18 @@
 \providecommand{\href}[2]{#2}
 \begin{thebibliography}{1}
 
+\bibitem{burden}
+Richar L. Burden; J.~Doublas Faires, \emph{Análisis numérico 7a. ed.},
+  Brooks/Cole, 2002.
+
+\bibitem{openFoam}
+Christopher~J. Greenshields, \emph{Openfoam - user manual}, OpenFOAM Foundation
+  Ltd, 2015.
+
+\bibitem{opecl20reference}
+Khronos OpenCL~Working Group, \emph{The opencl specification version 2.0},
+  Khronos Group, 2014.
+
 \bibitem{project2013guide}
 Project~Management Institute, \emph{A guide to the project management body of
   knowledge (pmbok{\textregistered} guide)}, PMI Standard, Project Management
@@ -15,5 +27,12 @@ Project~Management Institute, \emph{A guide to the project management body of
 \bibitem{sommerville2011software}
 I.~Sommerville, \emph{Software engineering}, International Computer Science
   Series, Pearson, 2011.
+
+\bibitem{paralution}
+PARALUTION~Labs UG, \emph{Paralution - user manual}, PARALUTION Labs UG, 2014.
+
+\bibitem{concurrencyInAction}
+Anthony Williams, \emph{C++ concurrency in action - practical multithreading},
+  Manning Publications Co., 2012.
 
 \end{thebibliography}

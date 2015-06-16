@@ -61,6 +61,107 @@
 	\newpage	
 
 
+\section{Justificación}
+El aumento de la complejidad computacional de las simulaciones llevadas a cabo en el ámbito del CIMEC acarrea consigo un inevitable aumento en el volumen de datos a procesar, y por lo tanto, de poder de procesamiento necesario para llevar a cabo el trabajo en un tiempo razonable y que permita ser competitivos. 
+La herramienta utilizada en el centro de investigación es, desde hace ya unos años, OpenFOAM(R), la cual es una biblioteca C++, utilizada principalmente para crear ejecutables, conocidos como aplicaciones. Las mismas, se pueden categorizar como solvers o como utilidades. Los solvers están diseñados para resolver un problema específico de la mecánica del continuo, más específicamente a la dinámica de fluidos conocida (CFD) a través del método de volúmenes finitos, mientras que las utilidades están diseñadas para la manipulación de datos. Su elección se funda principalmente en que es libre, es abierto -lo que permite modificarlo o crear desarrollos propios-, porque trae múltiples solvers y utilidades por defecto para resolver problemas de ingeniería, contando con documentación y una comunidad muy activa en el foro de consulta, además de ser reconocido mundialmente.
+ Sin entrar demasiado en detalles, para resolver un problema en OpenFOAM hay que trabajar en 3 etapas. Una primera, donde se crea o modifica una malla tridimensional que representa los objetos a simular y se especifican las condiciones iniciales y de borde. Luego, una segunda etapa donde se genera un sistema lineal de ecuaciones del tipo K = f, siendo el vector incógnita. Finalmente, en la tercer etapa, se resuelve el sistema de ecuaciones, siendo esta última, la que se lleva más del 80\% del tiempo de ejecución. La tendencia actual indica que el uso de GPUs para este tipo de problemas, donde la masificación de la distribución de tareas es natural, dada las dimensiones del problema, es el camino a seguir para conseguir mejores resultados, tanto en tiempo utilizado, como energía consumida.
+Actualmente se encuentran disponibles varias implementaciones de solvers para OpenFOAM(R) con licencia libre, entre ellas se pueden nombrar principalmente:
+ 	Cufflink (CUDA), la cual presenta algunos inconvenientes, ya que solo corre sobre hardware de Nvidia y en una única GPU, estando la implementación multi-GPU en estado experimental.La misma presenta dos solvers, Gradiente conjugado (PCG) basado en CUSP (librería de CUDA) para matrices simétricas, con tres precondicionadores a elección; y el Gradiente Biconjugado estabilizado (PBiCG) para matrices asimétricas, con dos precondicionadores a elección. Ambos solvers permiten elegir entre precisión simple o doble para la operatoria.
+Paralution (OpenMP, OpenCL y CUDA), el cual es virtualmente independiente de la plataforma, es decir, funciona tanto en windows, linux o mac y a su vez que permite establecer, en tiempo de compilación, la utilización de OpenMP, OpenCL o CUDA. A diferencia de Cufflink, presenta un soporte multi-GPU maduro, estable y testeado e implementa un número mayor de solvers, siendo PCG y PBiCG los más importantes para la resolución de los problemas encarados en el CIMEC. Ambos permiten la elección del precondicionador.
+Sin embargo, estos solvers no logran alcanzar la mejora de rendimiento esperable. Según estudios de Lukarski, para resolver un dado problema, se pueden esperar mejoras de tiempo de 3.23x comparando la implementación multithreaded nativa de OpenFOAM(R), con la de Paralution en OpenCL 1.2, cuando la potencia bruta de cómputo del GPGPU K20c en flops, utilizada en las pruebas, supera a la suma de los 16 núcleos de los dos Intel Xeon e2680 por una relación de aproximadamente 11:1.
+La implementación en OpenCL de Paralution aun no hace uso de las ventajas provistas por la nueva versión de la API. Esto trae el problema de que los dispositivos y el host no comparten el mismo espacio de memoria virtual, se debe administrar manualmente tanto la memoria del host, la memoria de cada dispositivo y la intercomunicación entre estos. Y no solo es necesario el control de los buffers, sino también que hay que copiarlos explícitamente a cada dispositivo, siendo esto un claro cuello de botella. Si bien, para el usuario o desarrollador, hacer uso de la implementación de Paralution es completamente transparente, en el fondo, dicha implementación cuenta los los problemas antes mencionados.
+OpenCL 2.0, a través del esquema de memoria virtual compartida (SVM) elimina esta limitación: el host y los dispositivos OpenCL pueden compartir el mismo rango de direcciones virtuales, mejorando notoriamente el desempeño en las aplicaciones que son altamente demandantes no sólo en capacidad de cómputo, sino también en espacio de almacenamiento en memoria, según afirma Raghavendra en su publicación, donde se ve claramente que no existen los tiempos utilizados para transformar los buffers en arrays y offsets, ni tampoco los para retornar los buffers desde el GPU hacia la memoria principal del sistema, representando estos el 94\% del tiempo, para la resolución del problema de búsqueda en árbol binario, para un tamaño de 5 millones de nodos.
+
+\subsection{Diagnóstico}
+Estando presente esta nueva tecnología, aún no hay en el mercado opciones que la exploten, ni siquiera que la utilicen con respecto a los solvers de OpenFOAM(R). Vemos que es posible obtener mejoras significativas de performance con su uso en un esquema paralelo basado en GPGPU. Es por esto que se pretende hacer uso del nuevo API de cómputo abierto OpenCL 2.0 con lo que se espera obtener mejoras de rendimiento al reducir la cantidad de datos transferidos entre los dispositivos y el host al aprovechar las ventajas significativas otorgadas por el esquema de memoria virtual compartida (SVM).
+
+\subsection{Aportes del trabajo}
+El Centro de Investigación de Métodos Computacionales(CIMEC) va a contar con una nueva alternativa para llevar a cabo sus simulaciones en un tiempo inferior. Se pretende que el producto resultante del proyecto sea open source, de acceso, utilización y distribución libre. Entre ellos pueden incluirse una comunidad en constante crecimiento de usuarios de OpenFOAM(R).
+En lo personal, adquirir conocimientos en el uso tanto de la suite OpenFOAM(R) como del paradigma de High Performance Computing, en general, y OpenCL 2.0 en particular, el cual apunta a ser el estándar por defecto.
+
+\section{Objetivos}
+
+\subsection{Generales}
+
+\begin{itemize}
+\item Desarrollar un método de resolución de sistemas lineales para OpenFOAM(R) sobre GPGPU con OpenCL 2.0.
+	\begin{itemize}
+	\item Analizar el uso de la suite OpenFOAM(R).
+	\item Analizar la API OpenCL 2.0
+	\item Analizar el paradigma del High Performance Computing.
+	\item Validar el método	
+	\end{itemize}
+\item Analizar e implementar los solvers lineales para \openfoam de \paralution
+	\begin{itemize}
+	\item Analizar el uso de la librería \paralution
+	\item Desarrollar los métodos iterativos de resolución de sistemas lineales de ecuaciones.
+	\end{itemize}
+\item Desarrollar una aplicación para resolver un problema acerca de la aerodinámica de vehículos de competición.
+	\begin{itemize}
+	\item Obtener los datos del modelo  de aerodinámica
+	\item Obtener diferentes soluciones con los distintos solvers desarrollados.
+	\item Comparar los tiempos invertidos por cada solver.
+	\item Comparar el consumo energético por cada solver.
+	\item Seleccionar la mejor alternativa en cuanto a eficiencia flops/watts y tiempo/watts.
+	\end{itemize}
+\end{itemize}
+
+\section{Alcance}
+
+\subsection{Funcionales}
+\begin{itemize}
+\item Instalación y puesta a punto del Sistema Operativo Linux, en su distribución Ubuntu 14.04
+	\begin{itemize}
+	\item Instalación del S.O.
+	\item Instalación de los drivers de la GPU AMD R9 290.
+	\item Compilacion e instalación de:
+		\begin{itemize}
+		\item \openfoam
+		\item \paralution
+		\item AMD APP SDK 3.0
+		\end{itemize}
+	\end{itemize}
+\item Implementación de los solvers de \paralution en OpenCL para ser utilizados en \openfoam:PCG y PBiCG.
+\item implementación propia del método del gradiente conjugado sobre OpenCL 2.0 para matrices LDU compatible con el formato de \openfoam
+\item Evaluación de convergencia del métodos a la aproximación de solución de la ecuación diferencial.
+\item Estudiar la eficiencia y efectividad de todos los métodos.
+\end{itemize}
+
+\subsection{No funcionales}
+Uso óptimo de los recursos de hardware disponibles para obtener mejoras en:
+\begin{itemize}
+\item Rendimiento
+\item Escalabilidad
+\item Estabilidad
+\item Confiabilidad
+\end{itemize}
+Uso de buenas prácticas de programación:
+\begin{itemize}
+\item Uso de reglas de escritura de código especificas para OpenFOAM
+\item Código legible y mantenible.
+\item Uso de un repositorio de GitHub para versionado de código.
+\item Tests unitarios sobre cada método principal.
+\end{itemize}
+
+\subsection{Exclusiones}
+\begin{flushleft}
+Sólo se hará uso de software libre. \linebreak
+No se harán comparativas sobre solvers propietarios. \linebreak
+Sólo se implementarán solvers OpenSource que trabajen sobre OpenCL. \linebreak
+Se trabajarán todos los datos en memoria RAM, tanto del host como de los dipositivos.
+\end{flushleft}
+
+\subsection{Limitaciones y Restricciones}
+Se dispone de una única GPU AMD Radeon R9 290 con 4Gb de RAM GDDR5.
+Se trabajará con problemas con tamaño maximo abordable por el hardware disponible.
+
+\section{Supuestos}
+Se dispone del hardware necesario para correr y utilizar OpenCL 2.0. AMD Radeon R9 290.
+La implementación del método resolución debe ser compatible con multi-GPU.
+
+\section{Criterios de aceptación del producto}
+Mínimo: lograr una mejora de eficiencia y performance respecto a las soluciones provistas nativamente por \openfoam
+Esperado: Lograr una mejora de performance respecto a las soluciones provistas por \paralution
 \section{Metodología}
 \label{sec:metodologia}
 Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) a través de una metodología propia definida para el proyecto. Separando el proyecto en tres etapas:
@@ -240,10 +341,198 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 
 \end{enumerate}
 
+%13/06/2015
+%
+%Estimado Juan Pablo,
+%
+%Para cada uno de los riesgos se solicita consignar:
+%
+%1.       Nombre                                                        
+%2.       Descripción
+%3.       Indicador: consignar aquellos parámetros que se medirán/controlarán para monitorear los eventos asociados al riesgo
+%4.       Probabilidad de ocurrencia
+%5.       Impacto
+%6.       Estrategia a adoptar: dentro de las mismas podemos encontrar Transferir, Evitar, Aceptar en forma pasiva o activa (implica plan de contingencia) y Mitigar (indicar si la mitigación se enfoca en la probabilidad de ocurrencia o el impacto).
+%Para más detalles consultar el capítulo de gestión de riesgos del PMBoK.
+%Puntualmente:
+%
+%a) Unificar los riesgos asociados a los problemas de estimación
+%
+%b) Reformular el riesgo “contraer enfermedad” por uno más general que abarque la falta de disponibilidad de los recursos humanos involucrados en el proyecto (alumno, directores, etc.)
+%
+%c) Describir mejor aquellos riesgos asociados a la temática del proyecto. Debe quedar claro cuál es la situación problemática que se está enfrentando.
+%
+%d) En los casos en el cual la estrategia sea de mitigación indicar si se apunta a mitigar la probabilidad de ocurrencia o el impacto.
+%
+%SUGERENCIA: en vista a la entrega del martes verificar la coherencia de las diferentes partes que involucran el Plan de Proyecto completo. El título, justificación, objetivos, metodología, etapas y tareas deben seguir un hilo conductor tanto en alcance como en complejidad no quedando elementos sin definir o que no se reflejan en todos los apartados.
+%
+%Saludos
+%
+%Mariel
+
+\section{Recursos}	
+	 \subsection{Disponibles}
+
+%		*****************************************
+%			RECURSOS DISPONIBLES DE CAPITAL
+%		*****************************************
+	 	\subsubsection{Bienes de Capital}
+	 	
+	 	\begin{enumerate}
+	 	\item PC de Escritorio (Intel Core i7 870, 12GB RAM DDR3, AMD Radeon R9 290, Monitor 22", Mouse y Teclado)
+	 	\item Laptop (Intel Core i5 2540M, 4GB DDR3, HD3000, Monitor 15.6")
+	 	\item Sistema Operativo Ubuntu 14.04
+	 	\item Compiladores C++.
+	 	\item SDK de OpenCL 2.0
+		\item Pizzarra
+		\item Fibrones
+		\item Impresora Monocromática con Sistema Continuo.
+	 	\end{enumerate}
+
+%		*****************************************
+%			RECURSOS DISPONIBLES RRHH
+%		*****************************************
+	 	\subsubsection{Recursos Humanos}
+	 	\begin{enumerate}
+		\item Desarrollador
+		\item Director
+		\item Ayudantes	 	
+	 	\end{enumerate}
+	 	
+	 	
+%	 **************************************
+%	 			RECURSOS NECESARIOS
+%	 **************************************	
+	 \subsection{Necesarios}
+
+%		************************************
+%				DE CAPITAL
+%		************************************
+		\subsubsection{De Capital}
+		\begin{enumerate}
+		\item Escritorio
+		\item Silla de Escritorio Acolchonada % :p
+		\end{enumerate}			 
+
+%		*************************************
+%				SERVICIOS
+%		*************************************	 
+	 	 \subsubsection{Servicios}
+		 \begin{enumerate}
+	 
+		\item Servicio de Electricidad
+		\item Servicio de Agua
+		\item Servicio de Internet
+	 
+		 \end{enumerate}
+
+%		*************************************
+%			INSUMOS
+%		*************************************	
+		\subsubsection{Insumos}
+		
+		\begin{enumerate}
+		\item Resmas de hojas A4
+		\item Tinta negra para Fibrones
+		\item Tinta negra para Impresora
+		\item Productos de Limpieza
+		\end{enumerate}
+
+%		*************************************
+%			OTROS
+%		*************************************
+	 	\subsubsection{Otros}
+		\begin{enumerate}
+		
+		 \item Fotocopias
+		 \item Encuadernación
+		
+		\end{enumerate}			 	
+	 	
+	 
+\section{Presupuesto}
+
+%Particularmente para la sección de presupuesto, mencionamos algunos rubros generales que pueden ser de interés para su propuesta:
+%
+%*Bienes de Capital
+%*Materiales e Insumos
+%*Consultorías y Servicios
+%*Infraestructura
+%*Viajes y Viáticos
+%*RRHH
+%*Gastos Administrativos
+%*Becas y Capacitaciones
+%*Otros costos
+\begin{table}[h]
+\small
+\label{tabla:presupuesto}
+\caption{Presupuesto}
+\begin{tabular}{|c|c|c|c|}
+\hline 
+\textbf{Descripción} & \textbf{Unidades} & \textbf{Precio Unitario} [\$] & \textbf{Costo Total} [\$] \\ \hline 
+PC de escritorio & 1 & 12000 & 12000 \\ %\hline 
+Laptop & 1 & 6000 & 6000 \\ %\hline 
+Pizzarra & 1 & 250 & 250 \\ %\hline 
+Fibrones & 2 & 20 & 40 \\ %\hline 
+Impresora & 1 & 1200 & 1200 \\ %\hline 
+Desarrollador & 450 Horas & 100 & 45000 \\ %\hline 
+Director & 100 Horas & 150 & 15000 \\ %\hline 
+Ayudante 1 & 80 Horas & 120 & 9600 \\ %\hline 
+Ayudante 2 & 80 Horas & 120 & 9600 \\ %\hline 
+Escritorio & 1 & 1200 & 1200 \\ %\hline 
+Silla de Escritorio & 1 & 1200 & 1200 \\ %\hline 
+Servicio de Electricidad & 6 Meses & 260 bimestral & 780 \\ %\hline 
+Servicio de Agua & 6 Meses & 450 bimestral & 1350 \\ %\hline 
+Servicio de Internet & 6 Meses & 280 mensual & 1680 \\ %\hline 
+Resma de Hojas A4 & 2 & 70 & 140 \\ %\hline 
+Tinta para Fibrones & 2 & 40 & 80 \\ %\hline 
+Tinta para Impresora & 100ml & 60 & 60 \\ %\hline 
+Encuadernación & 3 & 250 & 750 \\ \hline
+ & & Total & 104850\\ \hline
+\end{tabular} 
+\end{table}
+\section{Riesgos}
+
+Se define tres niveles que cuantizan el impacto de los riesgos:
+\begin{itemize}
+\small
+\item Alto - 3
+\item Medio - 2
+\item Bajo - 1
+\end{itemize}
+A su vez, se utiliza una escala de 0 a 5 que representa la probabilidad de ocurrencia, siendo 0 totalmente improbable, y 5 el correspondiente al 100\% de probabilidad.
+En base a las escalas anteriores, se define el rango de severidad que va desde 0 hasta 15.
+Severidades de 0 a 2 se aceptarán pasivamente, es decir, sin modificaciones en la planificación; de 3 a 6 se aceptarán activamente; de 7 a 10 se mitigarán; de 10 a 15 se transferirán.
+
+\begin{table}[h] %  [h] para que ubique la tabla en esta posición.
+\small
+%\tiny
+\label{tabla:riesgos}
+\caption{Análisis de Riesgos y Estrategias adoptadas}
+\begin{tabular}{p{4cm}|c|c|c|p{4cm}|}
+\hline
+\textbf{Riesgo} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Sever.} & \textbf{Estrategia} \\ \hline
+
+Subestimación de los tiempos en el plan de tareas & 3 & Medio & 6 & Replanificar tareas \\
+
+Sobreestimación de los tiempos en el plan de tareas & 1 & Alto & 3 & Replanificar tareas y/o reducir las horas de trabajo \\
+
+Subestimación de la complejidad del solver a desarrollar & 1 & Alto & 3 & Reducir la complejidad del diseño del solver a un único GPU. \\
+
+El desarrollo no se puede llevar a cabo por falta de una segunda GP-GPU & 2 & Medio & 3 & Modificar el presupuesto para incluir una segunda GP-GPU R9 290 \\
+
+La bibliografía disponible no abarca los temas requeridos para el diseño y desarrollo & 1 & Alto & 3 & Modificar el presupuesto para incluir la compra de bibliografía\\
+
+Contraer Enfermedad & 1 & Media & 2 & Continuar trabajando desde el hogar\\
+
+\hline
+
+\end{tabular}
+\end{table}
+
 \mbox{}
 \nocite{*}
 \bibliographystyle{amsplain}
 \bibliography{main}
-
 
 \end{document}

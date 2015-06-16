@@ -1,0 +1,12 @@
+\select@language {spanish}
+\contentsline {section}{\numberline {1}Recursos}{2}{section.1}
+\contentsline {subsection}{\numberline {1.1}Disponibles}{2}{subsection.1.1}
+\contentsline {subsubsection}{\numberline {1.1.1}Bienes de Capital}{2}{subsubsection.1.1.1}
+\contentsline {subsubsection}{\numberline {1.1.2}Recursos Humanos}{2}{subsubsection.1.1.2}
+\contentsline {subsection}{\numberline {1.2}Necesarios}{2}{subsection.1.2}
+\contentsline {subsubsection}{\numberline {1.2.1}De Capital}{2}{subsubsection.1.2.1}
+\contentsline {subsubsection}{\numberline {1.2.2}Servicios}{2}{subsubsection.1.2.2}
+\contentsline {subsubsection}{\numberline {1.2.3}Insumos}{3}{subsubsection.1.2.3}
+\contentsline {subsubsection}{\numberline {1.2.4}Otros}{3}{subsubsection.1.2.4}
+\contentsline {section}{\numberline {2}Presupuesto}{3}{section.2}
+\contentsline {section}{\numberline {3}Riesgos}{3}{section.3}

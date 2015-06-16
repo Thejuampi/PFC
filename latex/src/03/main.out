@@ -1,22 +1,45 @@
-\BOOKMARK [1][-]{section.1}{Metodolog\355a}{}% 1
-\BOOKMARK [2][-]{subsection.1.1}{An\341lisis y desarrollo de los m\351todos}{section.1}% 2
-\BOOKMARK [2][-]{subsection.1.2}{Implementaci\363n y prueba de los m\351todos}{section.1}% 3
-\BOOKMARK [2][-]{subsection.1.3}{Escritura del informe final y cierre}{section.1}% 4
-\BOOKMARK [1][-]{section.2}{Plan de Tareas}{}% 5
-\BOOKMARK [2][-]{subsection.2.1}{An\341lisis y desarrollo de los m\351todos}{section.2}% 6
-\BOOKMARK [3][-]{subsubsection.2.1.1}{An\341lisis de los solvers de Paralution\251}{subsection.2.1}% 7
-\BOOKMARK [3][-]{subsubsection.2.1.2}{Puesta en funcionamieto de los solvers de Paralution\251}{subsection.2.1}% 8
-\BOOKMARK [3][-]{subsubsection.2.1.3}{Estudio del marco te\363rico de arquitecturas paralelas y OpenCL 2.0}{subsection.2.1}% 9
-\BOOKMARK [3][-]{subsubsection.2.1.4}{An\341lisis del m\351todo PCG}{subsection.2.1}% 10
-\BOOKMARK [3][-]{subsubsection.2.1.5}{Desarrollo del m\351todo PCG en OpenCL 2.0}{subsection.2.1}% 11
-\BOOKMARK [3][-]{subsubsection.2.1.6}{Finalizar y Documentar la fase}{subsection.2.1}% 12
-\BOOKMARK [2][-]{subsection.2.2}{Implementaci\363n y prueba de los m\351todos}{section.2}% 13
-\BOOKMARK [3][-]{subsubsection.2.2.1}{Implementaci\363n}{subsection.2.2}% 14
-\BOOKMARK [3][-]{subsubsection.2.2.2}{Prueba}{subsection.2.2}% 15
-\BOOKMARK [3][-]{subsubsection.2.2.3}{Finalizar y Documentar la fase}{subsection.2.2}% 16
-\BOOKMARK [2][-]{subsection.2.3}{Escritura del informe final y cierre}{section.2}% 17
-\BOOKMARK [3][-]{subsubsection.2.3.1}{Documentaci\363n}{subsection.2.3}% 18
-\BOOKMARK [3][-]{subsubsection.2.3.2}{Entrega del producto}{subsection.2.3}% 19
-\BOOKMARK [2][-]{subsection.2.4}{Consideraciones}{section.2}% 20
-\BOOKMARK [1][-]{section.3}{Cronograma}{}% 21
-\BOOKMARK [1][-]{section.4}{Entregables}{}% 22
+\BOOKMARK [1][-]{section.1}{Justificaci\363n}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Diagn\363stico}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{Aportes del trabajo}{section.1}% 3
+\BOOKMARK [1][-]{section.2}{Objetivos}{}% 4
+\BOOKMARK [2][-]{subsection.2.1}{Generales}{section.2}% 5
+\BOOKMARK [1][-]{section.3}{Alcance}{}% 6
+\BOOKMARK [2][-]{subsection.3.1}{Funcionales}{section.3}% 7
+\BOOKMARK [2][-]{subsection.3.2}{No funcionales}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.3}{Exclusiones}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.4}{Limitaciones y Restricciones}{section.3}% 10
+\BOOKMARK [1][-]{section.4}{Supuestos}{}% 11
+\BOOKMARK [1][-]{section.5}{Criterios de aceptaci\363n del producto}{}% 12
+\BOOKMARK [1][-]{section.6}{Metodolog\355a}{}% 13
+\BOOKMARK [2][-]{subsection.6.1}{An\341lisis y desarrollo de los m\351todos}{section.6}% 14
+\BOOKMARK [2][-]{subsection.6.2}{Implementaci\363n y prueba de los m\351todos}{section.6}% 15
+\BOOKMARK [2][-]{subsection.6.3}{Escritura del informe final y cierre}{section.6}% 16
+\BOOKMARK [1][-]{section.7}{Plan de Tareas}{}% 17
+\BOOKMARK [2][-]{subsection.7.1}{An\341lisis y desarrollo de los m\351todos}{section.7}% 18
+\BOOKMARK [3][-]{subsubsection.7.1.1}{An\341lisis de los solvers de Paralution\251}{subsection.7.1}% 19
+\BOOKMARK [3][-]{subsubsection.7.1.2}{Puesta en funcionamieto de los solvers de Paralution\251}{subsection.7.1}% 20
+\BOOKMARK [3][-]{subsubsection.7.1.3}{Estudio del marco te\363rico de arquitecturas paralelas y OpenCL 2.0}{subsection.7.1}% 21
+\BOOKMARK [3][-]{subsubsection.7.1.4}{An\341lisis del m\351todo PCG}{subsection.7.1}% 22
+\BOOKMARK [3][-]{subsubsection.7.1.5}{Desarrollo del m\351todo PCG en OpenCL 2.0}{subsection.7.1}% 23
+\BOOKMARK [3][-]{subsubsection.7.1.6}{Finalizar y Documentar la fase}{subsection.7.1}% 24
+\BOOKMARK [2][-]{subsection.7.2}{Implementaci\363n y prueba de los m\351todos}{section.7}% 25
+\BOOKMARK [3][-]{subsubsection.7.2.1}{Implementaci\363n}{subsection.7.2}% 26
+\BOOKMARK [3][-]{subsubsection.7.2.2}{Prueba}{subsection.7.2}% 27
+\BOOKMARK [3][-]{subsubsection.7.2.3}{Finalizar y Documentar la fase}{subsection.7.2}% 28
+\BOOKMARK [2][-]{subsection.7.3}{Escritura del informe final y cierre}{section.7}% 29
+\BOOKMARK [3][-]{subsubsection.7.3.1}{Documentaci\363n}{subsection.7.3}% 30
+\BOOKMARK [3][-]{subsubsection.7.3.2}{Entrega del producto}{subsection.7.3}% 31
+\BOOKMARK [2][-]{subsection.7.4}{Consideraciones}{section.7}% 32
+\BOOKMARK [1][-]{section.8}{Cronograma}{}% 33
+\BOOKMARK [1][-]{section.9}{Entregables}{}% 34
+\BOOKMARK [1][-]{section.10}{Recursos}{}% 35
+\BOOKMARK [2][-]{subsection.10.1}{Disponibles}{section.10}% 36
+\BOOKMARK [3][-]{subsubsection.10.1.1}{Bienes de Capital}{subsection.10.1}% 37
+\BOOKMARK [3][-]{subsubsection.10.1.2}{Recursos Humanos}{subsection.10.1}% 38
+\BOOKMARK [2][-]{subsection.10.2}{Necesarios}{section.10}% 39
+\BOOKMARK [3][-]{subsubsection.10.2.1}{De Capital}{subsection.10.2}% 40
+\BOOKMARK [3][-]{subsubsection.10.2.2}{Servicios}{subsection.10.2}% 41
+\BOOKMARK [3][-]{subsubsection.10.2.3}{Insumos}{subsection.10.2}% 42
+\BOOKMARK [3][-]{subsubsection.10.2.4}{Otros}{subsection.10.2}% 43
+\BOOKMARK [1][-]{section.11}{Presupuesto}{}% 44
+\BOOKMARK [1][-]{section.12}{Riesgos}{}% 45

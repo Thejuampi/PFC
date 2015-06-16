@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2014.12.1)  31 MAY 2015 20:55
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2014.12.1)  16 JUN 2015 08:03
 entering extended mode
 **main.tex
 (C:\dev\git\PFC\latex\src\03\main.tex
@@ -804,7 +804,7 @@ LaTeX Info: Redefining \nameref on input line 57.
 \@outlinefile=\write4
 
 (C:\dev\git\PFC\latex\src\03\caratula.tex
-<logo_UNL.jpg, id=91, 340.27126pt x 340.27126pt>
+<logo_UNL.jpg, id=183, 340.27126pt x 340.27126pt>
 File: logo_UNL.jpg Graphic file (type jpg)
  <use logo_UNL.jpg>
 Package pdftex.def Info: logo_UNL.jpg used on input line 5.
@@ -822,69 +822,112 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 {C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map} <C:/dev/git/PFC/latex/src/
 03/logo_UNL.jpg>]
-[2]) (C:\dev\git\PFC\latex\src\03\main.toc)
+[2]) (C:\dev\git\PFC\latex\src\03\main.tocpdfTeX warning (ext4): destination wi
+th the same identifier (name{page.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.44 ...e {10.2.4}Otros}{14}{subsubsection.10.2.4}
+                                                   [1])
 \tf@toc=\write5
-pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
+pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
 l.61 	\newpage
-               [1]
-LaTeX Font Info:    Try loading font information for TS1+cmss on input line 95.
+               [2] [3] [4] [5]
+Overfull \hbox (14.1255pt too wide) in paragraph at lines 125--126
+[]\OT1/cmr/m/n/10.95 implementacion pro-pia del meto-do del gra-dien-te con-j
+u-ga-do so-bre OpenCL
+ []
 
+[6] [7]
+LaTeX Font Info:    Try loading font information for TS1+cmss on input line 196
+.
  ("C:\Program Files\MiKTeX 2.9\tex\latex\base\ts1cmss.fd"
 File: ts1cmss.fd 1999/05/25 v2.5h Standard LaTeX font definitions
-)pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has
- been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.99 \end{itemize}
-                   [2] [3] [4]
+) [8] [9]
 
 LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `!tbp') on input line 196.
+               Default added (so using `!tbp') on input line 297.
 
-<gantt.png, id=151, 1355.8153pt x 2123.68407pt>
+<gantt.png, id=288, 1355.8153pt x 2123.68407pt>
 File: gantt.png Graphic file (type png)
  <use gantt.png>
-Package pdftex.def Info: gantt.png used on input line 197.
+Package pdftex.def Info: gantt.png used on input line 298.
 (pdftex.def)             Requested size: 360.0pt x 563.87537pt.
- [5] [6 <C:/dev/git/PFC/latex/src/03/gantt.png>] (C:\dev\git\PFC\latex\src\03\m
-ain.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 249.
+ [10] [11 <C:/dev/git/PFC/latex/src/03/gantt.png>] [12] [13]
+Overfull \hbox (2.25644pt too wide) in paragraph at lines 470--493
+[][] 
+ []
 
-[7]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 249.
+[14]
+Underfull \hbox (badness 10000) in paragraph at lines 516--516
+[]\OT1/cmr/m/n/10 Subestimacion de los
+ []
+
+
+Underfull \hbox (badness 2753) in paragraph at lines 516--516
+\OT1/cmr/m/n/10 tiem-pos en el plan de
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 518--518
+[]\OT1/cmr/m/n/10 Sobreestimacion de los
+ []
+
+
+Underfull \hbox (badness 2753) in paragraph at lines 518--518
+\OT1/cmr/m/n/10 tiem-pos en el plan de
+ []
+
+
+Overfull \hbox (27.42014pt too wide) in paragraph at lines 512--531
+[][] 
+ []
+
+(C:\dev\git\PFC\latex\src\03\main.bbl
+Underfull \hbox (badness 1314) in paragraph at lines 11--13
+[]\OT1/cmr/m/n/10.95 Richar L. Bur-den; J. Dou-blas Fai-res, \OT1/cmr/m/it/10.9
+5 Anali-sis numeri-co 7a. ed.\OT1/cmr/m/n/10.95 ,
+ []
+
+[15])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 538.
+ [16]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 538.
  (C:\dev\git\PFC\latex\src\03\main.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 249.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 249.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 538.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 538.
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 616BD65B0464B0310B963FB9397ECE9B;1833.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 249.
+(rerunfilecheck)             Checksum: CDC702203CB5E7F5B2EBEC8AD13B9C4E;3270.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 538.
  ) 
 Here is how much of TeX's memory you used:
- 8263 strings out of 493921
- 114553 string characters out of 3147285
- 201154 words of memory out of 3000000
- 11374 multiletter control sequences out of 15000+200000
- 14646 words of font info for 52 fonts, out of 3000000 for 9000
+ 8383 strings out of 493921
+ 116018 string characters out of 3147285
+ 211396 words of memory out of 3000000
+ 11428 multiletter control sequences out of 15000+200000
+ 17666 words of font info for 64 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 29i,7n,43p,575b,513s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 29i,10n,43p,916b,581s stack positions out of 5000i,500n,10000p,200000b,50000s
  <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\t
 cti1095.pk> <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec
-\dpi600\tcsx1095.pk> <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jk
-nappen\ec\dpi600\tcrm1095.pk><C:/Program Files/MiKTeX 2.9/fonts/type1/public/am
-sfonts/cm/cmbx12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/c
-m/cmcsc10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10
-.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/
-Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Program F
-iles/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss10.pfb><C:/Program Files/MiK
-TeX 2.9/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C:/Program Files/MiKTeX 2.
-9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files/MiKTeX 2.9/fonts/
-type1/public/amsfonts/cm/cmti12.pfb>
-Output written on main.pdf (9 pages, 427165 bytes).
+\dpi600\tcrm1000.pk> <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jk
+nappen\ec\dpi600\tcsx1095.pk> <C:\Users\Juan\AppData\Local\MiKTeX\2.9\fonts\pk\
+ljfour\jknappen\ec\dpi600\tcrm1095.pk><C:/Program Files/MiKTeX 2.9/fonts/type1/
+public/amsfonts/cm/cmbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/a
+msfonts/cm/cmbx12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/
+cm/cmcsc10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr1
+0.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:
+/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Program 
+Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss10.pfb><C:/Program Files/Mi
+KTeX 2.9/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C:/Program Files/MiKTeX 2
+.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts
+/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/p
+ublic/amsfonts/cm/cmti12.pfb>
+Output written on main.pdf (18 pages, 496482 bytes).
 PDF statistics:
- 229 PDF objects out of 1000 (max. 8388607)
- 39 named destinations out of 1000 (max. 500000)
- 187 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 435 PDF objects out of 1000 (max. 8388607)
+ 100 named destinations out of 1000 (max. 500000)
+ 371 words of extra memory for PDF output out of 10000 (max. 10000000)
 

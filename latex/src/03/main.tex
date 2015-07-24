@@ -1,39 +1,37 @@
-%\documentclass[a4paper,10pt, oneside]{book}
-\documentclass[a4paper, 11pt, oneside]{paper}
-%\usepackage[latin1]{inputenc}
+\documentclass[a4paper, 10pt, oneside]{thesis}
 \usepackage[spanish]{babel} 		% Normas tipográficas y opciones del español e ingles
 %\usepackage[T1]{fontenc}    		% Codificación de salida
 \usepackage[utf8]{inputenc} 		% Codificación de entrada 
 %\usepackage{subfig}
 \def\spanishoptions{argentina}
-%\usepackage[spanish]{babel}
-\usepackage{calc}
-\usepackage{fancyhdr}
+\usepackage[final]{microtype}
+%\usepackage{calc}
+%\usepackage{fancyhdr}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{graphics}
+\usepackage{apalike}
+%\usepackage{amsmath}
+%\usepackage{amsthm}
+%\usepackage{amsfonts}
+%\usepackage{amssymb}
+%\usepackage{mathcomp}
 
-\usepackage{amsmath}
-\usepackage{amsthm}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{mathcomp}
-
-\usepackage{fancyhdr,fancybox} %%Fancy headings
-\usepackage{multirow}
-\usepackage{hyperref}
-\usepackage{subfigure}
-\usepackage{ccaption}
-\usepackage{enumerate}
+%\usepackage{fancyhdr,fancybox} %%Fancy headings
+%\usepackage{multirow}
+%\usepackage{hyperref}
+%\usepackage{subfigure}
+%\usepackage{ccaption}
+%\usepackage{enumerate}
 
 \def \openfoam{OpenFOAM\textsuperscript{\textregistered}}
 \def \paralution{Paralution\textsuperscript{\textregistered}}
 \def \ocl20{OpenCL 2.0}
 
+\providecommand{\keywords}[1]{\textbf{\textit{\linebreak Palabras clave---}} #1}
+
 %\textregistered\textcopyright
 %\sffamily\textregistered\textcopyright
-
-
 
 %
 % h	Establece la posición del elemento flotante «aquí». Ésto es, aproximadamente en el mismo punto donde aparece en el código (sin embargo, no siempre es exacto el posicionamiento)
@@ -62,12 +60,16 @@
 \begin{document}
 
 \input{caratula.tex}
-	\tableofcontents	
-	\newpage	
-\section{Resumen}
-\small
-\textbf{En el presente documento se detalla la justificación, objetivos y alcance para el desarrollo e implementación de resolvedores de ecuaciones lineales sobre una arquitectura paralela basada en GPU, buscando obtener la mejor solución de todas tanto en tiempo como en consumo energético. Para ello se especifica una metodología, con un plan de tareas y su cronograma correspondiente. Finalmente se establece una linea base para el presupuesto y una identificación y análisis para los riesgos.} \linebreak
-\small\textbf{Keywords:} GPU, GPGPU, HPC, CFD, OpenFOAM, Paralution, OpenCL, SVM, OpenSource, Libre.
+	
+\begin{abstract}
+En el presente documento se detalla la justificación, objetivos y alcance para el desarrollo e implementación de resolvedores de ecuaciones lineales sobre una arquitectura paralela basada en GPU, buscando obtener la mejor solución de todas tanto en tiempo como en consumo energético. Para ello se especifica una metodología, con un plan de tareas y su cronograma correspondiente. Finalmente se establece una linea base para el presupuesto y una identificación y análisis para los riesgos.
+\begin{keywords}
+GPU, GPGPU, HPC, CFD, OpenFOAM, Paralution, OpenCL, SVM, OpenSource, Libre
+\end{keywords}
+\end{abstract}
+
+\tableofcontents
+\newpage
 
 %3. Con respecto a la Justificación: carece de una descripción de contexto. Se arranca bruscamente con la descripción del problema (ni siquiera se explica qué es el CIMEC, a qué se dedican, cuál es su problemática). Además, se debe revisar la redacción completa, hay oraciones sumamente largas y numerosos problemas de puntuación (comas mal colocadas, ausencia de punto y aparte, etc.). Todo esto dificulta la lectura y comprensión. Reitero mi recomendación de hacer revisar el texto por la Prof. Mattioli.
 %
@@ -81,11 +83,12 @@
 %
 %Eliminar los subtítulos de la fundamentación. Lo que se denomina “diagnóstico” debería ser la descripción del “problema” que debe seguir al contexto.
 
-\section{Justificación}
+\chapter{Justificación}
 
 En la antigüedad, la investigación de la dinámica de fluidos se realizaba a través de la experimentación y observación del flujo de fluidos en entornos físicos. El desarrollo de la computadora dió lugar a la creación de la dinámica de fluidos computacional (CFD), es decir, la simulación de fluidos con modelos y métodos numéricos en entornos virtuales.\cite{kimbrell2012}.
 
-Open Source Field Operation And Manipulation (\openfoam) es un paquete de software CFD modular, con una base de usuarios en constante crecimiento, a través de múltiples áreas de la ingeniería y la ciencia\cite{Greenshields2015}, incluido el Centro de Investigación de Métodos Computacionales (CIMEC), dependiente del Consejo Nacional de Investigaciones Científicas y Técnicas (CONICET). Dicho paquete cuenta con una variedad de herramientas para la resolución de los problemas típicos de la CFD, que van desde la generación de mallas para la representación de objetos con su correspondiente asignación de condiciones iniciales y de contorno; la creación de sistemas de ecuaciones lineales (SLE) para la representación discretizada de las ecuaciones diferenciales en derivadas parciales (PDE) que gobiernan el flujo de los fluidos; resolvedores de  SLE; entre otros. Dichos resolvedores de SLE se encuentran implementados nativamente en la unidad central de proceso (CPU), desaprovechando la capacidad de cómputo de propósito general presente en las unidades de procesamiento gráfico actuales(GP-GPU)\cite{opecl20reference}.
+Open Source Field Operation And Manipulation (\openfoam) es un paquete de software CFD modular, con una base de usuarios en constante crecimiento, a través de múltiples áreas de la ingeniería y la ciencia\cite{Greenshields2015}, incluido el Centro de Investigación de Métodos Computacionales (CIMEC), 
+el cual se dedica principalmente a la implementación de métodos computacionales en la ciencia e ingeniería. Dicho paquete cuenta con una variedad de aplicaciones para la resolución de los problemas típicos de la CFD, incluyendo herramientas para la generación de mallas para la representación de objetos con su correspondiente asignación de condiciones iniciales y de contorno; la creación de sistemas de ecuaciones lineales (SLE) para la representación discretizada de las ecuaciones diferenciales en derivadas parciales (PDE) que gobiernan el flujo de los fluidos; resolvedores de  SLE; entre otras. Dichos resolvedores de SLE se encuentran implementados nativamente en la unidad central de proceso (CPU), desaprovechando la capacidad de cómputo de propósito general presente en las unidades de procesamiento gráfico actuales(GP-GPU)\cite{opecl20reference}.
 
 %El aumento de la complejidad computacional de las simulaciones llevadas a cabo en el ámbito del CIMEC acarrea consigo un inevitable aumento en el volumen de datos a procesar, y por lo tanto, de poder de procesamiento necesario para llevar a cabo el trabajo en un tiempo razonable y que les permita ser competitivos.
 %La herramienta utilizada en el centro de investigación es, \openfoam, la cual es una biblioteca C++ para crear aplicaciones. Las mismas, se pueden categorizar como solvers o como utilidades. Los solvers están diseñados para resolver un problema específico de la mecánica del continuo, más específicamente a la dinámica de fluidos conocida (CFD) a través del método de volúmenes finitos, mientras que las utilidades están diseñadas para la manipulación de datos. Su elección se funda principalmente en que es libre, es abierto y porque trae múltiples solvers y utilidades por defecto para resolver problemas de ingeniería, contando con documentación y una comunidad muy activa,siendo mundialmente reconocido.
@@ -104,9 +107,10 @@ Open Source Field Operation And Manipulation (\openfoam) es un paquete de softwa
 %El Centro de Investigación de Métodos Computacionales(CIMEC) dispondrá una nueva alternativa para llevar a cabo sus simulaciones en un tiempo inferior. Se pretende que el producto resultante del proyecto sea open source, de acceso, utilización y distribución libre. Entre ellos pueden incluirse una comunidad en constante crecimiento de usuarios de OpenFOAM(R).
 %En lo personal, adquirir conocimientos en el uso tanto de la suite OpenFOAM(R) como del paradigma de High Performance Computing, en general, y OpenCL 2.0 en particular, el cual apunta a ser el estándar por defecto.
 
-\section{Objetivos}
+\chapter{Objetivos}
 
-\subsection{Generales}
+A continuación se listan los objetivos generales en conjunto con sus objetivos específicos:
+\section{Generales}
 
 \begin{itemize}
 \item Desarrollar un método de resolución de sistemas lineales para OpenFOAM(R) sobre GPGPU con OpenCL 2.0.
@@ -131,9 +135,11 @@ Open Source Field Operation And Manipulation (\openfoam) es un paquete de softwa
 	\end{itemize}
 \end{itemize}
 
-\section{Alcance}
+\chapter{Alcance}
 
-\subsection{Funcionales}
+El alcance del proyecto se encuentra especificado según los requerimientos funcionales y los no funcionales, al mismo tiempo que se establecen los límites y exclusiones, como se 
+
+\section{Funcionales}
 \begin{itemize}
 \item Instalación y puesta a punto del Sistema Operativo Linux, en su distribución Ubuntu 14.04
 	\begin{itemize}
@@ -152,7 +158,7 @@ Open Source Field Operation And Manipulation (\openfoam) es un paquete de softwa
 \item Estudiar la eficiencia y efectividad de todos los métodos.
 \end{itemize}
 
-\subsection{No funcionales}
+\section{No funcionales}
 Uso óptimo de los recursos de hardware disponibles para obtener mejoras en:
 \begin{itemize}
 \item Rendimiento
@@ -168,7 +174,7 @@ Uso de buenas prácticas de programación:
 \item Tests unitarios sobre cada método principal.
 \end{itemize}
 
-\subsection{Exclusiones}
+\section{Exclusiones}
 \begin{flushleft}
 Sólo se hará uso de software libre. \linebreak
 No se harán comparativas sobre solvers propietarios. \linebreak
@@ -568,7 +574,7 @@ Se busca mitigar el impacto sobre las fechas de entrega para que la diferencia e
 
 \mbox{}
 %\nocite{*}
-\bibliographystyle{ieeetr}
+\bibliographystyle{apalike}
 \bibliography{main}
 
 \end{document}

@@ -1,5 +1,26 @@
 \begin{thebibliography}{}
 
+\bibitem[{Advanced Micro Devices, Inc}, 2015]{amdR9FuryX}
+{Advanced Micro Devices, Inc} (2015).
+\newblock Amd radeon™ r9 series graphics cards.
+
+\bibitem[Burden, 2002]{burden}
+Burden, Richar~L.;Faires, J.~D. (2002).
+\newblock {\em Análisis numérico 7a. ed.}
+\newblock Brooks/Cole.
+
+\bibitem[CIMEC, 2015]{cimec}
+CIMEC (2015).
+\newblock Centro de investigación de métodos computacionales.
+\newblock [Online; accessed 25-July-2015].
+
+\bibitem[Ghysels and Vanroose, 2014]{Ghysels2014224}
+Ghysels, P. and Vanroose, W. (2014).
+\newblock Hiding global synchronization latency in the preconditioned conjugate
+  gradient algorithm.
+\newblock {\em Parallel Computing}, 40(7):224 -- 238.
+\newblock 7th Workshop on Parallel Matrix Algorithms and Applications.
+
 \bibitem[Greenshields, 2015]{Greenshields2015}
 Greenshields, C.~J. (2015).
 \newblock {\em OpenFoam - User Manual}.
@@ -10,10 +31,45 @@ Howes, L. and Munshi, A. (2014).
 \newblock {\em The OpenCL Specification Version 2.0}.
 \newblock Khronos Group.
 
+\bibitem[Institute, 2013]{project2013guide}
+Institute, P.~M. (2013).
+\newblock {\em A Guide to the Project Management Body of Knowledge
+  (PMBOK{\textregistered} Guide)}.
+\newblock PMI Standard. Project Management Institute, Incorporated.
+
+\bibitem[{Intel Corporation}, 2015]{intelArk2015}
+{Intel Corporation} (2015).
+\newblock Ark - su fuente de información de productos intel®.
+
+\bibitem[Kaeli et~al., 2015]{kaeli2015}
+Kaeli, D., Mistry, P., Schaa, D., and Zhang, D. (2015).
+\newblock {\em Heterogeneous Computing with OpenCL 2.0}.
+\newblock Elsevier Science.
+
 \bibitem[Kimbrell, 2012]{kimbrell2012}
 Kimbrell, A.~B. (2012).
 \newblock Development and verification of a navier-stokes solver with vorticity
   confinement using openfoam.
 \newblock Master's thesis, University of Tennessee.
+
+\bibitem[{NVIDIA Corporation}, 2015]{nvidia2015}
+{NVIDIA Corporation} (2015).
+\newblock {\em CUDA C PROGRAMMING GUIDE}.
+\newblock NVIDIA Corporation.
+
+\bibitem[{PARALUTION Labs UG}, 2015]{paralution2015}
+{PARALUTION Labs UG} (2015).
+\newblock {\em Paralution - User Manual}.
+\newblock PARALUTION Labs UG.
+
+\bibitem[Sommerville, 2011]{sommerville2011software}
+Sommerville, I. (2011).
+\newblock {\em Software Engineering}.
+\newblock International Computer Science Series. Pearson.
+
+\bibitem[Williams, 2012]{concurrencyInAction}
+Williams, A. (2012).
+\newblock {\em C++ concurrency in action - practical multithreading}.
+\newblock Manning Publications Co.
 
 \end{thebibliography}

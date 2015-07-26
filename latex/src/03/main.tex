@@ -1,4 +1,5 @@
 \documentclass[a4paper, 10pt, oneside]{thesis}
+%\usepackage[papersize={4.5in, 6.2in}, width=4.13in, height=5.83in, vcenter, centering]{geometry}
 \usepackage[spanish]{babel} 		% Normas tipográficas y opciones del español e ingles
 %\usepackage[T1]{fontenc}    		% Codificación de salida
 \usepackage[utf8]{inputenc} 		% Codificación de entrada 
@@ -11,18 +12,7 @@
 \usepackage{graphicx}
 \usepackage{graphics}
 \usepackage{apalike}
-%\usepackage{amsmath}
-%\usepackage{amsthm}
-%\usepackage{amsfonts}
-%\usepackage{amssymb}
-%\usepackage{mathcomp}
 
-%\usepackage{fancyhdr,fancybox} %%Fancy headings
-%\usepackage{multirow}
-%\usepackage{hyperref}
-%\usepackage{subfigure}
-%\usepackage{ccaption}
-%\usepackage{enumerate}
 
 \def \openfoam{OpenFOAM\textsuperscript{\textregistered}}
 \def \paralution{Paralution\textsuperscript{\textregistered}}
@@ -85,10 +75,22 @@ GPU, GPGPU, HPC, CFD, OpenFOAM, Paralution, OpenCL, SVM, OpenSource, Libre
 
 \chapter{Justificación}
 
-En la antigüedad, la investigación de la dinámica de fluidos se realizaba a través de la experimentación y observación del flujo de fluidos en entornos físicos. El desarrollo de la computadora dió lugar a la creación de la dinámica de fluidos computacional (CFD), es decir, la simulación de fluidos con modelos y métodos numéricos en entornos virtuales.\cite{kimbrell2012}.
+En la antigüedad, la investigación de la dinámica de fluidos se realizaba a través de la experimentación y observación del flujo de fluidos en entornos físicos. El desarrollo de la computación dió lugar a la creación de la dinámica de fluidos computacional (CFD), es decir, la simulación de fluidos con modelos y métodos numéricos en entornos virtuales.\cite{kimbrell2012}.
 
-Open Source Field Operation And Manipulation (\openfoam) es un paquete de software CFD modular, con una base de usuarios en constante crecimiento, a través de múltiples áreas de la ingeniería y la ciencia\cite{Greenshields2015}, incluido el Centro de Investigación de Métodos Computacionales (CIMEC), 
-el cual se dedica principalmente a la implementación de métodos computacionales en la ciencia e ingeniería. Dicho paquete cuenta con una variedad de aplicaciones para la resolución de los problemas típicos de la CFD, incluyendo herramientas para la generación de mallas para la representación de objetos con su correspondiente asignación de condiciones iniciales y de contorno; la creación de sistemas de ecuaciones lineales (SLE) para la representación discretizada de las ecuaciones diferenciales en derivadas parciales (PDE) que gobiernan el flujo de los fluidos; resolvedores de  SLE; entre otras. Dichos resolvedores de SLE se encuentran implementados nativamente en la unidad central de proceso (CPU), desaprovechando la capacidad de cómputo de propósito general presente en las unidades de procesamiento gráfico actuales(GP-GPU)\cite{opecl20reference}.
+Open Source Field Operation And Manipulation (\openfoam) es un paquete de software CFD modular basado en el método de volúmenes finitos (FVM) como formulación a parámetros distribuídos; con una base de usuarios en constante crecimiento, a través de múltiples áreas de la ingeniería y la ciencia. Dicho paquete cuenta con una variedad de aplicaciones para la resolución de los problemas típicos de la CFD, incluidas herramientas para la generación de mallas para la representación de volúmenes; resolvedores de ecuaciones diferenciales en derivadas parciales (PDE); resolvedores de sistemas lineales de ecuaciones (SLE); utilidades de visualización, pre y post-procesamiento, entre otras \cite{Greenshields2015}.
+
+El Centro de Investigación de Métodos Computacionales (CIMEC) se dedica a la implementación de métodos computacionales en la ciencia e ingeniería, utilizando \openfoam para llevar a cabo las simulaciones de, por ejemplo, motores a explosión, turbinas eólicas, aeronáutica, etc. \cite{cimec}
+
+La observación del proceso de simulación indica que, aproximadamente, el 80\% del tiempo se emplea en la resolución de un SLE, siendo el mismo ejecutado por las unidades centrales de procesamiento (CPU). Sin embargo, el volumen de datos a procesar suele ser tan grande, que puede demorar desde días hasta semanas en completarse. Por otra parte, el aumento exponencial en la capacidad de cómputo de las unidades de procesamiento gráfico de propósito general (GPGPU) frente a las CPUs \cite{nvidia2015} plantea la posibilidad de llevar a cabo la resolución del SLE en dichas unidades. Por ejemplo, una AMD R9 Fury X posee una capacidad de cómputo de 8.6 TeraFlops, frente a los 182 GigaFlops del Intel Core i7 4770K o los 354 GigaFlops de un Core i7 5960X. \cite{intelArk2015} y \cite{amdR9FuryX}
+
+Open Computing Language (OpenCL) es un estándar, conformado por una interfaz de programación de aplicaciones (API) y un lenguaje de programación, que permite hacer uso de las unidades de GPGPU. En su versión 2.0 incorpora múltiples mejoras respecto a las versiones anteriores, que simplifican el manejo de los espacios de memoria a su ves que minimizan las transferencias entre los dispositivos a través de un esquema de memoria virtual compartida (SVM)\cite{kaeli2015}.
+
+Actualmente, se encuentran resolvedores de SLE implementados en GPGPU con OpenCL, sin embargo, no todas son libres y de código abierto; y su número disminuye para los compatibles con \openfoam; Entre ellas, destaca la implementación de \paralution, tanto por ser de código abierto, independiente de la plataforma y el sistema operativo, como por presentar un soporte multi-GPU maduro, estable y testeado\cite{paralution2015}; Finalmente, no existen en el mercado soluciones que hagan uso de \ocl20, estando \paralution implementado en OpenCL 1.2.
+
+Por otra parte, los análisis realizados en el CIMEC determinan que la resolución de problemas que involucran  la presión, es decir, SLEs resueltas con el método del gradiente conjugado precondicionado (PCG), son los que consumen sustancialmente mas tiempo en comparación a otras simulaciones.
+
+Es por todo lo anterior, que se propone el diseño y desarrollo del método PCG en GPGPU utilizando \ocl20, y la comparación con \paralution, esperando obtener mejoras en el tiempo de ejecución al implementarlo sobre un caso acerca de la aerodinámica de un vehículo de competición.
+
 
 %El aumento de la complejidad computacional de las simulaciones llevadas a cabo en el ámbito del CIMEC acarrea consigo un inevitable aumento en el volumen de datos a procesar, y por lo tanto, de poder de procesamiento necesario para llevar a cabo el trabajo en un tiempo razonable y que les permita ser competitivos.
 %La herramienta utilizada en el centro de investigación es, \openfoam, la cual es una biblioteca C++ para crear aplicaciones. Las mismas, se pueden categorizar como solvers o como utilidades. Los solvers están diseñados para resolver un problema específico de la mecánica del continuo, más específicamente a la dinámica de fluidos conocida (CFD) a través del método de volúmenes finitos, mientras que las utilidades están diseñadas para la manipulación de datos. Su elección se funda principalmente en que es libre, es abierto y porque trae múltiples solvers y utilidades por defecto para resolver problemas de ingeniería, contando con documentación y una comunidad muy activa,siendo mundialmente reconocido.
@@ -182,7 +184,7 @@ Sólo se implementarán solvers OpenSource que trabajen sobre OpenCL. \linebreak
 Se trabajarán todos los datos en memoria RAM, tanto del host como de los dipositivos.
 \end{flushleft}
 
-\subsection{Limitaciones y Restricciones}
+\section{Limitaciones y Restricciones}
 Se dispone de una única GPU AMD Radeon R9 290 con 4Gb de RAM GDDR5.
 Se trabajará con problemas con tamaño maximo abordable por el hardware disponible.
 
@@ -193,7 +195,7 @@ La implementación del método resolución debe ser compatible con multi-GPU.
 \section{Criterios de aceptación del producto}
 Mínimo: lograr una mejora de eficiencia y performance respecto a las soluciones provistas nativamente por \openfoam
 Esperado: Lograr una mejora de performance respecto a las soluciones provistas por \paralution
-\section{Metodología}
+\chapter{Metodología}
 \label{sec:metodologia}
 Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) a través de una metodología propia definida para el proyecto. Separando el proyecto en tres etapas:
 
@@ -203,17 +205,17 @@ Dada la limitación del personal disponible encargada de las tareas del proyecto
 %\item Escritura del informe final y cierre.
 %\end{itemize}
 
-\subsection{Análisis y desarrollo de los métodos}
+\section{Análisis y desarrollo de los métodos}
 En esta primera fase se realizará por un lado, las tareas de análisis de las soluciones de \paralution disponibles en el mercado para \openfoam, su linkeo, compilación, utilización, configuraciones y pruebas en casos simples para verificar su funcionamiento; por otro lado, se realizará un estudio sobre calculo paralelo y el método del gradiente conjugado, su utilización y desarrollo en \ocl20 y pruebas sobre casos simples con el mismo propósito.
 Al finalizar cada una de estas subetapas, se realizará un informe y un prototipo de resolvedor lineal en condiciones de ser utilizado.
 
-\subsection{Implementación y prueba de los métodos}
+\section{Implementación y prueba de los métodos}
 En esta segunda fase se configurará el entorno donde correrán las simulaciones y hará uso de los resolvedores lineales desarrollados sobre un caso real de simulación de vehículos de competición. Se registrarán todos los resultados obtenidos en cuanto a tiempo transcurrido, consumo energético y se compararan entre si. Al finalizar se documentarán los resultados en un informe.
 
-\subsection{Escritura del informe final y cierre}
+\section{Escritura del informe final y cierre}
 En esta ultima fase, se realizarán todas las tareas referidas a la escritura del informe final y cierre del proyecto. Se revisarán todos los resultados obtenidos y se elaborarán las conclusiones determinando cual de los métodos es el mejor, teniendo como criterio el tiempo total de corrida de la simulación y su consumo energético.
 
-\section{Plan de Tareas}
+\chapter{Plan de Tareas}
 \label{sec:planTareas}
 En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:metodologia}, se establece el siguiente plan de tareas:
 
@@ -222,15 +224,15 @@ En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:meto
 %***************ANALISIS Y DESARROLLO DE LOS METODOS***************
 %******************************************************************
 %******************************************************************
-\subsection{Análisis y desarrollo de los métodos}
+\section{Análisis y desarrollo de los métodos}
 
-\subsubsection{Análisis de los solvers de \paralution}
+\subsection{Análisis de los solvers de \paralution}
 \begin{itemize}
 \item Análisis de la utilización del resolvedor PCG.
 \item Análisis de la utilización del resolvedor PBiCG.
 \end{itemize}
 
-\subsubsection{Puesta en funcionamieto de los solvers de \paralution}
+\subsection{Puesta en funcionamieto de los solvers de \paralution}
 \begin{itemize}
 \item Linkear y compilar el resolvedor PCG con \openfoam.
 \item Linkear y Compilar el resolvedor PBiCG con \openfoam.
@@ -239,27 +241,27 @@ En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:meto
 \item Presentar los resultados. (hito)
 \end{itemize}
 
-\subsubsection{Estudio del marco teórico de arquitecturas paralelas y \ocl20} %Esto me hace un poco de ruido, no me termina de convencer la organización.
+\subsection{Estudio del marco teórico de arquitecturas paralelas y \ocl20} %Esto me hace un poco de ruido, no me termina de convencer la organización.
 \begin{itemize}
 \item Revisión de literatura sobre arquitecturas paralelas.
 \item Revisión de literatura sobre \ocl20.
 \item Realización de ejercicios prácticos sobre \ocl20.
 \end{itemize}
 
-\subsubsection{Análisis del método PCG}
+\subsection{Análisis del método PCG}
 \begin{itemize}
 \item Revisión de literatura acerca del método PCG.
 \item Diseñar el método sobre \ocl20.
 \end{itemize}
 
-\subsubsection{Desarrollo del método PCG en \ocl20}
+\subsection{Desarrollo del método PCG en \ocl20}
 \begin{itemize}
 \item Desarrollar el método.
 \item Optimizar el código.
 \item Realizar corridas de prueba y validar los resultados.
 \end{itemize}
 
-\subsubsection{Finalizar y Documentar la fase}
+\subsection{Finalizar y Documentar la fase}
 \begin{itemize}
 \item Recolectar, organizar y clasificar la información.
 \item Documentar la información.
@@ -271,21 +273,21 @@ En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:meto
 %**************IMPLEMENTACION Y PRUEBA DE LOS METODOS**************
 %******************************************************************
 %******************************************************************
-\subsection{Implementación y prueba de los métodos}
-\subsubsection{Implementación}
+\section{Implementación y prueba de los métodos}
+\subsection{Implementación}
 \begin{itemize}
 \item Configurar el entorno donde se correrán las simulaciones.
 \item Obtener los datos de la simulación.
 \item Crear los archivos de configuración de \openfoam para el resolvedor de \paralution.
 \item Crear los archivos de configuración de \openfoam para el resolvedor desarrollado.
 \end{itemize}
-\subsubsection{Prueba}
+\subsection{Prueba}
 \begin{itemize}
 \item Correr la simulación con los resolvedores de \paralution.
 \item Correr la simulación con el resolvedor desarrollado.
 \item Verificar y comparar los resultados de la simulación.
 \end{itemize}
-\subsubsection{Finalizar y Documentar la fase}
+\subsection{Finalizar y Documentar la fase}
 \begin{itemize}
 \item Recolectar, organizar y clasificar los resultados. %Tiempo, consumo energetico, % de utilizacion de hardware, etc.
 \item Documentar los resultados. %Aca es donde se pretende decidir cual fue la mejor alternativa
@@ -297,14 +299,14 @@ En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:meto
 %*************ESCRIBIR EL INFORME Y CIERRE DE PROYECTO*************
 %******************************************************************
 %******************************************************************
-\subsection{Escritura del informe final y cierre}
-\subsubsection{Documentación}
+\section{Escritura del informe final y cierre}
+\subsection{Documentación}
 \begin{itemize}
 \item Documentar el resolvedor desarrollado.
 \item Recolectar, organizar y clasificar la información.
 \item Escribir el Informe Final.
 \end{itemize}
-\subsubsection{Entrega del producto}
+\subsection{Entrega del producto}
 \begin{itemize}
 \item Obtener la aceptación de los resolvedores por parte del CIMEC.
 \item Presentar el producto final.
@@ -315,11 +317,11 @@ En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:meto
 %********************** CONSIDERACIONES ***************************
 %******************************************************************
 %******************************************************************
-\subsection{Consideraciones}
+\section{Consideraciones}
 Se dedicará un esfuerzo temporal de 20 Horas semanales, divididas a lo largo de la semana, donde se espera trabajar de Lunes a Viernes.
 Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícitas en la labor del desarrollo.
 
-\section{Cronograma}
+\chapter{Cronograma}
 \label{sec:cronograma}
 
 Para su elaboración se tuvieron en cuenta las limitaciones de los recursos humanos asignados al proyecto, requiriendo que las tareas se ejecuten de forma secuencial, y que por lo tanto, solo exista un único camino, coincidente con el camino crítico. Se propone el tres de Agosto de 2015 como fecha de inicio del proyecto, con una carga de 4 horas diarias, de lunes a viernes. Solamente se considera el 25 de Diciembre como feriado no laborable. Se estima el siete de Enero de 2016 como fecha de finalización del mismo, con una duración de 450 horas.
@@ -331,7 +333,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 \label{fig:gantt}
 \end{figure}
 
-\section{Entregables}
+\chapter{Entregables}
 \label{sec:entregables}
 
 \begin{enumerate}
@@ -401,13 +403,13 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %
 %Mariel
 
-\section{Recursos}	
-	 \subsection{Disponibles}
+\chapter{Recursos}	
+	 \section{Disponibles}
 
 %		*****************************************
 %			RECURSOS DISPONIBLES DE CAPITAL
 %		*****************************************
-	 	\subsubsection{Bienes de Capital}
+	 	\subsection{Bienes de Capital}
 	 	
 	 	\begin{enumerate}
 	 	\item PC de Escritorio (Intel Core i7 870, 12GB RAM DDR3, AMD Radeon R9 290, Monitor 22", Mouse y Teclado)
@@ -415,7 +417,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 	 	\item Sistema Operativo Ubuntu 14.04
 	 	\item Compiladores C++.
 	 	\item SDK de OpenCL 2.0
-		\item Pizzarra
+		\item Pizarra
 		\item Fibrones
 		\item Impresora Monocromática con Sistema Continuo.
 	 	\end{enumerate}
@@ -423,7 +425,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %		*****************************************
 %			RECURSOS DISPONIBLES RRHH
 %		*****************************************
-	 	\subsubsection{Recursos Humanos}
+	 	\subsection{Recursos Humanos}
 	 	\begin{enumerate}
 		\item Desarrollador
 		\item Director
@@ -434,12 +436,12 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %	 **************************************
 %	 			RECURSOS NECESARIOS
 %	 **************************************	
-	 \subsection{Necesarios}
+	 \section{Necesarios}
 
 %		************************************
 %				DE CAPITAL
 %		************************************
-		\subsubsection{De Capital}
+		\subsection{De Capital}
 		\begin{enumerate}
 		\item Escritorio
 		\item Silla de Escritorio Acolchonada % :p
@@ -448,7 +450,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %		*************************************
 %				SERVICIOS
 %		*************************************	 
-	 	 \subsubsection{Servicios}
+	 	 \subsection{Servicios}
 		 \begin{enumerate}
 	 
 		\item Servicio de Electricidad
@@ -460,7 +462,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %		*************************************
 %			INSUMOS
 %		*************************************	
-		\subsubsection{Insumos}
+		\subsection{Insumos}
 		
 		\begin{enumerate}
 		\item Resmas de hojas A4
@@ -472,16 +474,15 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %		*************************************
 %			OTROS
 %		*************************************
-	 	\subsubsection{Otros}
+	 	\subsection{Otros}
 		\begin{enumerate}
 		
 		 \item Fotocopias
 		 \item Encuadernación
 		
 		\end{enumerate}			 	
-	 	
-	 
-\section{Presupuesto}
+
+\chapter{Presupuesto}
 
 %Particularmente para la sección de presupuesto, mencionamos algunos rubros generales que pueden ser de interés para su propuesta:
 %
@@ -503,7 +504,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 \textbf{Descripción} & \textbf{Unidades} & \textbf{Precio Unitario} [\$] & \textbf{Costo Total} [\$] \\ \hline 
 PC de escritorio & 1 & 12000 & 12000 \\ %\hline 
 Laptop & 1 & 6000 & 6000 \\ %\hline 
-Pizzarra & 1 & 250 & 250 \\ %\hline 
+Pizarra & 1 & 250 & 250 \\ %\hline 
 Fibrones & 2 & 20 & 40 \\ %\hline 
 Impresora & 1 & 1200 & 1200 \\ %\hline 
 Desarrollador & 450 Horas & 100 & 45000 \\ %\hline 
@@ -522,7 +523,7 @@ Encuadernación & 3 & 250 & 750 \\ \hline
  & & Total & 104850\\ \hline
 \end{tabular} 
 \end{table}
-\section{Riesgos}
+\chapter{Riesgos}
 
 %Para cada uno de los riesgos se solicita consignar:
 %
@@ -573,7 +574,7 @@ Se busca mitigar el impacto sobre las fechas de entrega para que la diferencia e
 \end{flushleft}
 
 \mbox{}
-%\nocite{*}
+\nocite{*}
 \bibliographystyle{apalike}
 \bibliography{main}
 

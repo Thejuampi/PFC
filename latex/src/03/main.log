@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2014.12.1)  24 JUL 2015 01:59
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2014.12.1)  25 JUL 2015 23:36
 entering extended mode
 **main.tex
 (C:\dev\git\PFC\latex\src\03\main.tex
@@ -344,19 +344,19 @@ Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 \bibhang=\skip47
 )
 (C:\dev\git\PFC\latex\src\03\main.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Info: Redefining \microtypecontext on input line 60.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 50.
+LaTeX Font Info:    ... okay on input line 50.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 50.
+LaTeX Font Info:    ... okay on input line 50.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 50.
+LaTeX Font Info:    ... okay on input line 50.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 50.
+LaTeX Font Info:    ... okay on input line 50.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 50.
+LaTeX Font Info:    ... okay on input line 50.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 50.
+LaTeX Font Info:    ... okay on input line 50.
+LaTeX Info: Redefining \microtypecontext on input line 50.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
@@ -399,77 +399,108 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 
 {C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map} <C:/dev/git/PFC/latex/src/
 03/logo_UNL.jpg>] [2])
-Overfull \hbox (4.5963pt too wide) in paragraph at lines 65--69
+Overfull \hbox (4.5963pt too wide) in paragraph at lines 55--59
 \OT1/cmr/bx/it/10 Pa-la-bras clave--- \OT1/cmr/m/n/10 (-20) GPU, GPG-PU, HPC, C
 FD, Open-FOAM, Pa-ra-lu-tion, OpenCL,
  []
 
 [3
 
-] (C:\dev\git\PFC\latex\src\03\main.toc)
-\tf@toc=\write3
- [4
+] (C:\dev\git\PFC\latex\src\03\main.toc
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 18.
 
-]
-Cap\'{\i }tulo 1.
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 90.
 ("C:\Program Files\MiKTeX 2.9\tex\latex\base\omscmr.fd"
 File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <7> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 90.
- [5
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 18.
+ [4
 
 ]
+Overfull \hbox (0.55559pt too wide) detected at line 44
+\OT1/cmr/m/sl/10 10.. 
+ []
+
+)
+\tf@toc=\write3
+ [5]
+Cap\'{\i }tulo 1.
+[6
+
+] [7]
 Cap\'{\i }tulo 2.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 118.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 120.
 
-Overfull \hbox (6.87666pt too wide) in paragraph at lines 123--124
+Overfull \hbox (6.87666pt too wide) in paragraph at lines 125--126
 []\OT1/cmr/m/n/10 (-20) Analizar e im-ple-men-tar los sol-vers li-nea-les pa-ra
  OpenFOAM$[]$de Paralution$[]$ 
  []
 
-[6
+[8
 
 ]
 Cap\'{\i }tulo 3.
-[7
+[9
 
-] [8]
+] [10]
+Cap\'{\i }tulo 4.
+[11
+
+]
+Cap\'{\i }tulo 5.
 LaTeX Font Info:    Font shape `OMS/cmr/m/sl' in size <7> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 227.
- [9] [10]
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 229.
+[12
+
+] [13] [14]
+Cap\'{\i }tulo 6.
 
 LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `!tbp') on input line 328.
+               Default added (so using `!tbp') on input line 330.
 
-<gantt.png, id=48, 1355.8153pt x 2123.68407pt>
+<gantt.png, id=61, 1355.8153pt x 2123.68407pt>
 File: gantt.png Graphic file (type png)
  <use gantt.png>
-Package pdftex.def Info: gantt.png used on input line 329.
+Package pdftex.def Info: gantt.png used on input line 331.
 (pdftex.def)             Requested size: 345.0pt x 540.38191pt.
- [11] [12 <C:/dev/git/PFC/latex/src/03/gantt.png>] [13]
+ [15
+
+] [16 <C:/dev/git/PFC/latex/src/03/gantt.png>]
+Cap\'{\i }tulo 7.
+[17
+
+]
+Cap\'{\i }tulo 8.
+[18
+
+] [19]
+Cap\'{\i }tulo 9.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <9> on input line 501.
+(Font)              <9> on input line 502.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 501.
+(Font)              <6> on input line 502.
+[20
 
+]
+Cap\'{\i }tulo 10.
+[21
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[14] [15] (C:\dev\git\PFC\latex\src\03\main.bbl [16]) [17
+] (C:\dev\git\PFC\latex\src\03\main.bbl [22]
+LaTeX Font Info:    Font shape `OMS/cmr/m/it' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 37.
+) [23
 
 ]
 (C:\dev\git\PFC\latex\src\03\main.aux) ) 
 Here is how much of TeX's memory you used:
- 3911 strings out of 493921
- 55567 string characters out of 3147285
- 153304 words of memory out of 3000000
- 7077 multiletter control sequences out of 15000+200000
- 13704 words of font info for 83 fonts, out of 3000000 for 9000
+ 3945 strings out of 493921
+ 55969 string characters out of 3147285
+ 149557 words of memory out of 3000000
+ 7095 multiletter control sequences out of 15000+200000
+ 14283 words of font info for 91 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 33i,9n,35p,902b,364s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 33i,9n,35p,829b,345s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files/MiKTeX 2.9/fonts/type
 1/public/amsfonts/cm/cmbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
 /amsfonts/cm/cmbx12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfont
@@ -480,16 +511,17 @@ ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program Fil
 es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Program Files/MiKTeX
  2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Program Files/MiKTeX 2.9/font
 s/type1/public/amsfonts/cm/cmr5.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/pu
-blic/amsfonts/cm/cmr9.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfo
-nts/cm/cmsl10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/c
-msl12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsl9.pfb
-><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Pro
-gram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Program File
-s/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files/MiKTeX
- 2.9/fonts/type1/public/amsfonts/cm/cmti12.pfb>
-Output written on main.pdf (17 pages, 532494 bytes).
+blic/amsfonts/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfo
+nts/cm/cmr9.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cms
+l10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsl12.pfb>
+<C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsl9.pfb><C:/Progr
+am Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files
+/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Program Files/MiKTeX 2
+.9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files/MiKTeX 2.9/fonts
+/type1/public/amsfonts/cm/cmti12.pfb>
+Output written on main.pdf (23 pages, 559390 bytes).
 PDF statistics:
- 132 PDF objects out of 1000 (max. 8388607)
+ 155 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  26123 words of extra memory for PDF output out of 29859 (max. 10000000)
 

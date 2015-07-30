@@ -4,8 +4,8 @@
 {Advanced Micro Devices, Inc} (2015).
 \newblock Amd radeon™ r9 series graphics cards.
 
-\bibitem[Burden, 2002]{burden}
-Burden, Richar~L.;Faires, J.~D. (2002).
+\bibitem[Burden and Faires, 2002]{burden}
+Burden, R.~L. and Faires, J.~D. (2002).
 \newblock {\em Análisis numérico 7a. ed.}
 \newblock Brooks/Cole.
 
@@ -31,12 +31,6 @@ Howes, L. and Munshi, A. (2014).
 \newblock {\em The OpenCL Specification Version 2.0}.
 \newblock Khronos Group.
 
-\bibitem[Institute, 2013]{project2013guide}
-Institute, P.~M. (2013).
-\newblock {\em A Guide to the Project Management Body of Knowledge
-  (PMBOK{\textregistered} Guide)}.
-\newblock PMI Standard. Project Management Institute, Incorporated.
-
 \bibitem[{Intel Corporation}, 2015]{intelArk2015}
 {Intel Corporation} (2015).
 \newblock Ark - su fuente de información de productos intel®.
@@ -52,6 +46,10 @@ Kimbrell, A.~B. (2012).
   confinement using openfoam.
 \newblock Master's thesis, University of Tennessee.
 
+\bibitem[Lukarski, 2013]{Lukarski2013}
+Lukarski, D. (2013).
+\newblock Paralution - a library for iterative sparse methods on cpu and gpu.
+
 \bibitem[{NVIDIA Corporation}, 2015]{nvidia2015}
 {NVIDIA Corporation} (2015).
 \newblock {\em CUDA C PROGRAMMING GUIDE}.
@@ -62,6 +60,12 @@ Kimbrell, A.~B. (2012).
 \newblock {\em Paralution - User Manual}.
 \newblock PARALUTION Labs UG.
 
+\bibitem[{Project Management Institute}, 2013]{project2013guide}
+{Project Management Institute} (2013).
+\newblock {\em A Guide to the Project Management Body of Knowledge
+  (PMBOK{\textregistered} Guide)}.
+\newblock PMI Standard. Project Management Institute, Incorporated.
+
 \bibitem[Sommerville, 2011]{sommerville2011software}
 Sommerville, I. (2011).
 \newblock {\em Software Engineering}.
@@ -69,7 +73,7 @@ Sommerville, I. (2011).
 
 \bibitem[Williams, 2012]{concurrencyInAction}
 Williams, A. (2012).
-\newblock {\em C++ concurrency in action - practical multithreading}.
+\newblock {\em C++ Concurrency in action - Practical multithreading}.
 \newblock Manning Publications Co.
 
 \end{thebibliography}

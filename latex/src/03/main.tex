@@ -1,10 +1,16 @@
-\documentclass[a4paper, 10pt, oneside]{thesis}
+\documentclass[a4paper, 10pt, oneside]{article}
+
+
+\title{Analisis e Implementación de Resolvedores Lineales en GPGPU aplicados a OpenFOAM}
+\author{Lescano, Juan Pablo A.}
+\date{2015}
+
 %\usepackage[papersize={4.5in, 6.2in}, width=4.13in, height=5.83in, vcenter, centering]{geometry}
 \usepackage[spanish]{babel} 		% Normas tipográficas y opciones del español e ingles
 %\usepackage[T1]{fontenc}    		% Codificación de salida
 \usepackage[utf8]{inputenc} 		% Codificación de entrada 
 %\usepackage{subfig}
-\def\spanishoptions{argentina}
+%\def\spanishoptions{argentina}
 \usepackage[final]{microtype}
 %\usepackage{calc}
 %\usepackage{fancyhdr}
@@ -47,19 +53,30 @@
 %
 %Mariel
 
+
 \begin{document}
 
 \input{caratula.tex}
-	
+
 \begin{abstract}
-En el presente documento se detalla la justificación, objetivos y alcance para el desarrollo e implementación de resolvedores de ecuaciones lineales sobre una arquitectura paralela basada en GPU, buscando obtener la mejor solución de todas tanto en tiempo como en consumo energético. Para ello se especifica una metodología, con un plan de tareas y su cronograma correspondiente. Finalmente se establece una linea base para el presupuesto y una identificación y análisis para los riesgos.
+Un análisis comparativo de dos implementaciones del método del gradiente conjugado precondicionado (PCG) sobre unidades de procesamiento gráfico de propósito general (GPGPU) utilizando Open Computing Language (OpenCL) aplicados a \openfoam es propuesto para determinar la mejor alternativa en términos de tiempo y consumo energético. Por un lado, un desarrollo propio utilizando las mejoras en el manejo de memoria introducidas por OpenCL 2.0; por otro, la solución provista por \paralution, la cual utiliza una versión anterior de OpenCL.
+Ambas se compararán entre si, y frente a la solución paralela nativa de \openfoam mediante la simulación de la aerodinámica de un vehículo de competición.
+
+Para ello, se establece una linea base, a partir de una metodología propia y su descomposición en tareas, comenzando con la implementación del PCG de \paralution. Luego, el estudio, y análisis de, por un lado, programación paralela en OpenCL 2.0 y, por otro, el PCG y su posterior diseño y desarrollo. Finalmente, las tareas de cierre, recopilación de datos y escritura del informe final. La primera etapa presentará 2 entregables, en momentos distintos; mientras que las dos ultimas presentarán un  informe de avance cada una.
+
+El análisis y planificación de cada tarea definen una linea base del cronograma, marcando el camino crítico.
+El análisis de costo tuvo en cuenta los servicios, bienes de capital, necesarios y disponibles, con su correspondiente amortización, mostrando solo los resultados de la misma.
+
+Finalmente, la identificación y análisis, tanto cualitativo como cuantitativo, de los riesgos definen estrategias de contingencia, mitigación o aceptación. 
+
 \begin{keywords}
-GPU, GPGPU, HPC, CFD, OpenFOAM, Paralution, OpenCL, SVM, OpenSource, Libre
+GPU, GPGPU, CFD, OpenFOAM, Paralution, OpenCL, SVM, OpenSource, Libre
 \end{keywords}
 \end{abstract}
+\pagebreak
 
-\tableofcontents
-\newpage
+\small{\tableofcontents}
+%\newpage
 
 %3. Con respecto a la Justificación: carece de una descripción de contexto. Se arranca bruscamente con la descripción del problema (ni siquiera se explica qué es el CIMEC, a qué se dedican, cuál es su problemática). Además, se debe revisar la redacción completa, hay oraciones sumamente largas y numerosos problemas de puntuación (comas mal colocadas, ausencia de punto y aparte, etc.). Todo esto dificulta la lectura y comprensión. Reitero mi recomendación de hacer revisar el texto por la Prof. Mattioli.
 %
@@ -73,81 +90,65 @@ GPU, GPGPU, HPC, CFD, OpenFOAM, Paralution, OpenCL, SVM, OpenSource, Libre
 %
 %Eliminar los subtítulos de la fundamentación. Lo que se denomina “diagnóstico” debería ser la descripción del “problema” que debe seguir al contexto.
 
-\chapter{Justificación}
+\section{Justificación}
 
-En la antigüedad, la investigación de la dinámica de fluidos se realizaba a través de la experimentación y observación del flujo de fluidos en entornos físicos. El desarrollo de la computación dió lugar a la creación de la dinámica de fluidos computacional (CFD), es decir, la simulación de fluidos con modelos y métodos numéricos en entornos virtuales.\cite{kimbrell2012}.
+En la antigüedad, la investigación de la dinámica de fluidos se realizaba solamente a través de la experimentación y observación del flujo de fluidos en entornos físicos. El desarrollo de la computación dió lugar a la creación de la dinámica de fluidos computacional (CFD), es decir, la simulación de fluidos con modelos y métodos numéricos en entornos virtuales.\cite{kimbrell2012}.
 
 Open Source Field Operation And Manipulation (\openfoam) es un paquete de software CFD modular basado en el método de volúmenes finitos (FVM) como formulación a parámetros distribuídos; con una base de usuarios en constante crecimiento, a través de múltiples áreas de la ingeniería y la ciencia. Dicho paquete cuenta con una variedad de aplicaciones para la resolución de los problemas típicos de la CFD, incluidas herramientas para la generación de mallas para la representación de volúmenes; resolvedores de ecuaciones diferenciales en derivadas parciales (PDE); resolvedores de sistemas lineales de ecuaciones (SLE); utilidades de visualización, pre y post-procesamiento, entre otras \cite{Greenshields2015}.
 
-El Centro de Investigación de Métodos Computacionales (CIMEC) se dedica a la implementación de métodos computacionales en la ciencia e ingeniería, utilizando \openfoam para llevar a cabo las simulaciones de, por ejemplo, motores a explosión, turbinas eólicas, aeronáutica, etc. \cite{cimec}
+El Centro de Investigación de Métodos Computacionales (CIMEC) se dedica a la implementación y el uso de métodos computacionales en la ciencia e ingeniería utilizando, entre otras herramientas de software, \openfoam para llevar a cabo las simulaciones de, por ejemplo, motores a explosión, turbinas eólicas, problemas de la industria aeronáutica, petrolera, siderúrgica, nuclear, etc. \cite{cimec}
 
-La observación del proceso de simulación indica que, aproximadamente, el 80\% del tiempo se emplea en la resolución de un SLE, siendo el mismo ejecutado por las unidades centrales de procesamiento (CPU). Sin embargo, el volumen de datos a procesar suele ser tan grande, que puede demorar desde días hasta semanas en completarse. Por otra parte, el aumento exponencial en la capacidad de cómputo de las unidades de procesamiento gráfico de propósito general (GPGPU) frente a las CPUs \cite{nvidia2015} plantea la posibilidad de llevar a cabo la resolución del SLE en dichas unidades. Por ejemplo, una AMD R9 Fury X posee una capacidad de cómputo de 8.6 TeraFlops, frente a los 182 GigaFlops del Intel Core i7 4770K o los 354 GigaFlops de un Core i7 5960X. \cite{intelArk2015} y \cite{amdR9FuryX}
+La observación del proceso de simulación indica que, aproximadamente, el 80\% del tiempo se emplea en la resolución de los SLE, siendo el mismo distribuido y ejecutado por las unidades centrales de procesamiento (CPU). Sin embargo, el volumen de datos a procesar suele ser tan grande, que puede demorar desde días hasta semanas en completarse. Por otra parte, el aumento exponencial en la capacidad de cómputo de las unidades de procesamiento gráfico de propósito general (GPGPU) frente a las CPUs \cite{nvidia2015}, siendo los SLE una de las pocas etapas de la simulación de índole repetitiva, con nula casuística, resulta muy atractiva para ser resuelta con estas unidades de procesamiento. Por ejemplo, una AMD R9 Fury X posee una capacidad de cómputo de 8.6 TeraFlops \cite{amdR9FuryX}, frente a los 182 GigaFlops del Intel Core i7 4770K o los 354 GigaFlops de un Core i7 5960X. \cite{intelArk2015}. 
 
-Open Computing Language (OpenCL) es un estándar, conformado por una interfaz de programación de aplicaciones (API) y un lenguaje de programación, que permite hacer uso de las unidades de GPGPU. En su versión 2.0 incorpora múltiples mejoras respecto a las versiones anteriores, que simplifican el manejo de los espacios de memoria a su ves que minimizan las transferencias entre los dispositivos a través de un esquema de memoria virtual compartida (SVM)\cite{kaeli2015}.
+Open Computing Language (OpenCL) es un estándar, conformado por una interfaz de programación de aplicaciones (API) y un lenguaje de programación, que permite hacer uso de las unidades de GPGPU. En su versión 2.0 incorpora múltiples mejoras respecto a las versiones anteriores, que simplifican el manejo de los espacios de memoria a su vez que minimizan las transferencias entre los dispositivos a través de un esquema de memoria virtual compartida (SVM) \cite{kaeli2015}.
 
-Actualmente, se encuentran resolvedores de SLE implementados en GPGPU con OpenCL, sin embargo, no todas son libres y de código abierto; y su número disminuye para los compatibles con \openfoam; Entre ellas, destaca la implementación de \paralution, tanto por ser de código abierto, independiente de la plataforma y el sistema operativo, como por presentar un soporte multi-GPU maduro, estable y testeado\cite{paralution2015}; Finalmente, no existen en el mercado soluciones que hagan uso de \ocl20, estando \paralution implementado en OpenCL 1.2.
+Actualmente, se encuentran resolvedores de SLE implementados en GPGPU con OpenCL, sin embargo, no todas son libres y de código abierto; y su número disminuye para los compatibles con \openfoam; Entre ellas, destaca la implementación de \paralution, tanto por ser de código abierto, independiente de la plataforma y el sistema operativo, como por presentar un soporte multi-GPU maduro, estable y testeado\cite{paralution2015}.
+Al momento todas estas implementaciones no han dado el speed-up esperado en las aplicaciones que se consideran de interés para este proyecto. En gran medida por el manejo de la limitada memoria con que cuentan.\cite{Lukarski2013}
+Finalmente, no existen en el mercado soluciones que hagan uso de \ocl20, estando \paralution implementado en OpenCL 1.2.
 
-Por otra parte, los análisis realizados en el CIMEC determinan que la resolución de problemas que involucran  la presión, es decir, SLEs resueltas con el método del gradiente conjugado precondicionado (PCG), son los que consumen sustancialmente mas tiempo en comparación a otras simulaciones.
+Por otra parte, de la experiencia de los cálculos realizados en el CIMEC surge que la resolución de problemas que involucran la presión, como el caso de los flujos incompresibles, son los que consumen sustancialmente mas tiempo en comparación a otras simulaciones, usando el método de gradiente conjugado precondicionado (PCG), principalmente, para resolver estos SLEs.
 
 Es por todo lo anterior, que se propone el diseño y desarrollo del método PCG en GPGPU utilizando \ocl20, y la comparación con \paralution, esperando obtener mejoras en el tiempo de ejecución al implementarlo sobre un caso acerca de la aerodinámica de un vehículo de competición.
 
+Finalmente, el CIMEC dispondrá de una nueva alternativa para realizar las simulaciones en un tiempo que se espera sea sensiblemente inferior. Además, se pretende que el producto final sea Open Source, de acceso, utilización y distribución libre y gratuito, llegando de esta manera a la comunidad de usuarios de \openfoam y todo lo que esto trae aparejado. En lo personal, se espera adquirir conocimientos tanto en el uso de \openfoam como en la programación paralela en general, y \ocl20 en particular, el cual se perfila a ser el estándar por defecto.
 
-%El aumento de la complejidad computacional de las simulaciones llevadas a cabo en el ámbito del CIMEC acarrea consigo un inevitable aumento en el volumen de datos a procesar, y por lo tanto, de poder de procesamiento necesario para llevar a cabo el trabajo en un tiempo razonable y que les permita ser competitivos.
-%La herramienta utilizada en el centro de investigación es, \openfoam, la cual es una biblioteca C++ para crear aplicaciones. Las mismas, se pueden categorizar como solvers o como utilidades. Los solvers están diseñados para resolver un problema específico de la mecánica del continuo, más específicamente a la dinámica de fluidos conocida (CFD) a través del método de volúmenes finitos, mientras que las utilidades están diseñadas para la manipulación de datos. Su elección se funda principalmente en que es libre, es abierto y porque trae múltiples solvers y utilidades por defecto para resolver problemas de ingeniería, contando con documentación y una comunidad muy activa,siendo mundialmente reconocido.
-%\openfoam resuelve los problemas en 3 etapas. Una primera, donde se crea o modifica una malla tridimensional que representa los objetos a simular y se especifican las condiciones iniciales y de borde. Luego, una segunda etapa donde se genera un sistema lineal de ecuaciones. Finalmente, en la tercer etapa, se resuelve el sistema de ecuaciones, siendo esta última, la que se lleva más del 80\% del tiempo de ejecución. La tendencia actual indica que el uso de GPUs para este tipo de problemas, donde la masificación de la distribución de tareas es natural, dada las dimensiones del problema, es el camino a seguir para conseguir mejores resultados, tanto en tiempo utilizado, como energía consumida.
-%Actualmente se encuentran disponibles varias implementaciones de solvers para \openfoam con licencia libre, entre ellas se pueden nombrar principalmente:
-% \textbf{Cufflink} (CUDA), la cual presenta algunos inconvenientes, ya que solo corre sobre hardware de Nvidia y en una única GPU, estando la implementación multi-GPU en estado experimental.La misma presenta dos solvers, Gradiente conjugado (PCG) basado en CUSP (librería de CUDA) para matrices simétricas, con tres precondicionadores a elección; y el Gradiente Biconjugado estabilizado (PBiCG) para matrices asimétricas, con dos precondicionadores a elección.
-%\paralution (OpenMP, OpenCL y CUDA), el cual es independiente de la plataforma y a su vez que permite establecer, en tiempo de compilación, la utilización de OpenMP, OpenCL o CUDA. A diferencia de Cufflink, presenta un soporte multi-GPU maduro, estable y testeado e implementa un número mayor de solvers, siendo PCG y PBiCG los más importantes para la resolución de los problemas encarados en el CIMEC. Ambos permiten la elección del precondicionador.
-%Sin embargo, estos solvers no logran alcanzar la mejora de rendimiento esperable. Según estudios de Lukarski, para resolver un dado problema, se pueden esperar mejoras de tiempo de 3.23x comparando la implementación multithreaded nativa de OpenFOAM(R), con la de Paralution en OpenCL 1.2, cuando la potencia bruta de cómputo del GPGPU K20c en flops, utilizada en las pruebas, supera a la suma de los 16 núcleos de los dos Intel Xeon e2680 por una relación de 11:1.
-%La implementación en OpenCL de \paralution aun no hace uso de las ventajas provistas por la nueva versión de la API por lo que los dispositivos y el host no comparten el mismo espacio de memoria virtual debiendo ser administrada manualmente, presentando cuellos de botella.
-%OpenCL 2.0, a través del esquema de memoria virtual compartida (SVM) elimina esta limitación: el host y los dispositivos OpenCL pueden compartir el mismo rango de direcciones virtuales, mejorando notoriamente el desempeño en las aplicaciones que son altamente demandantes no sólo en capacidad de cómputo, sino también en espacio de almacenamiento en memoria, según afirma Raghavendra en su publicación, donde se ve claramente que no existen los tiempos utilizados para transformar los buffers en arrays y offsets, ni tampoco los para retornar los buffers desde el GPU hacia la memoria principal del sistema, representando estos el 94\% del tiempo, para la resolución del problema de búsqueda en árbol binario, para un tamaño de 5 millones de nodos.
-%
-%\subsection{Diagnóstico}
-%Estando presente esta nueva tecnología, aún no hay en el mercado opciones que la exploten, ni siquiera que la utilicen con respecto a los solvers de OpenFOAM(R). Vemos que es posible obtener mejoras significativas de performance con su uso en un esquema paralelo basado en GPGPU. Es por esto que se pretende hacer uso del nuevo API de cómputo abierto OpenCL 2.0 con lo que se espera obtener mejoras de rendimiento al reducir la cantidad de datos transferidos entre los dispositivos y el host al aprovechar las ventajas significativas otorgadas por el esquema de memoria virtual compartida (SVM).
-%
-%\subsection{Aportes del trabajo}
-%El Centro de Investigación de Métodos Computacionales(CIMEC) dispondrá una nueva alternativa para llevar a cabo sus simulaciones en un tiempo inferior. Se pretende que el producto resultante del proyecto sea open source, de acceso, utilización y distribución libre. Entre ellos pueden incluirse una comunidad en constante crecimiento de usuarios de OpenFOAM(R).
-%En lo personal, adquirir conocimientos en el uso tanto de la suite OpenFOAM(R) como del paradigma de High Performance Computing, en general, y OpenCL 2.0 en particular, el cual apunta a ser el estándar por defecto.
-
-\chapter{Objetivos}
+\section{Objetivos}
 
 A continuación se listan los objetivos generales en conjunto con sus objetivos específicos:
-\section{Generales}
 
 \begin{itemize}
-\item Desarrollar un método de resolución de sistemas lineales para OpenFOAM(R) sobre GPGPU con OpenCL 2.0.
+\item Diseñar y desarrollar el método de PCG en GPGPU con \ocl20 para \openfoam.
 	\begin{itemize}
-	\item Analizar el uso de la suite \openfoam.
+	\item Analizar la comunicación con \openfoam.
+	\item Analizar el paradigma de programación paralela.
 	\item Analizar la API OpenCL 2.0
-	\item Analizar el paradigma del High Performance Computing.
-	\item Validar el método	
+	\item Analizar el método PCG.
+	\item Validar el método PCG.
 	\end{itemize}
 \item Analizar e implementar los solvers lineales para \openfoam de \paralution
 	\begin{itemize}
 	\item Analizar el uso de la librería \paralution
-	\item Desarrollar los métodos iterativos de resolución de sistemas lineales de ecuaciones.
+	\item Implementar el resolvedor PCG de \paralution.
 	\end{itemize}
 \item Desarrollar una aplicación para resolver un problema acerca de la aerodinámica de vehículos de competición.
 	\begin{itemize}
 	\item Obtener los datos del modelo  de aerodinámica
 	\item Obtener diferentes soluciones con los distintos solvers desarrollados.
-	\item Comparar los tiempos invertidos por cada solver.
-	\item Comparar el consumo energético por cada solver.
 	\item Seleccionar la mejor alternativa en cuanto a eficiencia flops/watts y tiempo/watts.
 	\end{itemize}
 \end{itemize}
 
-\chapter{Alcance}
+\section{Alcance}
 
-El alcance del proyecto se encuentra especificado según los requerimientos funcionales y los no funcionales, al mismo tiempo que se establecen los límites y exclusiones, como se 
+El alcance del proyecto se encuentra especificado según los requerimientos funcionales y los no funcionales, al mismo tiempo que se establecen los límites y exclusiones, como se detalla a continuación.
 
-\section{Funcionales}
+\subsection{Funcionales}
 \begin{itemize}
 \item Instalación y puesta a punto del Sistema Operativo Linux, en su distribución Ubuntu 14.04
 	\begin{itemize}
 	\item Instalación del S.O.
 	\item Instalación de los drivers de la GPU AMD R9 290.
-	\item Compilacion e instalación de:
+	\item Compilación e instalación de:
 		\begin{itemize}
 		\item \openfoam
 		\item \paralution
@@ -160,7 +161,7 @@ El alcance del proyecto se encuentra especificado según los requerimientos func
 \item Estudiar la eficiencia y efectividad de todos los métodos.
 \end{itemize}
 
-\section{No funcionales}
+\subsection{No funcionales}
 Uso óptimo de los recursos de hardware disponibles para obtener mejoras en:
 \begin{itemize}
 \item Rendimiento
@@ -176,7 +177,7 @@ Uso de buenas prácticas de programación:
 \item Tests unitarios sobre cada método principal.
 \end{itemize}
 
-\section{Exclusiones}
+\subsection{Exclusiones}
 \begin{flushleft}
 Sólo se hará uso de software libre. \linebreak
 No se harán comparativas sobre solvers propietarios. \linebreak
@@ -184,20 +185,24 @@ Sólo se implementarán solvers OpenSource que trabajen sobre OpenCL. \linebreak
 Se trabajarán todos los datos en memoria RAM, tanto del host como de los dipositivos.
 \end{flushleft}
 
-\section{Limitaciones y Restricciones}
-Se dispone de una única GPU AMD Radeon R9 290 con 4Gb de RAM GDDR5.
-Se trabajará con problemas con tamaño maximo abordable por el hardware disponible.
+\subsection{Limitaciones y Restricciones}
+\begin{itemize}
+\item Se dispone de una única GPU AMD Radeon R9 290 con 4Gb de RAM GDDR5.
+\item Se trabajará con problemas con tamaño maximo abordable por el hardware disponible.
+\end{itemize}
 
-\section{Supuestos}
+\subsection{Supuestos}
 Se dispone del hardware necesario para correr y utilizar OpenCL 2.0. AMD Radeon R9 290.
 La implementación del método resolución debe ser compatible con multi-GPU.
 
-\section{Criterios de aceptación del producto}
-Mínimo: lograr una mejora de eficiencia y performance respecto a las soluciones provistas nativamente por \openfoam
+\subsection{Criterios de aceptación del producto}
+Mínimo: lograr una mejora de eficiencia y performance respecto a las soluciones provistas nativamente por \openfoam. 
+
 Esperado: Lograr una mejora de performance respecto a las soluciones provistas por \paralution
-\chapter{Metodología}
+
+\section{Metodología}
 \label{sec:metodologia}
-Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) a través de una metodología propia definida para el proyecto. Separando el proyecto en tres etapas:
+Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) a través de una metodología propia definida para el proyecto. El proyecto se dividirá en tres etapas:
 
 %\begin{itemize}
 %\item Análisis y desarrollo de los métodos.
@@ -205,66 +210,68 @@ Dada la limitación del personal disponible encargada de las tareas del proyecto
 %\item Escritura del informe final y cierre.
 %\end{itemize}
 
-\section{Análisis y desarrollo de los métodos}
-En esta primera fase se realizará por un lado, las tareas de análisis de las soluciones de \paralution disponibles en el mercado para \openfoam, su linkeo, compilación, utilización, configuraciones y pruebas en casos simples para verificar su funcionamiento; por otro lado, se realizará un estudio sobre calculo paralelo y el método del gradiente conjugado, su utilización y desarrollo en \ocl20 y pruebas sobre casos simples con el mismo propósito.
-Al finalizar cada una de estas subetapas, se realizará un informe y un prototipo de resolvedor lineal en condiciones de ser utilizado.
+\subsection{Análisis y desarrollo de los métodos}
+En esta primera fase se realizará por un lado, las tareas de análisis de las soluciones disponibles en el mercado de \paralution para \openfoam, su linkeo, compilación, utilización, configuraciones y pruebas en casos simples para verificar su funcionamiento; por otro lado, se realizará un estudio sobre cálculo paralelo y el método del gradiente conjugado, su utilización y desarrollo en \ocl20 y pruebas sobre casos simples con el mismo propósito.
+Al finalizar cada una de estas subetapas, se realizará un informe y un prototipo de resolvedor en condiciones de ser utilizado.
 
-\section{Implementación y prueba de los métodos}
-En esta segunda fase se configurará el entorno donde correrán las simulaciones y hará uso de los resolvedores lineales desarrollados sobre un caso real de simulación de vehículos de competición. Se registrarán todos los resultados obtenidos en cuanto a tiempo transcurrido, consumo energético y se compararan entre si. Al finalizar se documentarán los resultados en un informe.
+\subsection{Implementación y prueba de los métodos}
+En esta segunda fase se realizarán las configuraciones de \openfoam y puesta a punto, para correr la simulación sobre un caso real vehículos de competición, utilizando el solver propio y el de \paralution. Se registrarán todos los resultados obtenidos en cuanto a tiempo transcurrido, consumo energético y se compararan entre si. Al finalizar se documentarán los resultados en un informe.
 
-\section{Escritura del informe final y cierre}
+\subsection{Escritura del informe final y cierre}
 En esta ultima fase, se realizarán todas las tareas referidas a la escritura del informe final y cierre del proyecto. Se revisarán todos los resultados obtenidos y se elaborarán las conclusiones determinando cual de los métodos es el mejor, teniendo como criterio el tiempo total de corrida de la simulación y su consumo energético.
 
-\chapter{Plan de Tareas}
+\section{Plan de Tareas}
 \label{sec:planTareas}
-En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:metodologia}, se establece el siguiente plan de tareas:
+El plan de tareas se define en base a las etapas expuestas en la sección Metodología, P. \pageref{sec:metodologia}. Las duraciones de las tareas se estimaron en base a criterios de experto por parte del director y los ayudantes.
+
+A continuación se detallan los niveles del plan de tareas.
 
 %******************************************************************
 %******************************************************************
 %***************ANALISIS Y DESARROLLO DE LOS METODOS***************
 %******************************************************************
 %******************************************************************
-\section{Análisis y desarrollo de los métodos}
+\subsection{Análisis y desarrollo de los métodos}
 
-\subsection{Análisis de los solvers de \paralution}
+\subsubsection{Análisis de los solvers de \paralution}
 \begin{itemize}
-\item Análisis de la utilización del resolvedor PCG.
-\item Análisis de la utilización del resolvedor PBiCG.
+\item Análisis de la utilización del resolvedor PCG de \paralution. (16 Horas)
+%\item Análisis de la utilización del resolvedor PBiCG.
 \end{itemize}
 
-\subsection{Puesta en funcionamieto de los solvers de \paralution}
+\subsubsection{Puesta en funcionamieto de los solvers de \paralution}
 \begin{itemize}
-\item Linkear y compilar el resolvedor PCG con \openfoam.
-\item Linkear y Compilar el resolvedor PBiCG con \openfoam.
-\item Probar los resolvedores.
-\item Documentar los resultados.
-\item Presentar los resultados. (hito)
+\item Linkear y compilar el resolvedor PCG de \paralution. (8 Horas)
+%\item Linkear y Compilar el resolvedor PBiCG con \openfoam.
+\item Probar el solver de \paralution. (8 Horas.)
+\item Documentar los resultados. (15 Horas.)
+\item Presentar los resultados. (Hito)
 \end{itemize}
 
-\subsection{Estudio del marco teórico de arquitecturas paralelas y \ocl20} %Esto me hace un poco de ruido, no me termina de convencer la organización.
+\subsubsection{Estudio del marco teórico de arquitecturas paralelas y \ocl20} %Esto me hace un poco de ruido, no me termina de convencer la organización.
 \begin{itemize}
-\item Revisión de literatura sobre arquitecturas paralelas.
-\item Revisión de literatura sobre \ocl20.
-\item Realización de ejercicios prácticos sobre \ocl20.
+\item Revisión de literatura sobre arquitecturas paralelas. (27 Horas)
+\item Revisión de literatura sobre \ocl20. (48 Horas)
+\item Realización de ejercicios prácticos sobre \ocl20. (8 Horas)
 \end{itemize}
 
-\subsection{Análisis del método PCG}
+\subsubsection{Análisis del método PCG}
 \begin{itemize}
-\item Revisión de literatura acerca del método PCG.
-\item Diseñar el método sobre \ocl20.
+\item Revisión de literatura acerca del método PCG. (12 Horas)
+\item Diseñar el método sobre \ocl20. (40 Horas)
 \end{itemize}
 
-\subsection{Desarrollo del método PCG en \ocl20}
+\subsubsection{Desarrollo del método PCG en \ocl20}
 \begin{itemize}
-\item Desarrollar el método.
-\item Optimizar el código.
-\item Realizar corridas de prueba y validar los resultados.
+\item Desarrollar el método PCG sobre \ocl20. (48 Horas)
+\item Optimizar el código. (48 Horas)
+\item Realizar corridas de prueba y validar los resultados. (8 Horas)
 \end{itemize}
 
-\subsection{Finalizar y Documentar la fase}
+\subsubsection{Finalizar y Documentar la fase}
 \begin{itemize}
-\item Recolectar, organizar y clasificar la información.
-\item Documentar la información.
+\item Recolectar, organizar y clasificar la información. (12 Horas)
+\item Documentar la información. (16 Horas)
 \item Presentar entregables (Hito)
 \end{itemize}
 
@@ -273,24 +280,24 @@ En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:meto
 %**************IMPLEMENTACION Y PRUEBA DE LOS METODOS**************
 %******************************************************************
 %******************************************************************
-\section{Implementación y prueba de los métodos}
-\subsection{Implementación}
+\subsection{Implementación y prueba de los métodos}
+\subsubsection{Implementación}
 \begin{itemize}
-\item Configurar el entorno donde se correrán las simulaciones.
-\item Obtener los datos de la simulación.
-\item Crear los archivos de configuración de \openfoam para el resolvedor de \paralution.
-\item Crear los archivos de configuración de \openfoam para el resolvedor desarrollado.
+\item Configurar el entorno donde se correrán las simulaciones. (4 Horas)
+\item Obtener los datos de la simulación. (1 Hora)
+\item Crear los archivos de configuración de \openfoam para el resolvedor de \paralution. (4 Horas)
+\item Crear los archivos de configuración de \openfoam para el resolvedor propio. (4 Horas)
 \end{itemize}
-\subsection{Prueba}
+\subsubsection{Prueba}
 \begin{itemize}
-\item Correr la simulación con los resolvedores de \paralution.
-\item Correr la simulación con el resolvedor desarrollado.
-\item Verificar y comparar los resultados de la simulación.
+\item Correr la simulación con los resolvedores de \paralution. (12 Horas)
+\item Correr la simulación con el resolvedor propio. (6 Horas)
+\item Verificar y comparar los resultados de las simulaciones. (11 Horas)
 \end{itemize}
-\subsection{Finalizar y Documentar la fase}
+\subsubsection{Finalizar y Documentar la fase}
 \begin{itemize}
-\item Recolectar, organizar y clasificar los resultados. %Tiempo, consumo energetico, % de utilizacion de hardware, etc.
-\item Documentar los resultados. %Aca es donde se pretende decidir cual fue la mejor alternativa
+\item Recolectar, organizar y clasificar los resultados. (11 Horas) %Tiempo, consumo energetico, % de utilizacion de hardware, etc.
+\item Documentar los resultados. (11 Horas) %Aca es donde se pretende decidir cual fue la mejor alternativa
 \item Entregar la documentación y las configuraciones utilizadas. (Hito)
 \end{itemize}
 
@@ -299,42 +306,45 @@ En base a las etapas expuestas en la sección Metodología, P. \pageref{sec:meto
 %*************ESCRIBIR EL INFORME Y CIERRE DE PROYECTO*************
 %******************************************************************
 %******************************************************************
-\section{Escritura del informe final y cierre}
-\subsection{Documentación}
+\subsection{Escritura del informe final y cierre}
+\subsubsection{Documentación}
 \begin{itemize}
-\item Documentar el resolvedor desarrollado.
-\item Recolectar, organizar y clasificar la información.
-\item Escribir el Informe Final.
+\item Documentar el resolvedor desarrollado. (15 Horas)
+\item Recolectar, organizar y clasificar la información. (12 Horas)
+\item Escribir el Informe Final. (40 Horas)
 \end{itemize}
-\subsection{Entrega del producto}
+\subsubsection{Entrega del producto}
 \begin{itemize}
-\item Obtener la aceptación de los resolvedores por parte del CIMEC.
-\item Presentar el producto final.
-\item Entregar el producto final y las conclusiones. (hito)
+\item Obtener la aceptación de los resolvedores por parte del CIMEC. (2 Horas)
+\item Presentar el producto final. (3 Horas)
+\item Entregar el producto final y las conclusiones. (Hito)
 \end{itemize}
 %******************************************************************
 %******************************************************************
 %********************** CONSIDERACIONES ***************************
 %******************************************************************
 %******************************************************************
-\section{Consideraciones}
+\subsection{Consideraciones}
 Se dedicará un esfuerzo temporal de 20 Horas semanales, divididas a lo largo de la semana, donde se espera trabajar de Lunes a Viernes.
 Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícitas en la labor del desarrollo.
 
-\chapter{Cronograma}
+\section{Cronograma}
 \label{sec:cronograma}
 
-Para su elaboración se tuvieron en cuenta las limitaciones de los recursos humanos asignados al proyecto, requiriendo que las tareas se ejecuten de forma secuencial, y que por lo tanto, solo exista un único camino, coincidente con el camino crítico. Se propone el tres de Agosto de 2015 como fecha de inicio del proyecto, con una carga de 4 horas diarias, de lunes a viernes. Solamente se considera el 25 de Diciembre como feriado no laborable. Se estima el siete de Enero de 2016 como fecha de finalización del mismo, con una duración de 450 horas.
+Para su elaboración se tuvieron en cuenta las limitaciones de los recursos humanos asignados al proyecto, requiriendo que las tareas se ejecuten de forma secuencial, y que por lo tanto, solo exista un único camino, coincidente con el camino crítico. Se propone el tres de Agosto de 2015 como fecha de inicio del proyecto, con una carga de 4 horas diarias, de lunes a viernes. Solamente se considera el 25 de Diciembre como feriado no laborable. Se estima el siete de Enero de 2016 como fecha de finalización del mismo, con una duración total de 450 horas.
 En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan las relaciones entre tareas y su duración estimada.
 
-\begin{figure}[!]
+\begin{figure}[H]
 \includegraphics[width=\textwidth]{gantt.png}
 \caption{Diagrama de Gantt}
 \label{fig:gantt}
 \end{figure}
 
-\chapter{Entregables}
+\section{Entregables}
 \label{sec:entregables}
+
+Durante la ejecución del proyecto, se planean realizar 4 entregables. El primero se corresponde con el prototipo utilizando el solver PCG de \paralution y su informe correspondiente. El segundo con el solver PCG propio y el informe. El tercero con un informe de implementación de ambos solvers sobre un caso de simulación real. Finalmente, un cuarto informe recolectando toda la información obtenida hasta el momento y las conclusiones logradas.
+Para cada uno se detalla una fecha estimativa de entrega, su alcance y los criterios de aceptación.
 
 \begin{enumerate}
 
@@ -403,13 +413,13 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %
 %Mariel
 
-\chapter{Recursos}	
-	 \section{Disponibles}
+\section{Recursos}	
+	 \subsection{Disponibles}
 
 %		*****************************************
 %			RECURSOS DISPONIBLES DE CAPITAL
 %		*****************************************
-	 	\subsection{Bienes de Capital}
+	 	\subsubsection{Bienes de Capital}
 	 	
 	 	\begin{enumerate}
 	 	\item PC de Escritorio (Intel Core i7 870, 12GB RAM DDR3, AMD Radeon R9 290, Monitor 22", Mouse y Teclado)
@@ -425,7 +435,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %		*****************************************
 %			RECURSOS DISPONIBLES RRHH
 %		*****************************************
-	 	\subsection{Recursos Humanos}
+	 	\subsubsection{Recursos Humanos}
 	 	\begin{enumerate}
 		\item Desarrollador
 		\item Director
@@ -436,12 +446,12 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %	 **************************************
 %	 			RECURSOS NECESARIOS
 %	 **************************************	
-	 \section{Necesarios}
+	 \subsection{Necesarios}
 
 %		************************************
 %				DE CAPITAL
 %		************************************
-		\subsection{De Capital}
+		\subsubsection{De Capital}
 		\begin{enumerate}
 		\item Escritorio
 		\item Silla de Escritorio Acolchonada % :p
@@ -450,7 +460,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %		*************************************
 %				SERVICIOS
 %		*************************************	 
-	 	 \subsection{Servicios}
+	 	 \subsubsection{Servicios}
 		 \begin{enumerate}
 	 
 		\item Servicio de Electricidad
@@ -462,7 +472,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %		*************************************
 %			INSUMOS
 %		*************************************	
-		\subsection{Insumos}
+		\subsubsection{Insumos}
 		
 		\begin{enumerate}
 		\item Resmas de hojas A4
@@ -474,7 +484,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %		*************************************
 %			OTROS
 %		*************************************
-	 	\subsection{Otros}
+	 	\subsubsection{Otros}
 		\begin{enumerate}
 		
 		 \item Fotocopias
@@ -482,7 +492,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 		
 		\end{enumerate}			 	
 
-\chapter{Presupuesto}
+\section{Presupuesto}
 
 %Particularmente para la sección de presupuesto, mencionamos algunos rubros generales que pueden ser de interés para su propuesta:
 %
@@ -495,6 +505,9 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 %*Gastos Administrativos
 %*Becas y Capacitaciones
 %*Otros costos
+
+El análisis de costos del proyecto se detalla a continuación:
+
 \begin{table}[h]
 \small
 \label{tabla:presupuesto}
@@ -523,7 +536,9 @@ Encuadernación & 3 & 250 & 750 \\ \hline
  & & Total & 104850\\ \hline
 \end{tabular} 
 \end{table}
-\chapter{Riesgos}
+
+
+\section{Riesgos}
 
 %Para cada uno de los riesgos se solicita consignar:
 %

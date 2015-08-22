@@ -155,21 +155,21 @@ El alcance del proyecto se encuentra especificado según los requerimientos func
 		\item AMD APP SDK 3.0
 		\end{itemize}
 	\end{itemize}
-\item Implementación de los solvers de \paralution en OpenCL para ser utilizados en \openfoam:PCG y PBiCG.
-\item Implementación propia del método del gradiente conjugado sobre OpenCL 2.0 para matrices LDU compatible con el formato de \openfoam
+\item Implementación del solver PCG de \paralution en OpenCL para ser utilizados en \openfoam.
+\item Implementación propia del PCG sobre OpenCL 2.0 para matrices LDU compatible con el formato de \openfoam
 \item Evaluación de convergencia del métodos a la aproximación de solución de la ecuación diferencial.
 \item Estudiar la eficiencia y efectividad de todos los métodos.
 \end{itemize}
 
 \subsection{No funcionales}
-Uso óptimo de los recursos de hardware disponibles para obtener mejoras en:
+\subsubsection{Uso óptimo de los recursos de hardware disponibles para obtener mejoras en}
 \begin{itemize}
 \item Rendimiento
 \item Escalabilidad
 \item Estabilidad
 \item Confiabilidad
 \end{itemize}
-Uso de buenas prácticas de programación:
+\subsubsection{Uso de buenas prácticas de programación:}
 \begin{itemize}
 \item Uso de reglas de escritura de código especificas para OpenFOAM
 \item Código legible y mantenible.
@@ -178,37 +178,33 @@ Uso de buenas prácticas de programación:
 \end{itemize}
 
 \subsection{Exclusiones}
-\begin{flushleft}
-Sólo se hará uso de software libre. \linebreak
-No se harán comparativas sobre solvers propietarios. \linebreak
-Sólo se implementarán solvers OpenSource que trabajen sobre OpenCL. \linebreak
-Se trabajarán todos los datos en memoria RAM, tanto del host como de los dipositivos.
-\end{flushleft}
+\begin{itemize}
+\item Sólo se hará uso de software libre.
+\item No se harán comparativas sobre solvers propietarios.
+\item Sólo se implementarán solvers OpenSource que trabajen sobre OpenCL.
+\end{itemize}
 
 \subsection{Limitaciones y Restricciones}
 \begin{itemize}
 \item Se dispone de una única GPU AMD Radeon R9 290 con 4Gb de RAM GDDR5.
 \item Se trabajará con problemas con tamaño maximo abordable por el hardware disponible.
+\item Se trabajarán todos los datos en memoria RAM, tanto del host como de los dipositivos.
 \end{itemize}
 
 \subsection{Supuestos}
-Se dispone del hardware necesario para correr y utilizar OpenCL 2.0. AMD Radeon R9 290.
-La implementación del método resolución debe ser compatible con multi-GPU.
+\begin{itemize}
+\item Se dispone de todos los recursos de hardware y software necesario para desarrollar sobre OpenCL 2.0.
+\end{itemize}
+
 
 \subsection{Criterios de aceptación del producto}
 Mínimo: lograr una mejora de eficiencia y performance respecto a las soluciones provistas nativamente por \openfoam. 
 
-Esperado: Lograr una mejora de performance respecto a las soluciones provistas por \paralution
+Esperado: Lograr una mejora de performance respecto a las soluciones provistas por \paralution.
 
 \section{Metodología}
 \label{sec:metodologia}
 Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) a través de una metodología propia definida para el proyecto. El proyecto se dividirá en tres etapas:
-
-%\begin{itemize}
-%\item Análisis y desarrollo de los métodos.
-%\item Implementación y prueba de los métodos.
-%\item Escritura del informe final y cierre.
-%\end{itemize}
 
 \subsection{Análisis y desarrollo de los métodos}
 En esta primera fase se realizará por un lado, las tareas de análisis de las soluciones disponibles en el mercado de \paralution para \openfoam, su linkeo, compilación, utilización, configuraciones y pruebas en casos simples para verificar su funcionamiento; por otro lado, se realizará un estudio sobre cálculo paralelo y el método del gradiente conjugado, su utilización y desarrollo en \ocl20 y pruebas sobre casos simples con el mismo propósito.
@@ -227,22 +223,18 @@ El plan de tareas se define en base a las etapas expuestas en la sección Metodo
 A continuación se detallan los niveles del plan de tareas.
 
 %******************************************************************
-%******************************************************************
 %***************ANALISIS Y DESARROLLO DE LOS METODOS***************
-%******************************************************************
 %******************************************************************
 \subsection{Análisis y desarrollo de los métodos}
 
 \subsubsection{Análisis de los solvers de \paralution}
 \begin{itemize}
 \item Análisis de la utilización del resolvedor PCG de \paralution. (16 Horas)
-%\item Análisis de la utilización del resolvedor PBiCG.
 \end{itemize}
 
 \subsubsection{Puesta en funcionamieto de los solvers de \paralution}
 \begin{itemize}
 \item Linkear y compilar el resolvedor PCG de \paralution. (8 Horas)
-%\item Linkear y Compilar el resolvedor PBiCG con \openfoam.
 \item Probar el solver de \paralution. (8 Horas.)
 \item Documentar los resultados. (15 Horas.)
 \item Presentar los resultados. (Hito)
@@ -276,9 +268,7 @@ A continuación se detallan los niveles del plan de tareas.
 \end{itemize}
 
 %******************************************************************
-%******************************************************************
 %**************IMPLEMENTACION Y PRUEBA DE LOS METODOS**************
-%******************************************************************
 %******************************************************************
 \subsection{Implementación y prueba de los métodos}
 \subsubsection{Implementación}
@@ -353,7 +343,7 @@ Para cada uno se detalla una fecha estimativa de entrega, su alcance y los crite
 	\item Fecha: 18/08/2015
 	\item Descripción: Informe y Primer Prototipo.
 	\item Contenido del Informe: Descripción de la utilización de los resolvedores de \paralution; Descripción para la compilación de los resolvedores de \paralution; Resultados preliminares de las pruebas;
-	\item Alcance del prototipo: linkear y compilar los resolvedores lineales PCG y PBiCG de \paralution  en Ubuntu 14.04; Correr casos de prueba simples.
+	\item Alcance del prototipo: linkear y compilar el resolvedores lineal PCG de \paralution  en Ubuntu 14.04; Correr casos de prueba simples.
 	\item Criterio de aceptación: El director será quien determine si el prototipo funciona correctamente.
 \end{itemize}
 

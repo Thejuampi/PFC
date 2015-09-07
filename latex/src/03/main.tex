@@ -70,7 +70,7 @@ El análisis de costo tuvo en cuenta los servicios, bienes de capital, necesario
 Finalmente, la identificación y análisis, tanto cualitativo como cuantitativo, de los riesgos definen estrategias de contingencia, mitigación o aceptación. 
 
 \begin{keywords}
-GPU, GPGPU, CFD, OpenFOAM, Paralution, OpenCL, SVM, OpenSource, Libre
+GPGPU, CFD, OpenFOAM, Paralution, OpenCL, SVM, OpenSource, Libre
 \end{keywords}
 \end{abstract}
 \pagebreak
@@ -144,17 +144,6 @@ El alcance del proyecto se encuentra especificado según los requerimientos func
 
 \subsection{Funcionales}
 \begin{itemize}
-\item Instalación y puesta a punto del Sistema Operativo Linux, en su distribución Ubuntu 14.04
-	\begin{itemize}
-	\item Instalación del S.O.
-	\item Instalación de los drivers de la GPU AMD R9 290.
-	\item Compilación e instalación de:
-		\begin{itemize}
-		\item \openfoam
-		\item \paralution
-		\item AMD APP SDK 3.0
-		\end{itemize}
-	\end{itemize}
 \item Implementación del solver PCG de \paralution en OpenCL para ser utilizados en \openfoam.
 \item Implementación propia del PCG sobre OpenCL 2.0 para matrices LDU compatible con el formato de \openfoam
 \item Evaluación de convergencia del métodos a la aproximación de solución de la ecuación diferencial.
@@ -162,6 +151,18 @@ El alcance del proyecto se encuentra especificado según los requerimientos func
 \end{itemize}
 
 \subsection{No funcionales}
+\subsubsection{Instalación y puesta a punto del Sistema Operativo Linux, en su distribución Ubuntu 14.04} 
+\begin{itemize}
+	\item Instalación del S.O.
+	\item Instalación de los drivers de la GPU AMD R9 290.
+	\item Compilación e instalación de:
+	\begin{itemize}
+		\item \openfoam
+		\item \paralution
+		\item AMD APP SDK 3.0
+	\end{itemize}
+\end{itemize}
+
 \subsubsection{Uso óptimo de los recursos de hardware disponibles para obtener mejoras en}
 \begin{itemize}
 \item Rendimiento
@@ -186,9 +187,9 @@ El alcance del proyecto se encuentra especificado según los requerimientos func
 
 \subsection{Limitaciones y Restricciones}
 \begin{itemize}
-\item Se dispone de una única GPU AMD Radeon R9 290 con 4Gb de RAM GDDR5.
-\item Se trabajará con problemas con tamaño maximo abordable por el hardware disponible.
-\item Se trabajarán todos los datos en memoria RAM, tanto del host como de los dipositivos.
+\item Se dispone de una única GPU AMD Radeon R9 290 con 4GB de RAM GDDR5.
+\item Se trabajará con problemas de tamaño máximo abordable por el hardware disponible.
+\item Se trabajarán todos los datos en memoria RAM, tanto del host como de los dispositivos.
 \end{itemize}
 
 \subsection{Supuestos}
@@ -321,7 +322,7 @@ Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícita
 \section{Cronograma}
 \label{sec:cronograma}
 
-Para su elaboración se tuvieron en cuenta las limitaciones de los recursos humanos asignados al proyecto, requiriendo que las tareas se ejecuten de forma secuencial, y que por lo tanto, solo exista un único camino, coincidente con el camino crítico. Se propone el tres de Agosto de 2015 como fecha de inicio del proyecto, con una carga de 4 horas diarias, de lunes a viernes. Solamente se considera el 25 de Diciembre como feriado no laborable. Se estima el siete de Enero de 2016 como fecha de finalización del mismo, con una duración total de 450 horas.
+Para su elaboración se tuvieron en cuenta las limitaciones de los recursos humanos asignados al proyecto, requiriendo que las tareas se ejecuten de forma secuencial, y que por lo tanto, solo exista un único camino, coincidente con el camino crítico. Se propone el 3 de Agosto de 2015 como fecha de inicio del proyecto, con una carga de 4 horas diarias, de lunes a viernes. Solamente se considera el 25 de Diciembre como feriado no laborable. Se estima el siete de Enero de 2016 como fecha de finalización del mismo, con una duración total de 450 horas.
 En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan las relaciones entre tareas y su duración estimada.
 
 \begin{figure}[H]
@@ -333,7 +334,7 @@ En la figura \ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan
 \section{Entregables}
 \label{sec:entregables}
 
-Durante la ejecución del proyecto, se planean realizar 4 entregables. El primero se corresponde con el prototipo utilizando el solver PCG de \paralution y su informe correspondiente. El segundo con el solver PCG propio y el informe. El tercero con un informe de implementación de ambos solvers sobre un caso de simulación real. Finalmente, un cuarto informe recolectando toda la información obtenida hasta el momento y las conclusiones logradas.
+Durante la ejecución del proyecto, se planean realizar 4 entregables. El primero se corresponde con el prototipo utilizando el resolvedor PCG de \paralution y su informe correspondiente. El segundo con el resolvedor PCG propio y el informe. El tercero con un informe de implementación de ambos resolvedores sobre un caso de simulación real. Finalmente, un cuarto informe recolectando toda la información obtenida hasta el momento y las conclusiones logradas.
 Para cada uno se detalla una fecha estimativa de entrega, su alcance y los criterios de aceptación.
 
 \begin{enumerate}

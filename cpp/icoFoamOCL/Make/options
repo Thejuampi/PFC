@@ -1,0 +1,16 @@
+EXE_INC = \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/sampling/lnInclude \
+    -I../../../../build/inc \
+    -I/home/juan/dev/paralution-1.0.0/src/examples/OpenFOAM/clSPARSE/trunk/src/include \
+    -I/home/juan/dev/paralution-1.0.0/src/examples/OpenFOAM/clSPARSE/trunk/build/clSPARSE-build/library \
+    -I/opt/AMDAPPSDK-3.0/include
+
+EXE_LIBS = \
+    -lfiniteVolume \
+    -lOpenFOAM \
+    -fopenmp \
+    -lOpenCL \
+    ../../../../build/lib/libparalution.so \
+    /home/juan/dev/paralution-1.0.0/src/examples/OpenFOAM/clSPARSE/trunk/build/clSPARSE-build/library/libclSPARSE.so \
+    -lsampling

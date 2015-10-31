@@ -1,0 +1,6 @@
+.
+/opt/openfoam231/src/finiteVolume/lnInclude/
+/opt/openfoam231/src/OpenFOAM/lnInclude/
+/home/juan/dev/paralution-1.0.0/src/examples/OpenFOAM/clSPARSE/trunk/src/include/
+/home/juan/dev/paralution-1.0.0/src/examples/OpenFOAM/clSPARSE/trunk/build/clSPARSE-build/library/
+/opt/AMDAPPSDK-3.0/include/

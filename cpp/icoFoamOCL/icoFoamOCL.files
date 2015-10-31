@@ -1,0 +1,16 @@
+0/p
+0/U
+constant/polyMesh/blockMeshDict
+constant/polyMesh/boundary
+constant/transportProperties
+Make/files
+Make/options
+Make/options.OCL
+system/controlDict
+system/decomposeParDict
+system/fvSchemes
+system/fvSolution
+system/fvSolutionFoam
+system/fvSolutionFoamMG
+createFields.H
+icoFoamOCL.C

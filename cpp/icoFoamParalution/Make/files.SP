@@ -1,0 +1,4 @@
+icoFoamParalution.C
+/home/juan/dev/paralution-1.0.0/src/plug-ins/OpenFOAM/matrices/lduMatrix/solvers/paralution_PBiCG_SP/paralution_PBiCG_SP.C
+/home/juan/dev/paralution-1.0.0/src/plug-ins/OpenFOAM/matrices/lduMatrix/solvers/paralution_AMG_SP/paralution_AMG_SP.C
+EXE = ./icoFoamParalution

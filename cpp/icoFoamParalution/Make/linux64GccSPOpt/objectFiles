@@ -1,0 +1,4 @@
+OBJECTS = \
+$(OBJECTS_DIR)/icoFoamParalution.o\
+$(OBJECTS_DIR)/paralution_PBiCG_SP.o\
+$(OBJECTS_DIR)/paralution_AMG_SP.o

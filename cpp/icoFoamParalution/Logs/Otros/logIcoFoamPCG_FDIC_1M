@@ -1,0 +1,106 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : 2.3.1-bcfaaa7b8660
+Exec   : icoFoam -parallel
+Date   : Oct 07 2015
+Time   : 16:20:39
+Host   : "juan-ubuntu"
+PID    : 8462
+Case   : /home/juan/dev/paralution-1.0.0/src/examples/OpenFOAM/icoFoamParalution
+nProcs : 4
+Slaves : 
+3
+(
+"juan-ubuntu.8463"
+"juan-ubuntu.8464"
+"juan-ubuntu.8465"
+)
+
+Pstream initialized with:
+    floatTransfer      : 0
+    nProcsSimpleSum    : 0
+    commsType          : nonBlocking
+    polling iterations : 0
+sigFpe : Enabling floating point exception trapping (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+Reading transportProperties
+
+Reading field p
+
+Reading field U
+
+Reading/calculating face flux field phi
+
+
+Starting time loop
+
+Time = 0.0001
+
+Courant Number mean: 0 max: 0
+smoothSolver:  Solving for Ux, Initial residual = 1, Final residual = 9.96529e-06, No Iterations 695
+smoothSolver:  Solving for Uy, Initial residual = 0, Final residual = 0, No Iterations 0
+FDICPCG:  Solving for p, Initial residual = 1, Final residual = 9.80753e-07, No Iterations 2050
+time step continuity errors : sum local = 1.95898e-11, global = 5.33502e-21, cumulative = 5.33502e-21
+FDICPCG:  Solving for p, Initial residual = 0.78738, Final residual = 9.67164e-07, No Iterations 2045
+time step continuity errors : sum local = 2.44813e-11, global = -2.2048e-21, cumulative = 3.13022e-21
+ExecutionTime = 70.79 s  ClockTime = 71 s
+
+Time = 0.0002
+
+Courant Number mean: 0.0227346 max: 0.939568
+smoothSolver:  Solving for Ux, Initial residual = 0.0637823, Final residual = 9.96524e-06, No Iterations 780
+smoothSolver:  Solving for Uy, Initial residual = 0.547511, Final residual = 9.95828e-06, No Iterations 1011
+FDICPCG:  Solving for p, Initial residual = 0.970048, Final residual = 9.80592e-07, No Iterations 2023
+time step continuity errors : sum local = 9.24222e-11, global = -1.8661e-21, cumulative = 1.26413e-21
+FDICPCG:  Solving for p, Initial residual = 0.921705, Final residual = 9.93996e-07, No Iterations 2022
+time step continuity errors : sum local = 9.69024e-11, global = -1.80382e-21, cumulative = -5.3969e-22
+ExecutionTime = 154.12 s  ClockTime = 154 s
+
+Time = 0.0003
+
+Courant Number mean: 0.035198 max: 1.28014
+smoothSolver:  Solving for Ux, Initial residual = 0.0624339, Final residual = 9.91281e-06, No Iterations 726
+smoothSolver:  Solving for Uy, Initial residual = 0.569028, Final residual = 9.91996e-06, No Iterations 907
+FDICPCG:  Solving for p, Initial residual = 0.990169, Final residual = 9.70924e-07, No Iterations 1921
+time step continuity errors : sum local = 2.5448e-10, global = 4.73369e-21, cumulative = 4.194e-21
+FDICPCG:  Solving for p, Initial residual = 0.963946, Final residual = 9.975e-07, No Iterations 1919
+time step continuity errors : sum local = 2.63918e-10, global = -9.05329e-21, cumulative = -4.85929e-21
+ExecutionTime = 232.05 s  ClockTime = 232 s
+
+Time = 0.0004
+
+Courant Number mean: 0.0417749 max: 1.19394
+smoothSolver:  Solving for Ux, Initial residual = 0.103913, Final residual = 9.94246e-06, No Iterations 744
+smoothSolver:  Solving for Uy, Initial residual = 0.624536, Final residual = 9.91606e-06, No Iterations 911
+FDICPCG:  Solving for p, Initial residual = 0.99468, Final residual = 9.72013e-07, No Iterations 1908
+time step continuity errors : sum local = 6.3604e-10, global = -2.49015e-22, cumulative = -5.1083e-21
+FDICPCG:  Solving for p, Initial residual = 0.963881, Final residual = 9.90298e-07, No Iterations 1906
+time step continuity errors : sum local = 6.56782e-10, global = -4.45315e-21, cumulative = -9.56146e-21
+ExecutionTime = 310.06 s  ClockTime = 310 s
+
+Time = 0.0005
+
+Courant Number mean: 0.0536838 max: 3.52858
+smoothSolver:  Solving for Ux, Initial residual = 0.184693, Final residual = 9.96437e-06, No Iterations 761
+smoothSolver:  Solving for Uy, Initial residual = 0.746189, Final residual = 9.93825e-06, No Iterations 882
+FDICPCG:  Solving for p, Initial residual = 0.996311, Final residual = 9.78773e-07, No Iterations 1915
+time step continuity errors : sum local = 1.6008e-09, global = 9.68621e-21, cumulative = 1.24752e-22
+FDICPCG:  Solving for p, Initial residual = 0.967813, Final residual = 9.92794e-07, No Iterations 1914
+time step continuity errors : sum local = 1.64143e-09, global = -4.54638e-21, cumulative = -4.42163e-21
+ExecutionTime = 388.17 s  ClockTime = 388 s
+
+End
+
+Finalising parallel run

@@ -1,0 +1,141 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : 2.3.1-bcfaaa7b8660
+Exec   : ./icoFoamParalution
+Date   : Oct 12 2015
+Time   : 02:57:41
+Host   : "juan-ubuntu"
+PID    : 3931
+Case   : /home/juan/dev/paralution-1.0.0/src/examples/OpenFOAM/icoFoamParalution
+nProcs : 1
+sigFpe : Enabling floating point exception trapping (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+Reading transportProperties
+
+Reading field p
+
+Reading field U
+
+Reading/calculating face flux field phi
+
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 8
+Host thread affinity policy - thread mapping on every core
+Number of OpenCL devices in the system: 2
+PARALUTION ver B1.0.0
+PARALUTION platform is initialized
+Accelerator backend: OpenCL
+OpenMP threads:8
+Selected OpenCL platform: 0
+Selected OpenCL device: 0
+------------------------------------------------
+Platform number: 0
+Platform name: AMD Accelerated Parallel Processing
+Device number: 0
+Device name: Hawaii
+Device type: GPU
+totalGlobalMem: 3956 MByte
+clockRate: 947
+OpenCL version: OpenCL 2.0 AMD-APP (1729.3)
+------------------------------------------------
+------------------------------------------------
+Platform number: 0
+Platform name: AMD Accelerated Parallel Processing
+Device number: 1
+Device name: Intel(R) Core(TM) i7-4770K CPU @ 3.50GHz
+Device type: GPU
+totalGlobalMem: 11963 MByte
+clockRate: 841
+OpenCL version: OpenCL 1.2 AMD-APP (1729.3)
+------------------------------------------------
+
+Starting time loop
+
+Time = 0.0001
+
+Courant Number mean: 3.19189e-18 max: 1.73462e-13
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Ux, Initial residual = 1, Final residual = 8.19303e-06, No Iterations 108
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Uy, Initial residual = 0, Final residual = 0, No Iterations 0
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 1, Final residual = 9.04644e-06, No Iterations 20
+time step continuity errors : sum local = 1.84106e-10, global = 3.01096e-21, cumulative = 3.01096e-21
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.825267, Final residual = 6.9803e-06, No Iterations 20
+time step continuity errors : sum local = 1.72038e-10, global = -9.60188e-22, cumulative = 2.05077e-21
+ExecutionTime = 31.27 s  ClockTime = 20 s
+
+Time = 0.0002
+
+Courant Number mean: 0.0508499 max: 2.16258
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Ux, Initial residual = 0.049015, Final residual = 9.98363e-06, No Iterations 99
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Uy, Initial residual = 0.697328, Final residual = 9.68968e-06, No Iterations 124
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.99425, Final residual = 6.11652e-06, No Iterations 18
+time step continuity errors : sum local = 1.38299e-09, global = -1.1721e-21, cumulative = 8.78669e-22
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.970747, Final residual = 6.22803e-06, No Iterations 18
+time step continuity errors : sum local = 1.43204e-09, global = 2.55799e-21, cumulative = 3.43666e-21
+ExecutionTime = 60.55 s  ClockTime = 37 s
+
+Time = 0.0003
+
+Courant Number mean: 0.0836367 max: 4.92097
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Ux, Initial residual = 0.126795, Final residual = 9.79598e-06, No Iterations 109
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Uy, Initial residual = 0.898132, Final residual = 9.68198e-06, No Iterations 131
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.998848, Final residual = 7.1275e-06, No Iterations 18
+time step continuity errors : sum local = 1.05269e-08, global = -9.64888e-21, cumulative = -6.21222e-21
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.984044, Final residual = 7.01062e-06, No Iterations 18
+time step continuity errors : sum local = 1.04336e-08, global = -7.95913e-21, cumulative = -1.41713e-20
+ExecutionTime = 89.87 s  ClockTime = 55 s
+
+Time = 0.0004
+
+Courant Number mean: 0.11936 max: 17.3159
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Ux, Initial residual = 0.430745, Final residual = 7.5295e-06, No Iterations 116
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Uy, Initial residual = 0.914393, Final residual = 9.34328e-06, No Iterations 132
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.999487, Final residual = 6.4837e-06, No Iterations 18
+time step continuity errors : sum local = 5.802e-08, global = 1.32423e-20, cumulative = -9.2904e-22
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.984511, Final residual = 6.38006e-06, No Iterations 18
+time step continuity errors : sum local = 5.75365e-08, global = 5.8103e-21, cumulative = 4.88126e-21
+ExecutionTime = 119.5 s  ClockTime = 73 s
+
+Time = 0.0005
+
+Courant Number mean: 0.34785 max: 100.897
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Ux, Initial residual = 0.746036, Final residual = 9.79502e-06, No Iterations 131
+*** warning: LocalMatrix::Permute() is performed on the host
+*** warning: LocalMatrix::ILU0Factorize() is performed on the host
+paralution_PBiCG(paralution_MultiColoredILU):  Solving for Uy, Initial residual = 0.932253, Final residual = 9.93859e-06, No Iterations 133
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.999551, Final residual = 7.04883e-06, No Iterations 18
+time step continuity errors : sum local = 4.00997e-07, global = 7.90602e-20, cumulative = 8.39414e-20
+paralution_AMG(paralution_MultiColoredILU):  Solving for p, Initial residual = 0.985336, Final residual = 6.9311e-06, No Iterations 18
+time step continuity errors : sum local = 3.97247e-07, global = 2.6604e-19, cumulative = 3.49981e-19
+ExecutionTime = 149.13 s  ClockTime = 91 s
+
+End
+

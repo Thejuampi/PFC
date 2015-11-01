@@ -1,0 +1,4 @@
+LOCAL_OBJECTS = \
+icoFoamParalution.o\
+paralution_PBiCG_SP.o\
+paralution_AMG_SP.o

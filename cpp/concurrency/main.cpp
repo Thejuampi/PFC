@@ -1,8 +1,10 @@
+#define __CL_ENABLE_EXCEPTIONS
+
+#include "CL/cl.hpp"
 #include <iostream>
-#include <thread>
-#include <mutex>
+//#include <thread>
+//#include <mutex>
 #include <algorithm>
-#include <CL/opencl.h>
 #include "SDKUtil.hpp"
 #include "SDKFile.hpp"
 #include <string>
@@ -12,7 +14,7 @@
 
 using namespace std;
 
-void handleStatus(cl_int status) {
+inline void handleStatus(cl_int status) {
     if(status != CL_SUCCESS) {
         cout << "status = " << OCLUtils::getOpenCLErrorCodeStr(status) << " = " << status << endl
              << "exiting" << endl;
@@ -66,16 +68,12 @@ int main(int narg, char* args[])
 
     cl_mem bufC = clCreateBuffer(context, CL_MEM_WRITE_ONLY, datasize, NULL, &status);
 
-    int A[200] = {5};
-    int B[200] = {4};
+    int A[200];
+    int B[200];
     int C[200] = {0};
 
-//    const char* programSource[] = {
-//        "__kernel void vecadd( __global int* C, __global int* A, __global int* B) {",
-//        "   int tid = get_global_id(0); // OpenCL intrinsic function",
-//        "   C[tid] = A[tid] + B[tid];",
-//        "}"
-//    };
+   memset(A, 5, 200*sizeof(int));
+   memset(B, 4, 200*sizeof(int));
 
     appsdk::SDKFile file;
     if( !file.open("vecadd.cl") ) {
@@ -85,7 +83,7 @@ int main(int narg, char* args[])
     }
     const char * programSource[] = { file.source().c_str() };
 
-    status = clEnqueueWriteBuffer(cmdQueue, bufA, CL_TRUE,0, datasize, A, 0, NULL, NULL);
+    status = clEnqueueWriteBuffer(cmdQueue, bufA, CL_TRUE, 0, datasize, A, 0, NULL, NULL);
     handleStatus(status);
 
     status = clEnqueueWriteBuffer(cmdQueue, bufB, CL_TRUE, 0, datasize, B, 0, NULL, NULL);
@@ -108,10 +106,35 @@ int main(int narg, char* args[])
     status = clSetKernelArg(kernel, 0, sizeof(cl_mem), &bufA);
     status = clSetKernelArg(kernel, 1, sizeof(cl_mem), &bufB);
     status = clSetKernelArg(kernel, 2, sizeof(cl_mem), &bufC);
+    handleStatus(status);
 
+    size_t indexSpaceSize[1], workGroupSize[1];
+    indexSpaceSize[0] = datasize/sizeof(cl_int);
+    workGroupSize[0]  = 8;
 
+    status = clEnqueueNDRangeKernel(cmdQueue, kernel, 1, NULL, indexSpaceSize, workGroupSize, 0, NULL, NULL);
+    handleStatus(status);
 
+    status = clEnqueueReadBuffer(cmdQueue, bufC, CL_TRUE, 0, datasize, C, 0, NULL, NULL);
+    handleStatus(status);
 
+    clReleaseKernel(kernel);
+    clReleaseProgram(program);
+    clReleaseCommandQueue(cmdQueue);
+    clReleaseMemObject(bufA);
+    clReleaseMemObject(bufB);
+    clReleaseMemObject(bufC);
+    clReleaseContext(context);
+
+    std::ofstream fSalida("resultado.csv");
+    for(int c = 0; c < 199; ++c) {
+        fSalida << C[c] << ", ";
+    }
+    fSalida <<C[199]<<endl;
+
+    free(A);
+    free(B);
+    free(C);
 
     return 0;
 }

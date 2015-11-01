@@ -1,4 +1,4 @@
 .
-/opt/openfoam231/src/finiteVolume/lnInclude/
-/opt/openfoam231/src/OpenFOAM/lnInclude/
+/opt/openfoam240/src/finiteVolume/lnInclude/
+/opt/openfoam240/src/OpenFOAM/lnInclude/
 /home/juan/dev/paralution-1.0.0/build/inc/

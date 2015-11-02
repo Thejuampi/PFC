@@ -15,3 +15,4 @@ createFields.H
 icoFoamOCL.C
 clsparse_pcg.h
 clsparse_pcg.cpp
+clSPARSE_PCG_init.h

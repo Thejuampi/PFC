@@ -1,6 +1,6 @@
 .
-/opt/openfoam240/src/finiteVolume/lnInclude/
-/opt/openfoam240/src/OpenFOAM/lnInclude/
+/opt/openfoam231/src/finiteVolume/lnInclude/
+/opt/openfoam231/src/OpenFOAM/lnInclude/
 /home/juan/dev/clSPARSE/src/include/
 /home/juan/dev/clSPARSE/bin/clSPARSE-build/library/
 /opt/AMDAPPSDK-3.0/include/

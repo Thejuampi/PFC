@@ -1,0 +1,3 @@
+OBJECTS = \
+$(OBJECTS_DIR)/PBiCG_accel.o\
+$(OBJECTS_DIR)/PCG_accel.o

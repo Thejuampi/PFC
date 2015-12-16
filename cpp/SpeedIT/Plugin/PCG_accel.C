@@ -1,0 +1,505 @@
+/*
+ * PCG_accel.C - part of the SpeedIT Classic toolkit
+ * Copyright 2010 (C) Vratis Ltd
+ * email: support@vratis.com
+ * 
+ * SpeedIT Classic toolkit is a free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published 
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * SpeedIT Classic library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along
+ * with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "PCG_accel.H"
+#include "CSR_convert.H"
+
+#include "error.H"
+
+#if defined(SI_EXTREME)
+#include "speedit.h"
+#else
+#include "si_classic.h"
+#endif
+
+#include "cuwrap.h"
+
+#include <vector>
+#include <iostream>
+#include <fstream>
+
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+    defineTypeNameAndDebug(PCG_accel, 0);
+
+    lduMatrix::solver::addsymMatrixConstructorToTable<PCG_accel>
+        addPCG_accelSymMatrixConstructorToTable_;
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::PCG_accel::PCG_accel
+(
+    const word& fieldName,
+    const lduMatrix& matrix,
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const FieldField<Field, scalar>& interfaceIntCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
+    const dictionary& solverControls
+)
+:
+    lduMatrix::solver
+    (
+        fieldName,
+        matrix,
+        interfaceBouCoeffs,
+        interfaceIntCoeffs,
+        interfaces,
+        solverControls
+    )
+{
+	//Read SpeedIT configureation from fvSolve dictionary
+	#include "Config.H"
+
+}
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+//
+//		Method "solve" is used as an interface to external solver functions
+//
+#ifdef OF22
+Foam::solverPerformance Foam::PCG_accel::solve
+#else
+Foam::lduMatrix::solverPerformance Foam::PCG_accel::solve
+#endif
+(
+    scalarField& psi,
+    const scalarField& source,
+    const direction cmpt
+) const
+{
+    if(matrix_type == UNKNOWN)
+    {
+        Foam::FatalError << "Unsupported matrix type" << nl
+                            << "Correct types are: " << nl
+                            << "( " << nl << " CSR" << nl << " CMR" << nl << ")"
+                            << Foam::exit(Foam::FatalError, -1) ;
+    }
+
+#ifdef OF22
+    solverPerformance solverPerf
+#else
+    lduMatrix::solverPerformance solverPerf
+#endif
+            (
+                lduMatrix::preconditioner::getName(controlDict_) + typeName,
+                fieldName_
+                );
+
+#if defined(SI_EXTREME)
+    double eps = tolerance_ ;
+#else
+    scalar eps = tolerance_;
+#endif
+
+    int n_iter = maxIter_ ;
+    int solver_result = -1 ;
+    int cu_err = 0;
+
+    //Calculate initial residual
+    register label nCells = psi.size();
+
+    //scalar* __restrict__ psiPtr = psi.begin();
+
+    scalarField pA(nCells);
+    //scalar* __restrict__ pAPtr = pA.begin();
+
+    scalarField wA(nCells);
+    scalar* __restrict__ wAPtr = wA.begin();
+    // --- Calculate A.psi
+    matrix_.Amul(wA, psi, interfaceBouCoeffs_, interfaces_, cmpt);
+    // --- Calculate initial residual field
+    scalarField rA(source - wA);
+    //scalar* __restrict__ rAPtr = rA.begin();
+
+    // --- Calculate normalisation factor
+    scalar normFactor = this->normFactor(psi, source, wA, pA);
+    Info << "Scalar: " << normFactor << nl;
+    // --- Calculate normalised residual norm
+    solverPerf.initialResidual() = gSumMag(rA)/normFactor;
+    Info << "Initial residual " << solverPerf.initialResidual() << nl;
+    solverPerf.finalResidual() = solverPerf.initialResidual();
+
+#if defined(SI_EXTREME)
+    /*
+        Set device on which you wish to perform calculations
+
+        DeviceID = -1 - SpeedIT will automatically search best
+        device base on number of processors and compute capability.
+        SpeedIT is compatible with GPUs with CC >= 2.0;
+
+        It is better to set the DeviceID than every time execute search procedure
+    */
+
+    int DeviceID = -1;
+    cu_err = si_init(DeviceID);
+    if ( 0 != cu_err)
+    {
+        Foam::FatalError << "Problem with initialisation of SpeedIT Library" << Foam::exit(Foam::FatalError, -1) ;
+    }
+#endif
+
+    //	Create CSR matrix
+    #include "CreateMatrix.H"
+
+//#if defined(SI_EXTREME)
+    scalar* p_vals = &(vals[0]) ;
+    int* p_c_idx = &(c_idx[0]) ;
+    int* p_r_idx = &(r_idx[0]) ;
+//#endif
+
+#if defined(WM_SP)     // scalar is float
+
+    Info << "In SINGLE PRECISION" << nl;
+	#if defined(SI_EXTREME)
+    // float part of extreme
+    Info << "In EXTREME PART" << nl;
+    if ( matrix_type == CSR )
+    {
+    	Info << "In CSR part" << nl;
+        SI_CSR_FLOAT_HANDLE matrix_handler = si_shcsr(p_vals, p_c_idx, p_r_idx, n_rows, n_rows, nnz, HOST);
+        switch ( precond_type )
+        {
+        case SI_AMG:
+            {
+                Info << "Calculating with AMG in SINGLE PRECISION" << nl;
+                SI_CSR_FLOAT_AMG_HANDLE preconditioner_handler = si_gscsramg(matrix_handler);
+                solver_result = si_gshcsrcgamg(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+                si_shcsrfreeamg(&preconditioner_handler);
+            }
+            break;
+        case SI_AINV:
+        {
+        	Info << "Calculating with AINV in SINGLE PRECISION " << nl;
+        	SI_CSR_FLOAT_AINV_HANDLE preconditioner_handler = si_gscsrainv(matrix_handler);
+        	solver_result = si_gshcsrcgainv(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+        	si_shcsrfreeainv(&preconditioner_handler);
+
+        }
+        break;
+
+        case SI_AINV_SC:
+        {
+        	Info << "Calculating with AINV Scaled in SINGLE PRECISION" << nl;
+        	SI_CSR_FLOAT_AINV_SCALED_HANDLE preconditioner_handler = si_gscsrainvscaled(matrix_handler);
+        	solver_result = si_gshcsrcgainvscaled(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+        	si_shcsrfreeainvscaled(&preconditioner_handler);
+
+        }
+        break;
+
+        case SI_AINV_NS:
+        {
+        	Info << "Calculating with AINV Non-symmetric in SINGLE PRECISION" << nl;
+        	SI_CSR_FLOAT_AINV_NSYM_HANDLE preconditioner_handler = si_gscsrainvnsym(matrix_handler);
+        	solver_result = si_gshcsrcgainvnsym(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+        	si_shcsrfreeainvnsym(&preconditioner_handler);
+
+        }
+        break;
+
+        case SI_DIAGONAL:
+        {
+        	Info << "Calculating with DIAGONAL in SINGLE PRECISION" << nl;
+                SI_CSR_FLOAT_DIAGONAL_HANDLE preconditioner_handler = si_gscsrdiagonal(matrix_handler);
+        	solver_result = si_gshcsrcgdiagonal(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+        	si_shcsrfreediagonal(&preconditioner_handler);
+
+        }
+        break;
+
+        case SI_VOID:
+        {
+        	Info << "Calculating with VOID in SINGLE Precision" << nl;
+                SI_CSR_FLOAT_VOID_HANDLE preconditioner_handler = si_gscsrvoid(matrix_handler);
+        	solver_result = si_gshcsrcgvoid(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+        	si_shcsrfreevoid(&preconditioner_handler);
+
+        }
+        break;
+
+        default:
+            {
+            	Foam::FatalError << "Problem with initialisation of preconditioner" << Foam::exit(Foam::FatalError, -1) ;
+            }
+        break;
+
+        }
+        si_shreleasecsr(&matrix_handler);
+    }
+    //CMR Matrix here
+    else if ( matrix_type == CMR )
+    {
+    	Info << "In CMR part" << nl;
+    	SI_CMR_FLOAT_HANDLE matrix_handler = si_shcmr(p_vals, p_c_idx, p_r_idx, n_rows, n_rows, nnz, HOST);
+    	switch (precond_type)
+    	{
+			case SI_DIAGONAL:
+			{
+				Info << "Calculating with DIAGONAL CMR in SINGLE PRECISION" << nl;
+                                SI_CMR_FLOAT_DIAGONAL_HANDLE preconditioner_handler = si_gscmrdiagonal(matrix_handler);
+				solver_result = si_gshcmrcgdiagonal(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+				si_shcmrfreediagonal(&preconditioner_handler);
+
+			}
+			break;
+			case SI_VOID:
+			{
+				Info << "Calculating with VOID CMR in SINGLE PRECISION" << nl;
+                                SI_CMR_FLOAT_VOID_HANDLE preconditioner_handler = si_gscmrvoid(matrix_handler);
+				solver_result = si_gshcmrcgvoid(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+				si_shcmrfreevoid(&preconditioner_handler);
+
+			}
+			break;
+			default:
+			{
+				Foam::FatalError << "Problem with initialisation of preconditioner" << Foam::exit(Foam::FatalError, -1);
+			}
+			break;
+    	}
+    	si_shreleasecmr(&matrix_handler);
+    }
+    else {
+    	Foam::FatalError << "Matrix format not recognised" << Foam::exit(Foam::FatalError, -1);
+    }
+#else
+    //classic part
+    Info << "IN CLASSIC PART" << nl;
+    if ( matrix_type != CSR )
+    {
+    	Info << " IN CMR PART " << nl;
+    	Info << "WARNING: Classic version of SpeedIT is compatible only with CSR format" << nl;
+    	Info << "Runinng with CSR" << nl;
+    }
+
+
+    //
+    //	Copy data to GPU memory. Explicit memory magement is needed, because SpeedIT
+    //	Classic library solver functions require pointers to data in GPU memory.
+    //
+    scalar* pgpu_vals = NULL ;
+    int* pgpu_c_idx   = NULL;
+    int* pgpu_r_idx   = NULL ;
+
+
+    //int cu_err = 0 ;
+
+    cu_err += si_cuda_malloc(reinterpret_cast<void**>(&pgpu_vals),  nnz * sizeof(scalar)) ;
+    cu_err += si_cuda_malloc(reinterpret_cast<void**>(&pgpu_c_idx), nnz * sizeof(int)) ;
+    cu_err += si_cuda_malloc(reinterpret_cast<void**>(&pgpu_r_idx), (n_rows+1) * sizeof(int)) ;
+
+    if (0 != cu_err) {
+    	si_cuda_free (pgpu_vals) ;
+    	si_cuda_free (pgpu_c_idx) ;
+    	si_cuda_free (pgpu_r_idx) ;
+
+    	Foam::FatalError << "Can not allocate GPU memory" << Foam::exit(Foam::FatalError, -1) ;
+    } ;
+
+    cu_err += si_cuda_memcpy (pgpu_vals,  p_vals,  nnz        * sizeof(scalar), C2G) ;
+    cu_err += si_cuda_memcpy (pgpu_c_idx, p_c_idx, nnz        * sizeof(int),    C2G) ;
+    cu_err += si_cuda_memcpy (pgpu_r_idx, p_r_idx, (n_rows+1) * sizeof(int),    C2G) ;
+
+    if (0 != cu_err) {
+    	si_cuda_free (pgpu_vals) ;
+    	si_cuda_free (pgpu_c_idx) ;
+    	si_cuda_free (pgpu_r_idx) ;
+
+    	Foam::FatalError << "Can not copy data to GPU memory" << Foam::exit(Foam::FatalError, -1) ;
+    } ;
+
+    switch ( precond_type )
+    {
+    case SI_DIAGONAL:
+    {
+    	Info << "Calculationg PCG with DIAGONAL IN SINGLE PRECISION " << nl;
+    	solver_result = sicl_gscsrcg( n_rows,
+    			pgpu_vals, pgpu_c_idx, pgpu_r_idx,
+    			pgpu_X, pgpu_B,
+    			P_DIAG,
+    			&n_iter, &eps) ;
+    }
+    break;
+    case SI_VOID:
+    {
+    	Info << "Calculating PCG with VOID in SINGLE PRECISION" << nl;
+    	solver_result = sicl_gscsrcg( n_rows,
+    			pgpu_vals, pgpu_c_idx, pgpu_r_idx,
+    			pgpu_X, pgpu_B,
+    			P_NONE,
+    			&n_iter, &eps) ;
+
+    }
+    break;
+    default:
+    {
+    	Foam::FatalError << "Problem with initialisation of preconditioner" << Foam::exit(Foam::FatalError, -1) ;
+    }
+    break;
+    }
+
+    //Free matrix data
+    si_cuda_free (pgpu_vals) ;
+    si_cuda_free (pgpu_c_idx) ;
+    si_cuda_free (pgpu_r_idx) ;
+
+#endif //SI_EXTREME
+
+
+
+#elif defined(WM_DP)   // scalar is double
+
+    Info << "In DOUBLE PRECISION" << nl;
+#if defined(SI_EXTREME)
+    Info << "In EXTREME PART " << nl;
+    if(matrix_type == CSR)
+    {
+    	Info << "In CSR PART" << nl;
+        SI_CSR_DOUBLE_HANDLE matrix_handler = si_dhcsr(p_vals, p_c_idx, p_r_idx, n_rows, n_rows, nnz, HOST);
+        //ugly but we have distinction between precond handlers in solver functions functions
+        switch( precond_type )
+        {
+        case SI_AMG:
+            {
+                Info << "Calculating with AMG" << nl;
+                SI_CSR_DOUBLE_AMG_HANDLE preconditioner_handler = si_gdcsramg(matrix_handler);
+                solver_result = si_gdhcsrcgamg(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+                si_dhcsrfreeamg(&preconditioner_handler);
+            }
+            break;
+        case SI_AINV:
+        {
+            Info << "Calculating with AINV" << nl;
+            SI_CSR_DOUBLE_AINV_HANDLE preconditioner_handler = si_gdcsrainv(matrix_handler);
+            solver_result = si_gdhcsrcgainv(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+            si_dhcsrfreeainv(&preconditioner_handler);
+        }
+            break;
+        case SI_AINV_SC:
+        {
+            Info << "Calculating with AINV_SC" << nl;
+            SI_CSR_DOUBLE_AINV_SCALED_HANDLE preconditioner_handler = si_gdcsrainvscaled ( matrix_handler );
+            solver_result = si_gdhcsrcgainvscaled(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+            si_dhcsrfreeainvscaled(&preconditioner_handler);
+        }
+            break;
+        case SI_AINV_NS:
+        {
+            Info << "Calculating with AINV_NS" << nl;
+            SI_CSR_DOUBLE_AINV_NSYM_HANDLE preconditioner_handler = si_gdcsrainvnsym ( matrix_handler );
+            solver_result = si_gdhcsrcgainvnsym(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+            si_dhcsrfreeainvnsym(&preconditioner_handler);
+        }
+            break;
+        case SI_VOID:
+        {
+            Info << "Calculating with VOID" << nl;
+            SI_CSR_DOUBLE_VOID_HANDLE preconditioner_handler = si_gdcsrvoid(matrix_handler);
+            solver_result = si_gdhcsrcgvoid(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+            si_dhcsrfreevoid(&preconditioner_handler);
+        }
+            break;
+        case SI_DIAGONAL:
+        {
+            Info << "Calculating with DIAGONAL" << nl;
+            SI_CSR_DOUBLE_DIAGONAL_HANDLE preconditioner_handler = si_gdcsrdiagonal(matrix_handler);
+            solver_result = si_gdhcsrcgdiagonal(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+            si_dhcsrfreediagonal(&preconditioner_handler);
+        }
+            break;
+        default:
+        {
+        	Foam::FatalError << "Problem with initialisation of preconditioner" << Foam::exit(Foam::FatalError, -1) ;
+        }
+            break;
+        }
+        si_dhreleasecsr(&matrix_handler);
+    }
+    else if (matrix_type == CMR)
+    {
+    	Info <<"In CMR PART" << nl;
+        SI_CMR_DOUBLE_HANDLE matrix_handler = si_dhcmr (p_vals, p_c_idx, p_r_idx, n_rows, n_rows, nnz, HOST);
+        switch( precond_type )
+        {
+        case SI_DIAGONAL:
+            {
+                Info << "Calculating with DIAGONAL" << nl;
+                SI_CMR_DOUBLE_DIAGONAL_HANDLE preconditioner_handler = si_gdcmrdiagonal(matrix_handler);
+                solver_result = si_gdhcmrcgdiagonal(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+                si_dhcmrfreediagonal(&preconditioner_handler);
+            }
+            break;
+        case SI_VOID:
+            {
+                Info << "Calculating with VOID" << nl;
+                SI_CMR_DOUBLE_VOID_HANDLE preconditioner_handler = si_gdcmrvoid(matrix_handler);
+                solver_result = si_gdhcmrcgvoid(matrix_handler,pgpu_X, pgpu_B, preconditioner_handler, &n_iter, &eps );
+                si_dhcmrfreevoid(&preconditioner_handler);
+            }
+            break;
+        default:
+            {
+            	Foam::FatalError << "Problem with initialisation of preconditioner" << Foam::exit(Foam::FatalError, -1) ;
+            }
+            break;
+        }
+        si_dhreleasecmr(&matrix_handler);
+    }
+    else {
+       	Foam::FatalError << "Matrix format not recognised" << Foam::exit(Foam::FatalError, -1);
+       }
+#else
+    Info << "In CLASSIC PART" << nl;
+    Foam::FatalError << "Classic part is not supported for double precision" << Foam::exit(Foam::FatalError, -1) ;
+#endif//SI_EXTREME
+
+#endif //WM_DP WM_SP case
+
+    //
+    //	Copy result from GPU memory
+    //
+    if (0 != si_cuda_memcpy (X, pgpu_X, n_rows*sizeof(scalar), G2C)) {
+        Info << "ERROR : Can not copy result from GPU memory" << nl;
+    } ;
+
+
+    if (0 != solver_result) {
+        Info << "ERROR : solver function returned " << solver_result << nl ;
+    } ;
+
+    //
+    //	Free buffers in GPU memory
+    //
+    si_cuda_free (pgpu_B) ;
+    si_cuda_free (pgpu_X) ;
+
+    solverPerf.finalResidual() = eps ;
+    solverPerf.nIterations() = n_iter ;
+    solverPerf.checkConvergence(tolerance_, relTol_) ;
+
+    return solverPerf ;
+}
+
+

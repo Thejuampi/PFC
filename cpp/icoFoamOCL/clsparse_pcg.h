@@ -2,6 +2,7 @@
 #define CLSPARSE_PCG_H
 
 #include "lduMatrix.H"
+#include "clSparseUtils.h"
 
 namespace Foam {
 

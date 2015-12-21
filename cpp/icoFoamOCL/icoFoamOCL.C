@@ -30,7 +30,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include <clSPARSE.h>
+#include "clSparseUtils.h"
+//#include <clSPARSE.h>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
+    clSparseUtils::init();
     Info<< "\nStarting time loop\n" << endl;
 
     while (runTime.loop())

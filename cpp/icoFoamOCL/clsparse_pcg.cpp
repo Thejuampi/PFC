@@ -110,6 +110,10 @@ Foam::solverPerformance Foam::clSPARSE_PCG::solve(Foam::scalarField &psi, const 
     if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
 
+
+    }
+
+
     return solverPerf;
 
 }

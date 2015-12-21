@@ -1,0 +1,70 @@
+#!/bin/sh
+
+cd ${0%/*} || exit 1    # run from this directory
+
+usage="\nUsage: ./Allwmake TYPE [OF22] [-h]\n\n
+      Compile SpeedIT plugin for OpenFOAM \n\n
+      
+      TYPE: Version of SpeedIT\n
+      \tTYPE=EXTREME: Compile plugin for Extreme version\n
+      \tTYPE=CLASSIC: Compile plugin for SpeedIT Classic\n\n
+      \tOF22: Compile plugin for OpenFOAM 2.2\n\n
+      -h: Print this message.\n"
+
+case $@ in
+    -h)
+echo $usage
+      exit;
+      ;;
+esac
+
+if [ $# -eq 0 -o $# -gt 2 ]
+then
+    echo $usage
+    exit;
+fi
+
+if [ $# -eq 2 ]
+then
+    if [ "$2" = "OF22" ]
+    then
+        echo "\nCompatible with OpenFOAM 2.2\n"
+        export WM_PRECISION_OPTION="$WM_PRECISION_OPTION -DOF22";
+    else
+        echo $usage
+        exit;
+    fi
+fi
+
+#case $@ in
+case $1 in
+#        COMMERCIAL)
+		EXTREME)
+            echo "\nSpeedIT plugin will be compiled to use with Extreme version\n"
+            export WM_PRECISION_OPTION="$WM_PRECISION_OPTION -DSI_EXTREME";
+            ;;
+#        FREE)
+		CLASSIC)
+            echo "\nSpeedit plugin will be compiled to use with Classic version\n"
+            export WM_PRECISION_OPTION="$WM_PRECISION_OPTION -DSI_CLASSIC";
+            ;;
+        *)
+            echo "Argument not recognised."
+            echo $usage;
+            exit;
+            ;;
+    esac
+    
+#compile libcwrap
+if [ -d libcuwrap ]
+then
+    cd libcuwrap
+    echo "Compiling libcuwrap\n"
+    make
+    cd ..
+else 
+    echo "libcuwrap folder not found in $PWD direcotry"
+fi
+
+echo "Compiling plugin\n"
+wmake libso

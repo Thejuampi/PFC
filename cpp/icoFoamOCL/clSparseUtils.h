@@ -292,13 +292,16 @@ inline void importMatrix(const Foam::lduMatrix &foamMat, clsparseCsrMatrix *mat)
 //            return clMem;
 //        }
 
-    //Mapeo, tengo que ver bien para qué es necesario
      cl_float* fCsrValues = rCsrValues.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION,       mat->valOffset,     mat->num_nonzeros );
      cl_int* iCsrColIndices = rCsrColIndices.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, mat->colIndOffset,  mat->num_nonzeros );
      cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, mat->rowOffOffset,  mat->num_rows + 1 );
 
-
-
+     //Esto de puede mejorar al copiar directamente al espacio de memoria de la GPU.
+     // Por ahora lo dejo así porque necesito probar que funcione correctamente.
+     // TODO:(juan) refactorizar esto. Hacer la asignación directamente al copiar los valores desde openFOAM
+     std::memcpy(fCsrValues, val, nnz);
+     std::memcpy(iCsrColIndices, col, nnz);
+     std::memcpy(iCsrRowOffsets, row_offset, n);
 
 }
 

@@ -17,7 +17,7 @@
 #include <CL/cl.hpp>
 #endif
 
-#include"clSPARSE.h"
+#include "clSPARSE.h"
 
 
 namespace clSparseUtils {
@@ -44,7 +44,7 @@ cldenseVector g_x;
 cldenseVector g_b;
 clsparseCsrMatrix g_A;
 clsparseStatus status;
-clsparseControl clSparseControl;
+clsparseControl g_clSparseControl;
 cl::Context g_context;
 
 cl_int getDeviceId() {
@@ -137,7 +137,7 @@ void init() {
 
 
     // Create clsparseControl object
-    clSparseControl = clsparseCreateControl(queue(), &status); // supongo que el operador() debe estar sobrecargado
+    g_clSparseControl = clsparseCreateControl(queue(), &status); // supongo que el operador() debe estar sobrecargado
     if (status != CL_SUCCESS)
     {
         std::cout << "Problem with creating clSPARSE control object"
@@ -149,61 +149,61 @@ void init() {
 }
 
 template <typename ValueType>
-inline void importMatrix(const Foam::lduMatrix &foamMat, clsparseCsrMatrix *mat) {
+inline void importMatrix(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix) {
 
     //TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
     clsparseInitCsrMatrix(&A);
 
     // Matrix size
-    int n = foamMat.diag().size();
-    int nnz = foamMat.diag().size() + foamMat.lower().size() + foamMat.upper().size();
+    int n = ref_foamMatrix.diag().size();
+    int nnz = ref_foamMatrix.diag().size() + ref_foamMatrix.lower().size() + ref_foamMatrix.upper().size();
 
     // CSR values
-    int *row_offset = NULL;
-    int *col = NULL;
-    ValueType *val = NULL;
+    int *row_offsets = NULL;
+    int *column_indices = NULL;
+    ValueType *matrix_values = NULL;
 
     // reservar lugar:
     //TODO (juan) : ver si se puede hacer directamente en la memoria de la GPU
-    row_offset = (std::nothrow) new int[n+1];// (n+1, &row_offset);
-    col = (std::nothrow) new int[nnz];
-    val = (std::nothrow) new ValueType[nnz];
+    row_offsets = (std::nothrow) new int[n+1];// (n+1, &row_offset);
+    column_indices = (std::nothrow) new int[nnz];
+    matrix_values = (std::nothrow) new ValueType[nnz];
 
     //Importar matriz aca
-    row_offset[0] = 0;
-    std::memset(row_offset+1, 1, n);
+    row_offsets[0] = 0;
+    std::memset(row_offsets+1, 1, n);
 
-    Foam::UList<int>::const_iterator it_low = foamMat.lduAddr().lowerAddr().begin();
-    Foam::UList<int>::const_iterator it_up  = foamMat.lduAddr().upperAddr().begin();
+    Foam::UList<int>::const_iterator it_low = ref_foamMatrix.lduAddr().lowerAddr().begin();
+    Foam::UList<int>::const_iterator it_up  = ref_foamMatrix.lduAddr().upperAddr().begin();
 
-    for (int i=0; i<foamMat.lower().size(); ++i) {
-      row_offset[*(it_low++) + 1]++;
-      row_offset[*(it_up++)  + 1]++;
+    for (int i=0; i<ref_foamMatrix.lower().size(); ++i) {
+      row_offsets[*(it_low++) + 1]++;
+      row_offsets[*(it_up++)  + 1]++;
     }
 
     //CSR
     //TODO (juan) ver como se puede mejorar esto
     int sum = 0;
     for (int i=0; i<n; ++i) {
-      int temp = row_offset[i];
-      row_offset[i] = sum;
+      int temp = row_offsets[i];
+      row_offsets[i] = sum;
       sum += temp;
     }
-    row_offset[n] = sum;
+    row_offsets[n] = sum;
 
-    Foam::UList<double>::const_iterator it_val = foamMat.lower().begin();
-    it_low = foamMat.lduAddr().lowerAddr().begin();
-    it_up  = foamMat.lduAddr().upperAddr().begin();
+    Foam::UList<double>::const_iterator it_val = ref_foamMatrix.lower().begin();
+    it_low = ref_foamMatrix.lduAddr().lowerAddr().begin();
+    it_up  = ref_foamMatrix.lduAddr().upperAddr().begin();
 
     // fill col and val arrays for lower part
-    for (int i=0; i<foamMat.lower().size(); ++i) {
+    for (int i=0; i<ref_foamMatrix.lower().size(); ++i) {
       // row index for lower = upper + 1
       int r_lower = *it_up + 1;
-      int dest_lower = row_offset[r_lower];
+      int dest_lower = row_offsets[r_lower];
 
-      col[dest_lower] = *it_low;
-      val[dest_lower] = *it_val;
-      ++row_offset[r_lower];
+      column_indices[dest_lower] = *it_low;
+      matrix_values[dest_lower] = *it_val;
+      ++row_offsets[r_lower];
 
       ++it_low;
       ++it_up;
@@ -211,12 +211,12 @@ inline void importMatrix(const Foam::lduMatrix &foamMat, clsparseCsrMatrix *mat)
     }
 
     // fill diagonal part
-    it_val = foamMat.diag().begin();
-    for (int i=0; i<foamMat.diag().size(); ++i) {
-      int dest_diag = row_offset[i+1];
-      val[dest_diag] = *it_val;
-      col[dest_diag] = i;
-      ++row_offset[i+1];
+    it_val = ref_foamMatrix.diag().begin();
+    for (int i=0; i<ref_foamMatrix.diag().size(); ++i) {
+      int dest_diag = row_offsets[i+1];
+      matrix_values[dest_diag] = *it_val;
+      column_indices[dest_diag] = i;
+      ++row_offsets[i+1];
       ++it_val;
     }
     it_low = foam_mat.lduAddr().lowerAddr().begin();
@@ -227,82 +227,80 @@ inline void importMatrix(const Foam::lduMatrix &foamMat, clsparseCsrMatrix *mat)
     for (int i=0; i<foam_mat.upper().size(); ++i) {
       // row index for upper part = lower + 1
       int r_upper = *it_low + 1;
-      int dest_upper = row_offset[r_upper];
+      int dest_upper = row_offsets[r_upper];
 
-      col[dest_upper] = *it_up;
-      val[dest_upper] = *it_val;
-      ++row_offset[r_upper];
+      column_indices[dest_upper] = *it_up;
+      matrix_values[dest_upper] = *it_val;
+      ++row_offsets[r_upper];
 
       ++it_low;
       ++it_up;
       ++it_val;
     }
 
-    mat->num_nonzeros = nnz;
-    mat->num_cols = n;
-    mat->num_rows = n;
+    p_clSparseMatrix->num_nonzeros = nnz;
+    p_clSparseMatrix->num_cols = n;
+    p_clSparseMatrix->num_rows = n;
 
     // REVISAR: probablemente no funcione bien con el "ValueType"
-    mat->values = ::clCreateBuffer(clSparseUtils::g_context, CL_MEM_READ_ONLY, mat->num_nonzeros * sizeof( ValueType ), NULL, &cl_status );
-    mat->colIndices = ::clCreateBuffer( context(), CL_MEM_READ_ONLY, mat->num_nonzeros * sizeof( cl_int ), NULL, &cl_status );
-    mat->rowOffsets = ::clCreateBuffer( context(), CL_MEM_READ_ONLY, ( mat->num_rows + 1 ) * sizeof( cl_int ), NULL, &cl_status );
-    mat->rowBlocks = ::clCreateBuffer( context(), CL_MEM_READ_ONLY, mat->rowBlockSize * sizeof( cl_ulong ), NULL, &cl_status );
-
+    p_clSparseMatrix->values = ::clCreateBuffer(g_context(), CL_MEM_READ_ONLY, p_clSparseMatrix->num_nonzeros * sizeof( ValueType ), NULL, &cl_status );
+    p_clSparseMatrix->colIndices = ::clCreateBuffer( g_context(), CL_MEM_READ_ONLY, p_clSparseMatrix->num_nonzeros * sizeof( cl_int ), NULL, &cl_status );
+    p_clSparseMatrix->rowOffsets = ::clCreateBuffer( g_context(), CL_MEM_READ_ONLY, ( p_clSparseMatrix->num_rows + 1 ) * sizeof( cl_int ), NULL, &cl_status );
+    p_clSparseMatrix->rowBlocks = ::clCreateBuffer( g_context(), CL_MEM_READ_ONLY, p_clSparseMatrix->rowBlockSize * sizeof( cl_ulong ), NULL, &cl_status );
 
     //OpenCL 2.0: usa clSVMAlloc <- para delegar la alocación de memoria en la GPU
-
-//    clMemRAII( const cl_command_queue cl_queue, void* cl_malloc,
-//                   const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE):
-//            clMem( nullptr ), clOwner(false)
-//        {
-//            clQueue = cl_queue;
-//            clMem = static_cast< pType* >( cl_malloc );
-//
-//            if(cl_size > 0)
-//            {
-//                cl_context ctx = NULL;
-//
-//                ::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
-//                cl_int status = 0;
-//
-//                clMem = static_cast< pType* > (clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
-//                clOwner = true;
-//            }
-//
-//            ::clRetainCommandQueue( clQueue );
-//        }
+    //FIXME!: ver como modificar cl_float/cl_double segun el TypeName
+    clMemRAII< cl_float > rCsrValues(   g_clSparseControl->queue( ), p_clSparseMatrix->values );
+    clMemRAII< cl_int > rCsrColIndices( g_clSparseControl->queue( ), p_clSparseMatrix->colIndices );
+    clMemRAII< cl_int > rCsrRowOffsets( g_clSparseControl->queue( ), p_clSparseMatrix->rowOffsets );
 
 
-    clMemRAII< cl_float > rCsrValues(   clSparseControl->queue( ), mat->values );
-    clMemRAII< cl_int > rCsrColIndices( clSparseControl->queue( ), mat->colIndices );
-    clMemRAII< cl_int > rCsrRowOffsets( clSparseControl->queue( ), mat->rowOffsets );
-
-//    pType* clMapMem( cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int *clStatus = nullptr)
-//        {
-//            // Right now, we don't support returning an event to wait on
-//            clBlocking = CL_TRUE;
-//
-//            cl_int _clStatus = ::clEnqueueSVMMap( clQueue, clBlocking, clFlags,
-//                                                  clMem, clSize * sizeof( pType ), 0, NULL, NULL );
-//            if (clStatus != nullptr)
-//            {
-//                *clStatus = _clStatus;
-//            }
-//
-//            return clMem;
-//        }
-
-     cl_float* fCsrValues = rCsrValues.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION,       mat->valOffset,     mat->num_nonzeros );
-     cl_int* iCsrColIndices = rCsrColIndices.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, mat->colIndOffset,  mat->num_nonzeros );
-     cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, mat->rowOffOffset,  mat->num_rows + 1 );
+    //FIXME! (juan) : ver como hacer cuando TypeName es float o es double
+    //FIXME!: ver como modificar cl_float/cl_double segun el TypeName
+    cl_float* fCsrValues = rCsrValues.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION,       p_clSparseMatrix->valOffset,     p_clSparseMatrix->num_nonzeros );
+    cl_int* iCsrColIndices = rCsrColIndices.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, p_clSparseMatrix->colIndOffset,  p_clSparseMatrix->num_nonzeros );
+    cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, p_clSparseMatrix->rowOffOffset,  p_clSparseMatrix->num_rows + 1 );
 
      //Esto de puede mejorar al copiar directamente al espacio de memoria de la GPU.
      // Por ahora lo dejo así porque necesito probar que funcione correctamente.
      // TODO:(juan) refactorizar esto. Hacer la asignación directamente al copiar los valores desde openFOAM
-     std::memcpy(fCsrValues, val, nnz);
-     std::memcpy(iCsrColIndices, col, nnz);
-     std::memcpy(iCsrRowOffsets, row_offset, n);
+    std::memcpy(fCsrValues, matrix_values, nnz);
+    std::memcpy(iCsrColIndices, column_indices, nnz);
+    std::memcpy(iCsrRowOffsets, row_offsets, n);
 
+    // This function allocates memory for rowBlocks structure. If not called
+    // the structure will not be calculated and clSPARSE will run the vectorized
+    // version of SpMV instead of adaptive;
+    clsparseCsrMetaSize( p_clSparseMatrix, g_clSparseControl);
+    A.rowBlocks = ::clCreateBuffer( context(), CL_MEM_READ_WRITE,
+            A.rowBlockSize * sizeof( cl_ulong ), NULL, &cl_status );
+    clsparseCsrMetaCompute( &A, control );
+
+//    // Allocate memory for vector of unknowns;
+//    g_x.num_values = g_A.num_cols;
+//    g_x.values = clCreateBuffer(g_context(), CL_MEM_READ_ONLY, g_x.num_values * sizeof(TypeName), NULL, &cl_status);
+//    TypeName zero(0.0);
+//    TypeName one(1.0);
+//    cl_status = clEnqueueFillBuffer(g_queue(), (cl_mem)g_x.values, &zero, sizeof(float),
+//                                        0, g_x.num_values * sizeof(TypeName), 0, nullptr, nullptr);
+
+}
+
+/**
+ *  Genera un vector de clSparse a partir de un vector de openFOAM
+ *  Cuidado: No verifica puntero nulo
+ */
+template <typename ValueType>
+inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector){
+    size_t n = (size_t)foamVector.size();
+    vector->values =        clCreateBuffer(g_context(), CL_MEM_READ_ONLY,n,NULL, &cl_status);
+    /**
+     * TODO (juan): Ver que es mas eficiente. Usar el mapeo de memoria de OpenCL 2.0 o copiar los datos directamente
+     *
+     */
+    clMemRAII< cl_float >   rValues ( g_clSparseControl->queue( ), vector->values);
+    cl_float*               fValues = rValues.clMapMem(CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0,  n);
+    std::copy(foamVector.begin(), foamVector.end(), fValues);
 }
 
 

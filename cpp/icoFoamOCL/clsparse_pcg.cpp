@@ -109,7 +109,38 @@ Foam::solverPerformance Foam::clSPARSE_PCG::solve(Foam::scalarField &psi, const 
 
     if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
+        clSparseUtils::importMatrix(matrix(), &clSparseUtils::g_A);
+        clSparseUtils::importarVectorOpenFoam(source, &clSparseUtils::g_b);
+        clSparseUtils::importarVectorOpenFoam(psi, &clSparseUtils::g_x);
 
+        // We will use:
+        // preconditioner: diagonal
+        // relative tolerance: 1e-2
+        // absolute tolerance: 1e-5
+        // max iters: 1000
+        /**
+         * FIXME! (juan) : modificar el DIAGONAL segun el valor que se establezca en el "control dict"
+         */
+        clSParseSolverControl solverControl =
+                clsparseCreateSolverControl(DIAGONAL, maxIter_, relTol_, tolerance_);
+
+        // We can set different print modes of the solver status:
+        // QUIET - print no messages (default)
+        // NORMAL - print summary
+        // VERBOSE - per iteration status;
+        clsparseSolverPrintMode(solverControl, QUIET);
+
+
+        /*
+         * FIXME! (juan) : Problema con el tipo de datos (float o double)
+         * status = clsparse___S___csrcg(&x, &A, &b, solverControl, control);
+         * status = clsparse___D___csrcg(&x, &A, &b, solverControl, control);
+         *
+        */
+        clSparseUtils::cl_status = clsparseDcsrcg(&clSparseUtils::g_x, &clSparseUtils::g_A, &clSparseUtils::g_b, solverControl, clSparseUtils::g_clSparseControl);
+
+        //release solver control structure after finishing execution;
+        clsparseReleaseSolverControl(solverControl);
 
     }
 

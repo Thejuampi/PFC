@@ -249,6 +249,55 @@ inline void importMatrix(const Foam::lduMatrix &foamMat, clsparseCsrMatrix *mat)
     mat->rowBlocks = ::clCreateBuffer( context(), CL_MEM_READ_ONLY, mat->rowBlockSize * sizeof( cl_ulong ), NULL, &cl_status );
 
 
+    //OpenCL 2.0: usa clSVMAlloc <- para delegar la alocación de memoria en la GPU
+
+//    clMemRAII( const cl_command_queue cl_queue, void* cl_malloc,
+//                   const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE):
+//            clMem( nullptr ), clOwner(false)
+//        {
+//            clQueue = cl_queue;
+//            clMem = static_cast< pType* >( cl_malloc );
+//
+//            if(cl_size > 0)
+//            {
+//                cl_context ctx = NULL;
+//
+//                ::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
+//                cl_int status = 0;
+//
+//                clMem = static_cast< pType* > (clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
+//                clOwner = true;
+//            }
+//
+//            ::clRetainCommandQueue( clQueue );
+//        }
+
+
+    clMemRAII< cl_float > rCsrValues(   clSparseControl->queue( ), mat->values );
+    clMemRAII< cl_int > rCsrColIndices( clSparseControl->queue( ), mat->colIndices );
+    clMemRAII< cl_int > rCsrRowOffsets( clSparseControl->queue( ), mat->rowOffsets );
+
+//    pType* clMapMem( cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int *clStatus = nullptr)
+//        {
+//            // Right now, we don't support returning an event to wait on
+//            clBlocking = CL_TRUE;
+//
+//            cl_int _clStatus = ::clEnqueueSVMMap( clQueue, clBlocking, clFlags,
+//                                                  clMem, clSize * sizeof( pType ), 0, NULL, NULL );
+//            if (clStatus != nullptr)
+//            {
+//                *clStatus = _clStatus;
+//            }
+//
+//            return clMem;
+//        }
+
+    //Mapeo, tengo que ver bien para qué es necesario
+     cl_float* fCsrValues = rCsrValues.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION,       mat->valOffset,     mat->num_nonzeros );
+     cl_int* iCsrColIndices = rCsrColIndices.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, mat->colIndOffset,  mat->num_nonzeros );
+     cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, mat->rowOffOffset,  mat->num_rows + 1 );
+
+
 
 
 }

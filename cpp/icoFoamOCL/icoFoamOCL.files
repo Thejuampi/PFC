@@ -13,6 +13,6 @@ system/fvSolutionFoam
 system/fvSolutionFoamMG
 createFields.H
 icoFoamOCL.C
-clsparse_pcg.h
-clsparse_pcg.cpp
+clsparse_pcg_dp.h
+clsparse_pcg_dp.cpp
 clSparseUtils.h

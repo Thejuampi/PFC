@@ -1,5 +1,5 @@
-#ifndef CLSPARSE_PCG_H
-#define CLSPARSE_PCG_H
+#ifndef CLSPARSE_PCG_DP_H
+#define CLSPARSE_PCG_DP_H
 
 #include "lduMatrix.H"
 #include "clSparseUtils.h"
@@ -7,10 +7,10 @@
 namespace Foam {
 
 /*---------------------------------------------------------------------------*\
-                           Class clSPARSE_PCG Declaration
+                           Class clSPARSE_PCG_DP Declaration
 \*---------------------------------------------------------------------------*/
 
-class clSPARSE_PCG : public lduMatrix::solver
+class clSPARSE_PCG_DP : public lduMatrix::solver
 {
 private:
     // Private Member Functions
@@ -24,9 +24,9 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("clSPARCE_PCG")
+    TypeName("clSPARCE_PCG_DP")
 
-    clSPARSE_PCG(
+    clSPARSE_PCG_DP(
         const word& fieldName,
         const lduMatrix& matrix,
         const FieldField<Field, scalar>& interfaceBouCoeffs,
@@ -36,7 +36,7 @@ public:
     );
 
     //- Destructor
-    virtual ~clSPARSE_PCG()
+    virtual ~clSPARSE_PCG_DP()
     {}
 
     virtual solverPerformance solve
@@ -53,6 +53,6 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#endif // CLSPARSE_PCG_H
+#endif // CLSPARSE_PCG_DP_H
 
 // ************************************************************************* //

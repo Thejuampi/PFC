@@ -29,23 +29,23 @@ License
 \*---------------------------------------------------------------------------*/
 
 
-#include "clsparse_pcg.h"
+#include "clsparse_pcg_dp.h"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-    defineTypeNameAndDebug(clSPARSE_PCG, 0);
+    defineTypeNameAndDebug(clSPARSE_PCG_DP, 0);
 
-    lduMatrix::solver::addsymMatrixConstructorToTable<clSPARSE_PCG>
-        addclSPARSE_PCGSymMatrixConstructorToTable_;
+    lduMatrix::solver::addsymMatrixConstructorToTable<clSPARSE_PCG_DP>
+        addclSPARSE_PCG_DPSymMatrixConstructorToTable_;
 
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 /**
- * @brief Foam::clSPARSE_PCG::clSPARSE_PCG
+ * @brief Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
  * @param fieldName
  * @param matrix
  * @param interfaceBouCoeffs
@@ -53,7 +53,7 @@ namespace Foam
  * @param interfaces
  * @param solverControls
  */
-Foam::clSPARSE_PCG::clSPARSE_PCG(const Foam::word &fieldName, const Foam::lduMatrix &matrix, const FieldField<Foam::Field, scalar> &interfaceBouCoeffs, const FieldField<Foam::Field, scalar> &interfaceIntCoeffs, const Foam::lduInterfaceFieldPtrsList &interfaces, const Foam::dictionary &solverControls)
+Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP(const Foam::word &fieldName, const Foam::lduMatrix &matrix, const FieldField<Foam::Field, scalar> &interfaceBouCoeffs, const FieldField<Foam::Field, scalar> &interfaceIntCoeffs, const Foam::lduInterfaceFieldPtrsList &interfaces, const Foam::dictionary &solverControls)
 (
     const word& fieldName,
     const lduMatrix& matrix,
@@ -77,16 +77,16 @@ Foam::clSPARSE_PCG::clSPARSE_PCG(const Foam::word &fieldName, const Foam::lduMat
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 /**
- * @brief Foam::clSPARSE_PCG::solve
+ * @brief Foam::clSPARSE_PCG_DP::solve
  * @param psi
  * @param source
  * @param cmpt
  * @return
  */
-Foam::solverPerformance Foam::clSPARSE_PCG::solve(Foam::scalarField &psi, const Foam::scalarField &source, const Foam::direction cmpt) const
+Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField &psi, const Foam::scalarField &source, const Foam::direction cmpt) const
 {
     word precond_name = lduMatrix::preconditioner::getName(controlDict_);
-
+    word solverPrintMode = controlDict_.lookupOrDefault<word>("SolverPrintMode", "QUIET");
     solverPerformance solverPerf(typeName + '(' + precond_name + ')', fieldName_);
 
     register label nCells = psi.size();
@@ -113,30 +113,35 @@ Foam::solverPerformance Foam::clSPARSE_PCG::solve(Foam::scalarField &psi, const 
         clSparseUtils::importarVectorOpenFoam(source, &clSparseUtils::g_b);
         clSparseUtils::importarVectorOpenFoam(psi, &clSparseUtils::g_x);
 
-        // We will use:
-        // preconditioner: diagonal
-        // relative tolerance: 1e-2
-        // absolute tolerance: 1e-5
-        // max iters: 1000
-        /**
-         * FIXME! (juan) : modificar el DIAGONAL segun el valor que se establezca en el "control dict"
-         */
-        clSParseSolverControl solverControl =
-                clsparseCreateSolverControl(DIAGONAL, maxIter_, relTol_, tolerance_);
+        clSParseSolverControl solverControl = nullptr;
+        if(precond_name == "CLSPARSE_DIAGONAL"){
+            solverControl = clsparseCreateSolverControl(DIAGONAL, maxIter_, relTol_, tolerance_);
+        } else {
+            solverControl = clsparseCreateSolverControl(NOPRECOND, maxIter_, relTol_, tolerance_);
+        }
 
         // We can set different print modes of the solver status:
         // QUIET - print no messages (default)
         // NORMAL - print summary
         // VERBOSE - per iteration status;
-        clsparseSolverPrintMode(solverControl, QUIET);
 
-
+        if(solverPrintMode == "QUIET"){
+            clsparseSolverPrintMode(solverControl, QUIET);
+        } else if(solverPrintMode == "NORMAL"){
+            clsparseSolverPrintMode(solverControl, NORMAL);
+        } else if(solverPrintMode == "VERBOSE"){
+            clsparseSolverPrintMode(solverControl,  VERBOSE);
+        } else { // Si se ingresa un valor erroneo, toma QUIET por defecto
+            clsparseSolverPrintMode(solverControl, QUIET);
+        }
         /*
          * FIXME! (juan) : Problema con el tipo de datos (float o double)
          * status = clsparse___S___csrcg(&x, &A, &b, solverControl, control);
          * status = clsparse___D___csrcg(&x, &A, &b, solverControl, control);
          *
         */
+
+
         clSparseUtils::cl_status = clsparseDcsrcg(&clSparseUtils::g_x, &clSparseUtils::g_A, &clSparseUtils::g_b, solverControl, clSparseUtils::g_clSparseControl);
 
         //release solver control structure after finishing execution;

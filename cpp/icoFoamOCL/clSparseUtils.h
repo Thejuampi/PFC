@@ -149,7 +149,7 @@ void init() {
 }
 
 template <typename ValueType>
-inline void importMatrix(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix) {
+inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix) {
 
     //TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
     clsparseInitCsrMatrix(&A);
@@ -250,14 +250,14 @@ inline void importMatrix(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatri
 
     //OpenCL 2.0: usa clSVMAlloc <- para delegar la alocación de memoria en la GPU
     //FIXME!: ver como modificar cl_float/cl_double segun el TypeName
-    clMemRAII< cl_float > rCsrValues(   g_clSparseControl->queue( ), p_clSparseMatrix->values );
+    clMemRAII< cl_double > rCsrValues(   g_clSparseControl->queue( ), p_clSparseMatrix->values );
     clMemRAII< cl_int > rCsrColIndices( g_clSparseControl->queue( ), p_clSparseMatrix->colIndices );
     clMemRAII< cl_int > rCsrRowOffsets( g_clSparseControl->queue( ), p_clSparseMatrix->rowOffsets );
 
 
     //FIXME! (juan) : ver como hacer cuando TypeName es float o es double
     //FIXME!: ver como modificar cl_float/cl_double segun el TypeName
-    cl_float* fCsrValues = rCsrValues.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION,       p_clSparseMatrix->valOffset,     p_clSparseMatrix->num_nonzeros );
+    cl_double* fCsrValues = rCsrValues.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION,       p_clSparseMatrix->valOffset,     p_clSparseMatrix->num_nonzeros );
     cl_int* iCsrColIndices = rCsrColIndices.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, p_clSparseMatrix->colIndOffset,  p_clSparseMatrix->num_nonzeros );
     cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, p_clSparseMatrix->rowOffOffset,  p_clSparseMatrix->num_rows + 1 );
 
@@ -298,8 +298,8 @@ inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseV
      * TODO (juan): Ver que es mas eficiente. Usar el mapeo de memoria de OpenCL 2.0 o copiar los datos directamente
      *
      */
-    clMemRAII< cl_float >   rValues ( g_clSparseControl->queue( ), vector->values);
-    cl_float*               fValues = rValues.clMapMem(CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0,  n);
+    clMemRAII< cl_double >   rValues ( g_clSparseControl->queue( ), vector->values);
+    cl_double*               fValues = rValues.clMapMem(CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0,  n);
     std::copy(foamVector.begin(), foamVector.end(), fValues);
 }
 

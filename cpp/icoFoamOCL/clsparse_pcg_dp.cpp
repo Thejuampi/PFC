@@ -109,7 +109,7 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField &psi, con
 
     if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
-        clSparseUtils::importMatrix(matrix(), &clSparseUtils::g_A);
+        clSparseUtils::importarMatrizDP(matrix(), &clSparseUtils::g_A);
         clSparseUtils::importarVectorOpenFoam(source, &clSparseUtils::g_b);
         clSparseUtils::importarVectorOpenFoam(psi, &clSparseUtils::g_x);
 

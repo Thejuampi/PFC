@@ -2,6 +2,7 @@ EXE_INC = \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/sampling/lnInclude \
     -I/home/juan/dev/git/clSPARSE/src/include/ \
+    -I/home/juan/dev/git/clSPARSE/src/library/include/ \
     -I/home/juan/dev/bin/clSPARSE/clSPARSE-build/include/ \
     -I/home/juan/dev/bin/clSPARSE/clSPARSE-build/library/ \
     -I/opt/AMDAPPSDK-3.0/include \

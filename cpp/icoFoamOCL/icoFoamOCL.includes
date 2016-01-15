@@ -2,6 +2,7 @@
 /opt/openfoam240/src/finiteVolume/lnInclude/
 /opt/openfoam240/src/OpenFOAM/lnInclude/
 /home/juan/dev/git/clSPARSE/src/include/
+/home/juan/dev/git/clSPARSE/src/library/include/
 /home/juan/dev/bin/clSPARSE/clSPARSE-build/include/
 /home/juan/dev/bin/clSPARSE/clSPARSE-build/library/
 /opt/AMDAPPSDK-3.0/include/

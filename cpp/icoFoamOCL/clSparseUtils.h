@@ -5,9 +5,9 @@
 #include <iostream>
 #include <vector>
 
-#ifndef OMPI_MPI_H
-#include <mpi/mpi.h>
-#endif
+//#ifndef OMPI_MPI_H
+//#include <mpi/mpi.h>
+//#endif
 
 #include "lduMatrix.H"
 
@@ -17,7 +17,11 @@
 #include <CL/cl.hpp>
 #endif
 
-#include "clSPARSE.h"
+#define BUILD_CLVERSION 200
+
+#include <clSPARSE.h>
+#include "clSPARSE-2x.hpp"
+//#include <clSPARSE-2x.hpp"
 
 
 namespace clSparseUtils {
@@ -48,10 +52,11 @@ clsparseControl g_clSparseControl;
 cl::Context g_context;
 
 cl_int getDeviceId() {
-    if(num_procs > my_id) {
-        my_id = my_id % num_procs;
-    }
-    return my_id;
+//    if(num_procs > my_id) {
+//        my_id = my_id % num_procs;
+//    }
+//    return my_id;
+    return 0;
 }
 
 cl_int getPlatformId() {
@@ -60,8 +65,8 @@ cl_int getPlatformId() {
 
 void init() {
 
-    ierr = MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
-    ierr = MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+    //ierr = MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
+    //ierr = MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
     /**  Step 1. Setup OpenCL environment; **/
 
@@ -75,15 +80,15 @@ void init() {
     {
         std::cout << "Problem with getting OpenCL platforms"
                   << " [" << cl_status << "]" << std::endl;
-        return -2;
+        //return -2;
+        exit(-2);
     }
 
     int platform_id = getPlatformId();
-    for (const auto& p : g_platforms)
+    for (const cl::Platform& p : g_platforms)
     {
         std::cout << "Platform ID " << platform_id++ << " : "
                   << p.getInfo<CL_PLATFORM_NAME>() << std::endl;
-
     }
 
     // Platform
@@ -132,7 +137,7 @@ void init() {
     if (status != clsparseSuccess)
     {
         std::cout << "Problem with executing clsparseSetup()" << std::endl;
-        return -3;
+        exit(-3);
     }
 
 
@@ -142,7 +147,7 @@ void init() {
     {
         std::cout << "Problem with creating clSPARSE control object"
                   <<" error [" << status << "]" << std::endl;
-        return -4;
+        return exit(-4);
     }
 
 
@@ -152,7 +157,7 @@ template <typename ValueType>
 inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix) {
 
     //TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
-    clsparseInitCsrMatrix(&A);
+    clsparseInitCsrMatrix(p_clSparseMatrix);
 
     // Matrix size
     int n = ref_foamMatrix.diag().size();
@@ -165,9 +170,9 @@ inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrM
 
     // reservar lugar:
     //TODO (juan) : ver si se puede hacer directamente en la memoria de la GPU
-    row_offsets = (std::nothrow) new int[n+1];// (n+1, &row_offset);
-    column_indices = (std::nothrow) new int[nnz];
-    matrix_values = (std::nothrow) new ValueType[nnz];
+    row_offsets = new (std::nothrow) int[n+1];// (n+1, &row_offset);
+    column_indices = new (std::nothrow) int[nnz];
+    matrix_values = new (std::nothrow) ValueType[nnz];
 
     //Importar matriz aca
     row_offsets[0] = 0;
@@ -219,12 +224,12 @@ inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrM
       ++row_offsets[i+1];
       ++it_val;
     }
-    it_low = foam_mat.lduAddr().lowerAddr().begin();
-    it_up  = foam_mat.lduAddr().upperAddr().begin();
-    it_val = foam_mat.upper().begin();
+    it_low = ref_foamMatrix.lduAddr().lowerAddr().begin();
+    it_up  = ref_foamMatrix.lduAddr().upperAddr().begin();
+    it_val = ref_foamMatrix.upper().begin();
 
     // fill upper part
-    for (int i=0; i<foam_mat.upper().size(); ++i) {
+    for (int i=0; i<ref_foamMatrix.upper().size(); ++i) {
       // row index for upper part = lower + 1
       int r_upper = *it_low + 1;
       int dest_upper = row_offsets[r_upper];
@@ -250,16 +255,16 @@ inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrM
 
     //OpenCL 2.0: usa clSVMAlloc <- para delegar la alocación de memoria en la GPU
     //FIXME!: ver como modificar cl_float/cl_double segun el TypeName
-    clMemRAII< cl_double > rCsrValues(   g_clSparseControl->queue( ), p_clSparseMatrix->values );
-    clMemRAII< cl_int > rCsrColIndices( g_clSparseControl->queue( ), p_clSparseMatrix->colIndices );
-    clMemRAII< cl_int > rCsrRowOffsets( g_clSparseControl->queue( ), p_clSparseMatrix->rowOffsets );
+    clMemRAII<cl_double> rCsrValues(  clSparseUtils::g_queue(), p_clSparseMatrix->values );
+    clMemRAII<cl_int> rCsrColIndices( clSparseUtils::g_queue(), p_clSparseMatrix->colIndices );
+    clMemRAII<cl_int> rCsrRowOffsets( clSparseUtils::g_queue(), p_clSparseMatrix->rowOffsets );
 
 
     //FIXME! (juan) : ver como hacer cuando TypeName es float o es double
     //FIXME!: ver como modificar cl_float/cl_double segun el TypeName
-    cl_double* fCsrValues = rCsrValues.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION,       p_clSparseMatrix->valOffset,     p_clSparseMatrix->num_nonzeros );
-    cl_int* iCsrColIndices = rCsrColIndices.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, p_clSparseMatrix->colIndOffset,  p_clSparseMatrix->num_nonzeros );
-    cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, p_clSparseMatrix->rowOffOffset,  p_clSparseMatrix->num_rows + 1 );
+    cl_double* fCsrValues = rCsrValues.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION,      0 /*p_clSparseMatrix->valOffset*/,     nnz );
+    cl_int* iCsrColIndices = rCsrColIndices.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0 /*p_clSparseMatrix->colIndOffset*/,  nnz );
+    cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0 /*p_clSparseMatrix->rowOffOffset*/,  p_clSparseMatrix->num_rows + 1 );
 
      //Esto de puede mejorar al copiar directamente al espacio de memoria de la GPU.
      // Por ahora lo dejo así porque necesito probar que funcione correctamente.
@@ -272,17 +277,9 @@ inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrM
     // the structure will not be calculated and clSPARSE will run the vectorized
     // version of SpMV instead of adaptive;
     clsparseCsrMetaSize( p_clSparseMatrix, g_clSparseControl);
-    A.rowBlocks = ::clCreateBuffer( context(), CL_MEM_READ_WRITE,
-            A.rowBlockSize * sizeof( cl_ulong ), NULL, &cl_status );
-    clsparseCsrMetaCompute( &A, control );
-
-//    // Allocate memory for vector of unknowns;
-//    g_x.num_values = g_A.num_cols;
-//    g_x.values = clCreateBuffer(g_context(), CL_MEM_READ_ONLY, g_x.num_values * sizeof(TypeName), NULL, &cl_status);
-//    TypeName zero(0.0);
-//    TypeName one(1.0);
-//    cl_status = clEnqueueFillBuffer(g_queue(), (cl_mem)g_x.values, &zero, sizeof(float),
-//                                        0, g_x.num_values * sizeof(TypeName), 0, nullptr, nullptr);
+    p_clSparseMatrix->rowBlocks = ::clCreateBuffer( clSparseUtils::g_context(), CL_MEM_READ_WRITE,
+            p_clSparseMatrix->rowBlockSize * sizeof( cl_ulong ), NULL, &cl_status );
+    clsparseCsrMetaCompute( p_clSparseMatrix, clSparseUtils::g_clSparseControl );
 
 }
 
@@ -298,7 +295,7 @@ inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseV
      * TODO (juan): Ver que es mas eficiente. Usar el mapeo de memoria de OpenCL 2.0 o copiar los datos directamente
      *
      */
-    clMemRAII< cl_double >   rValues ( g_clSparseControl->queue( ), vector->values);
+    clMemRAII< cl_double >   rValues ( clSparseUtils::g_queue(), vector->values);
     cl_double*               fValues = rValues.clMapMem(CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0,  n);
     std::copy(foamVector.begin(), foamVector.end(), fValues);
 }

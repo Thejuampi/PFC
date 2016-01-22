@@ -13,5 +13,7 @@ EXE_LIBS = \
     -lfiniteVolume \
     -lOpenFOAM \
     -lOpenCL \
-    -lclSPARSE \
+     /home/juan/dev/bin/clSPARSE/clSPARSE-build/library/libclSPARSE.so \
+#    -lclSPARSE \
     -lsampling
+

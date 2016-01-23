@@ -1,2 +1,3 @@
 OBJECTS = \
-$(OBJECTS_DIR)/icoFoamOCL.o
+$(OBJECTS_DIR)/icoFoamOCL.o\
+$(OBJECTS_DIR)/clsparse_pcg_dp.o

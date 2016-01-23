@@ -23,6 +23,20 @@
 #include "clSPARSE-2x.hpp"
 //#include <clSPARSE-2x.hpp"
 
+/*
+ *
+ *    Don't define variables in headers. Put declarations in header and definitions in one of the .c files.
+ *    In config.h
+ *
+ *    extern const char *names[];
+ *    In some .c file:
+ *
+ *    const char *names[] =
+ *    {
+ *       "brian", "stefan", "steve"
+ *    };
+ *
+ */
 
 namespace clSparseUtils {
 
@@ -34,12 +48,12 @@ int ierr, my_id, num_procs;
 /**
  * @brief Variables de OpenCL
  */
-cl::Device g_device;
-cl::Platform g_platform;
-cl::CommandQueue g_queue;
-cl_int cl_status;
-std::vector<cl::Platform> g_platforms;
-std::vector<cl::Device> g_devices;
+static cl::Device g_device;
+static cl::Platform g_platform;
+static cl::CommandQueue g_queue;
+static cl_int cl_status;
+static std::vector<cl::Platform> g_platforms;
+static std::vector<cl::Device> g_devices;
 
 /**
  * @brief Varibales de clSPARSE
@@ -51,7 +65,7 @@ clsparseStatus status;
 clsparseControl g_clSparseControl;
 cl::Context g_context;
 
-cl_int getDeviceId() {
+static cl_int getDeviceId() {
 //    if(num_procs > my_id) {
 //        my_id = my_id % num_procs;
 //    }
@@ -153,7 +167,7 @@ void init() {
 
 }
 
-template <typename ValueType>
+template <typename ValueType=double>
 inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix) {
 
     //TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
@@ -287,7 +301,7 @@ inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrM
  *  Genera un vector de clSparse a partir de un vector de openFOAM
  *  Cuidado: No verifica puntero nulo
  */
-template <typename ValueType>
+template <typename ValueType=double>
 inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector){
     size_t n = (size_t)foamVector.size();
     vector->values =        clCreateBuffer(g_context(), CL_MEM_READ_ONLY,n,NULL, &cl_status);

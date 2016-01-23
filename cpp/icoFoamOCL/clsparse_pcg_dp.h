@@ -16,10 +16,10 @@ private:
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
-        clSPARSE_PCG(const clSPARSE_PCG&);
+        clSPARSE_PCG_DP(const clSPARSE_PCG_DP&);
 
         //- Disallow default bitwise assignment
-        void operator=(const clSPARSE_PCG&);
+        void operator=(const clSPARSE_PCG_DP&);
 
 public:
 

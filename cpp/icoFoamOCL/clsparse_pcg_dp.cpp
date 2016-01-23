@@ -53,7 +53,7 @@ namespace Foam
  * @param interfaces
  * @param solverControls
  */
-Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP(const Foam::word &fieldName, const Foam::lduMatrix &matrix, const FieldField<Foam::Field, scalar> &interfaceBouCoeffs, const FieldField<Foam::Field, scalar> &interfaceIntCoeffs, const Foam::lduInterfaceFieldPtrsList &interfaces, const Foam::dictionary &solverControls)
+Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
 (
     const word& fieldName,
     const lduMatrix& matrix,
@@ -109,9 +109,13 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField &psi, con
 
     if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
-        clSparseUtils::importarMatrizDP(matrix(), &clSparseUtils::g_A);
-        clSparseUtils::importarVectorOpenFoam(source, &clSparseUtils::g_b);
-        clSparseUtils::importarVectorOpenFoam(psi, &clSparseUtils::g_x);
+        //TODO (juan): sacar la matriz del namespace y declararla aca, antes de usarla.
+
+
+
+        clSparseUtils::importarMatrizDP(matrix(), &(clSparseUtils::g_A));
+        clSparseUtils::importarVectorOpenFoam(source, &(clSparseUtils::g_b));
+        clSparseUtils::importarVectorOpenFoam(psi, &(clSparseUtils::g_x));
 
         clSParseSolverControl solverControl = nullptr;
         if(precond_name == "CLSPARSE_DIAGONAL"){

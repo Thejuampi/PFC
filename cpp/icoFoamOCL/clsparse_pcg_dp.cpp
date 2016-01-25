@@ -30,6 +30,8 @@ License
 
 
 #include "clsparse_pcg_dp.h"
+#include "clSparseUtils.h"
+
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -111,8 +113,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField &psi, con
 
         //TODO (juan): sacar la matriz del namespace y declararla aca, antes de usarla.
 
-
-
         clSparseUtils::importarMatrizDP(matrix(), &(clSparseUtils::g_A));
         clSparseUtils::importarVectorOpenFoam(source, &(clSparseUtils::g_b));
         clSparseUtils::importarVectorOpenFoam(psi, &(clSparseUtils::g_x));
@@ -144,7 +144,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField &psi, con
          * status = clsparse___D___csrcg(&x, &A, &b, solverControl, control);
          *
         */
-
 
         clSparseUtils::cl_status = clsparseDcsrcg(&clSparseUtils::g_x, &clSparseUtils::g_A, &clSparseUtils::g_b, solverControl, clSparseUtils::g_clSparseControl);
 

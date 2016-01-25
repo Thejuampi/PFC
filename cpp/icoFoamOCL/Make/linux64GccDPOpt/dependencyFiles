@@ -1,3 +1,4 @@
 DEPENDENCIES = \
 icoFoamOCL.dep\
-./clsparse_pcg_dp.dep
+./clsparse_pcg_dp.dep\
+./clSparseUtils.dep

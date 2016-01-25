@@ -16,3 +16,4 @@ icoFoamOCL.C
 clsparse_pcg_dp.h
 clsparse_pcg_dp.cpp
 clSparseUtils.h
+clSparseUtils.cpp

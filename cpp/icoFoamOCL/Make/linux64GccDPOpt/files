@@ -55,7 +55,7 @@
 icoFoamOCL.C
 
 ./clsparse_pcg_dp.cpp
-
+./clSparseUtils.cpp
 
 
 EXE = ./icoFoamOCL

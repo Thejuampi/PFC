@@ -232,7 +232,7 @@ inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrM
 
 }
 
-template <typename ValueType=double>
+//template <typename ValueType=double>
 inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector){
     size_t n = (size_t)foamVector.size();
     vector->values =        clCreateBuffer(g_context(), CL_MEM_READ_ONLY,n,NULL, &cl_status);

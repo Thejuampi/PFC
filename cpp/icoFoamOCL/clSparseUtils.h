@@ -75,9 +75,9 @@ cl_int getDeviceId();
 cl_int getPlatformId();
 void init();
 
-template <typename ValueType=double>
+//template <typename ValueType=double>
 inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix);
-template <typename ValueType=double>
+//template <typename ValueType=double>
 inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector);
 
 }

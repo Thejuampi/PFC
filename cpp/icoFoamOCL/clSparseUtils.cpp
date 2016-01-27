@@ -2,7 +2,26 @@
 
 namespace clSparseUtils{
 
-cl_int getDeviceId() {
+cl::Device g_device;
+cl::Platform g_platform;
+cl::CommandQueue g_queue;
+cl_int cl_status;
+std::vector<cl::Platform> g_platforms;
+std::vector<cl::Device> g_devices;
+
+/**
+ * @brief Varibales de clSPARSE
+ */
+cldenseVector g_x;
+cldenseVector g_b;
+clsparseCsrMatrix g_A;
+clsparseStatus status;
+clsparseControl g_clSparseControl;
+cl::Context g_context;
+
+}
+
+cl_int clSparseUtils::getDeviceId() {
 //    if(num_procs > my_id) {
 //        my_id = my_id % num_procs;
 //    }
@@ -10,12 +29,12 @@ cl_int getDeviceId() {
     return 0;
 }
 
-cl_int getPlatformId() {
+cl_int clSparseUtils::getPlatformId() {
     return 0; // Por el momento, solo funciona en un solo host
 }
 
 
-void init() {
+void clSparseUtils::init() {
 
     //ierr = MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
     //ierr = MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
@@ -103,7 +122,7 @@ void init() {
 
 
 template <typename ValueType=double>
-inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix) {
+inline void clSparseUtils::importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix) {
 
     //TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
     clsparseInitCsrMatrix(p_clSparseMatrix);
@@ -233,7 +252,7 @@ inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrM
 }
 
 //template <typename ValueType=double>
-inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector){
+inline void clSparseUtils::importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector){
     size_t n = (size_t)foamVector.size();
     vector->values =        clCreateBuffer(g_context(), CL_MEM_READ_ONLY,n,NULL, &cl_status);
     /**
@@ -244,6 +263,3 @@ inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseV
     cl_double*               fValues = rValues.clMapMem(CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0,  n);
     std::copy(foamVector.begin(), foamVector.end(), fValues);
 }
-
-} // namespace
-

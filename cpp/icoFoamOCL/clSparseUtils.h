@@ -20,6 +20,7 @@
 
 #define BUILD_CLVERSION 200
 
+
 #include <clSPARSE.h>
 #include "clSPARSE-2x.hpp"
 //#include <clSPARSE-2x.hpp"
@@ -76,9 +77,9 @@ cl_int getPlatformId();
 void init();
 
 //template <typename ValueType=double>
-inline void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix);
+void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix);
 //template <typename ValueType=double>
-inline void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector);
+void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector);
 
 }
 

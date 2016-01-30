@@ -1,23 +1,5 @@
 #include "clSparseUtils.h"
 
-cl::Device clSparseUtils::g_device;
-cl::Platform clSparseUtils::g_platform;
-cl::CommandQueue clSparseUtils::g_queue;
-cl_int clSparseUtils::cl_status;
-std::vector<cl::Platform> clSparseUtils::g_platforms;
-std::vector<cl::Device> clSparseUtils::g_devices;
-
-/**
- * @brief Varibales de clSPARSE
- */
-cldenseVector clSparseUtils::g_x;
-cldenseVector clSparseUtils::g_b;
-clsparseCsrMatrix clSparseUtils::g_A;
-clsparseStatus clSparseUtils::status;
-clsparseControl clSparseUtils::g_clSparseControl;
-cl::Context clSparseUtils::g_context;
-
-
 cl_int clSparseUtils::getDeviceId() {
 //    if(num_procs > my_id) {
 //        my_id = my_id % num_procs;
@@ -39,10 +21,10 @@ void clSparseUtils::init() {
     /**  Step 1. Setup OpenCL environment; **/
 
     // Init OpenCL environment;
-    cl_status = CL_SUCCESS;
+//    cl_status = CL_SUCCESS;
 
     // Get OpenCL platforms
-    cl_status = cl::Platform::get(&g_platforms);
+//    cl_status = cl::Platform::get(&g_platforms);
 
     if (cl_status != CL_SUCCESS)
     {

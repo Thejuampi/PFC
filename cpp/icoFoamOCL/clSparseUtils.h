@@ -55,22 +55,7 @@ namespace clSparseUtils {
 /**
  * @brief Variables de OpenCL
  */
-extern cl::Device g_device;
-extern cl::Platform g_platform;
-extern cl::CommandQueue g_queue;
-extern cl_int cl_status;
-extern std::vector<cl::Platform> g_platforms;
-extern std::vector<cl::Device> g_devices;
 
-/**
- * @brief Varibales de clSPARSE
- */
-extern cldenseVector g_x;
-extern cldenseVector g_b;
-extern clsparseCsrMatrix g_A;
-extern clsparseStatus status;
-extern clsparseControl g_clSparseControl;
-extern cl::Context g_context;
 
 cl_int getDeviceId();
 cl_int getPlatformId();

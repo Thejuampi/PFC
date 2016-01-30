@@ -1,7 +1,14 @@
 #ifndef CLSPARSE_PCG_DP_H
 #define CLSPARSE_PCG_DP_H
 
-#include "lduMatrix.H"
+#include <clSPARSE.h>
+#include <clSPARSE-2x.h>
+#include <clSPARSE-2x.hpp>
+#include <vector>
+
+#include "/opt/intel/intel-opencl-1.2-5.0.0.43/opencl-1.2-sdk-5.0.0.43/include/CL/cl.hpp"
+#include "/opt/openfoam240/src/finiteVolume/cfdTools/general/include/fvCFD.H"
+#include "/opt/openfoam240/src/OpenFOAM/matrices/lduMatrix/lduMatrix/lduMatrix.H"
 
 namespace Foam {
 
@@ -19,6 +26,29 @@ private:
 
         //- Disallow default bitwise assignment
         void operator=(const clSPARSE_PCG_DP&);
+
+        cl::Device g_device;
+        cl::Platform g_platform;
+        cl::CommandQueue g_queue;
+        cl_int cl_status;
+        std::vector<cl::Platform> g_platforms;
+        std::vector<cl::Device> g_devices;
+
+        /**
+         * @brief Varibales de clSPARSE
+         */
+//        cldenseVector m_x;
+//        cldenseVector g_b;
+//        clsparseCsrMatrix g_A;
+//        clsparseStatus status;
+        clsparseControl g_clSparseControl;
+        cl::Context g_context;
+
+        /**
+         *
+         */
+        cl_platform_id getPlatformId();
+        cl_device_id getDeviceId();
 
 public:
 
@@ -45,6 +75,8 @@ public:
         const direction cmpt=0
     ) const;
 };
+
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

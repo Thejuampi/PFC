@@ -62,19 +62,24 @@ Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP(const word& fieldName,
 {
 
 	cl_status status = CL_SUCCESS;
-	cl_status = cl::Platform::get(&g_platforms);
+	cl_status = cl::Platform::get(&m_platforms);
 	int platform_id = getPlatformId();
 	platform_id = getPlatformId();
 	//TODO (juan) usar puntero?
-	g_platform = g_platforms[platform_id];
-	cl_status = g_platform.getDevices(CL_DEVICE_TYPE_GPU, &g_devices);
+	m_platform = m_platforms[platform_id];
+	cl_status = m_platform.getDevices(CL_DEVICE_TYPE_GPU, &g_devices);
 	cl_device_id device_id = getDeviceId();
     device_id = getDeviceId();
-    g_device = g_devices[device_id];
-    g_context = cl::Context(g_device);
-    cl::CommandQueue queue(g_context, g_device);
+    m_device = g_devices[device_id];
+    m_context = cl::Context(m_device);
+    m_queue(m_context, m_device);
     status = clsparseSetup();
-    g_clSparseControl = clsparseCreateControl(queue(), &status);
+    clsparseStatus p_clSparceStatus = clsparseSuccess;
+    cl_command_queue clCommandQueue = &m_queue();
+    m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparceStatus);
+
+    //Ver cuantas veces es necesario hacer el init() de los vectores y/o matrices
+
 }
 
 cl_platform_id Foam::clSPARSE_PCG_DP::getPlatformId() {
@@ -123,19 +128,23 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField &psi,
 
 	if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
-		//TODO (juan): sacar la matriz del namespace y declararla aca, antes de usarla.
+		clsparseCsrMatrix cls_matrix;
+		cldenseVector cls_b;
+		cldenseVector cls_x;
 
-		clSparseUtils::importarMatrizDP(matrix(), &(clSparseUtils::g_A));
-		clSparseUtils::importarVectorOpenFoam(source, &(clSparseUtils::g_b));
-		clSparseUtils::importarVectorOpenFoam(psi, &(clSparseUtils::g_x));
+		clsparseInitVector(&cls_b);
+		clsparseInitVector(&cls_x);
+		clsparseInitCsrMatrix(&cls_matrix);
+
+		clSparseUtils::importarMatrizDP(matrix(), &cls_matrix, &(m_context()), &(m_queue()), m_clSparseControl);
+		clSparseUtils::importarVectorOpenFoam(source, &cls_b, &(m_context()), &(m_queue()) );
+		clSparseUtils::importarVectorOpenFoam(psi, &cls_x, &(m_context()), &(m_queue()) );
 
 		clSParseSolverControl solverControl = nullptr;
 		if (precond_name == "CLSPARSE_DIAGONAL") {
-			solverControl = clsparseCreateSolverControl(DIAGONAL, maxIter_,
-					relTol_, tolerance_);
+			solverControl = clsparseCreateSolverControl(DIAGONAL, maxIter_, relTol_, tolerance_);
 		} else {
-			solverControl = clsparseCreateSolverControl(NOPRECOND, maxIter_,
-					relTol_, tolerance_);
+			solverControl = clsparseCreateSolverControl(NOPRECOND, maxIter_, relTol_, tolerance_);
 		}
 
 		// We can set different print modes of the solver status:
@@ -158,10 +167,12 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField &psi,
 		 * status = clsparse___D___csrcg(&x, &A, &b, solverControl, control);
 		 *
 		 */
-
-		clSparseUtils::cl_status = clsparseDcsrcg(&clSparseUtils::g_x,
-				&clSparseUtils::g_A, &clSparseUtils::g_b, solverControl,
-				clSparseUtils::g_clSparseControl);
+		clsparseDcsrcg(
+				&cls_x,
+				&cls_matrix,
+				&cls_b, solverControl,
+				m_clSparseControl
+			);
 
 		//release solver control structure after finishing execution;
 		clsparseReleaseSolverControl(solverControl);

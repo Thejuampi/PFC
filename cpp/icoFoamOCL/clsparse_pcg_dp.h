@@ -6,9 +6,7 @@
 #include <clSPARSE-2x.hpp>
 #include <vector>
 
-#include "/opt/intel/intel-opencl-1.2-5.0.0.43/opencl-1.2-sdk-5.0.0.43/include/CL/cl.hpp"
-#include "/opt/openfoam240/src/finiteVolume/cfdTools/general/include/fvCFD.H"
-#include "/opt/openfoam240/src/OpenFOAM/matrices/lduMatrix/lduMatrix/lduMatrix.H"
+#include "fvCFD.H"
 
 namespace Foam {
 
@@ -27,26 +25,16 @@ private:
         //- Disallow default bitwise assignment
         void operator=(const clSPARSE_PCG_DP&);
 
-        cl::Device g_device;
-        cl::Platform g_platform;
-        cl::CommandQueue g_queue;
+        cl::Device m_device;
+        cl::Platform m_platform;
+        cl::CommandQueue m_queue;
         cl_int cl_status;
-        std::vector<cl::Platform> g_platforms;
+        std::vector<cl::Platform> m_platforms;
         std::vector<cl::Device> g_devices;
 
-        /**
-         * @brief Varibales de clSPARSE
-         */
-//        cldenseVector m_x;
-//        cldenseVector g_b;
-//        clsparseCsrMatrix g_A;
-//        clsparseStatus status;
-        clsparseControl g_clSparseControl;
-        cl::Context g_context;
+        clsparseControl m_clSparseControl;
+        cl::Context m_context;
 
-        /**
-         *
-         */
         cl_platform_id getPlatformId();
         cl_device_id getDeviceId();
 
@@ -74,6 +62,7 @@ public:
         const scalarField& source,
         const direction cmpt=0
     ) const;
+
 };
 
 

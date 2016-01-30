@@ -1,8 +1,7 @@
 $(OBJECTS_DIR)/clsparse_pcg_dp.o: clsparse_pcg_dp.dep
 clsparse_pcg_dp.dep: clsparse_pcg_dp.cpp
 clsparse_pcg_dp.dep: clsparse_pcg_dp.h
-clsparse_pcg_dp.dep: /opt/intel/intel-opencl-1.2-5.0.0.43/opencl-1.2-sdk-5.0.0.43/include/CL/cl.hpp
-clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/finiteVolume/cfdTools/general/include/fvCFD.H
+clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/fvCFD.H
 clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/parRun.H
 clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/Pstream.H
 clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/UPstream.H
@@ -668,7 +667,6 @@ clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/argListI.H
 clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/timeSelector.H
 clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/scalarRanges.H
 clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/scalarRange.H
-clsparse_pcg_dp.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/matrices/lduMatrix/lduMatrix/lduMatrix.H
 clsparse_pcg_dp.dep: clSparseUtils.h
 clsparse_pcg_dp.dep: /home/juan/dev/git/clSPARSE/src/library/include/clSPARSE-2x.hpp
 clsparse_pcg_dp.dep: /home/juan/dev/git/clSPARSE/src/include/clSPARSE-2x.h

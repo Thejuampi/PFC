@@ -1,25 +1,22 @@
 #include "clSparseUtils.h"
 
-namespace clSparseUtils{
-
-cl::Device g_device;
-cl::Platform g_platform;
-cl::CommandQueue g_queue;
-cl_int cl_status;
-std::vector<cl::Platform> g_platforms;
-std::vector<cl::Device> g_devices;
+cl::Device clSparseUtils::g_device;
+cl::Platform clSparseUtils::g_platform;
+cl::CommandQueue clSparseUtils::g_queue;
+cl_int clSparseUtils::cl_status;
+std::vector<cl::Platform> clSparseUtils::g_platforms;
+std::vector<cl::Device> clSparseUtils::g_devices;
 
 /**
  * @brief Varibales de clSPARSE
  */
-cldenseVector g_x;
-cldenseVector g_b;
-clsparseCsrMatrix g_A;
-clsparseStatus status;
-clsparseControl g_clSparseControl;
-cl::Context g_context;
+cldenseVector clSparseUtils::g_x;
+cldenseVector clSparseUtils::g_b;
+clsparseCsrMatrix clSparseUtils::g_A;
+clsparseStatus clSparseUtils::status;
+clsparseControl clSparseUtils::g_clSparseControl;
+cl::Context clSparseUtils::g_context;
 
-}
 
 cl_int clSparseUtils::getDeviceId() {
 //    if(num_procs > my_id) {
@@ -84,7 +81,6 @@ void clSparseUtils::init() {
     //        std::cout << "Device ID " << device_id++ << " : "
     //                  << device.getInfo<CL_DEVICE_NAME>() << std::endl;
     //    }
-
     // Device;
     device_id = getDeviceId();
     g_device = g_devices[device_id];

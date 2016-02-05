@@ -54,6 +54,6 @@
 # 1 "files"
 icoFoamOCL.C
 
-clsparse_pcg_dp.cpp
+
 
 EXE = ./icoFoamOCL

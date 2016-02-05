@@ -1,3 +1,2 @@
 SOURCE = \
-icoFoamOCL.C\
-clsparse_pcg_dp.cpp
+icoFoamOCL.C

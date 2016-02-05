@@ -28,8 +28,8 @@
 
  \*---------------------------------------------------------------------------*/
 
-#include "clsparse_pcg_dp.h"
 #include "clSparseUtils.h"
+#include "clsparse_pcg_dp.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -100,13 +100,17 @@ cl_device_id Foam::clSPARSE_PCG_DP::getDeviceId() {
  * @param cmpt
  * @return
  */
-Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField &psi,
-		const Foam::scalarField &source, const Foam::direction cmpt) const {
+Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
+	(
+		Foam::scalarField& psi,
+        const Foam::scalarField& source,
+        const Foam::direction cmpt
+	) const
+	{
+
 	word precond_name = lduMatrix::preconditioner::getName(controlDict_);
-	word solverPrintMode = controlDict_.lookupOrDefault<word>("SolverPrintMode",
-			"QUIET");
-	solverPerformance solverPerf(typeName + '(' + precond_name + ')',
-			fieldName_);
+	word solverPrintMode = controlDict_.lookupOrDefault<word>("SolverPrintMode", "QUIET");
+	solverPerformance solverPerf(typeName + '(' + precond_name + ')', fieldName_);
 
 	register label nCells = psi.size();
 

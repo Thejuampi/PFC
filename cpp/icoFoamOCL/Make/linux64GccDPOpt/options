@@ -52,10 +52,7 @@
 
 # 4 "<command-line>" 2
 # 1 "options"
-EXE_INC = -I$(LIB_SRC)/finiteVolume/lnInclude -I$(LIB_SRC)/sampling/lnInclude -I/home/juan/dev/git/clSPARSE/src/include/ -I/home/juan/dev/git/clSPARSE/src/library/include/ -I/home/juan/dev/bin/clSPARSE/clSPARSE-build/include/ -I/home/juan/dev/bin/clSPARSE/clSPARSE-build/library/ -I/opt/AMDAPPSDK-3.0/include -I/opt/intel/intel-opencl-1.2-5.0.0.43/opencl-sdk/include -I$(LIB_SRC)/meshTools/lnInclude
-# 11 "options"
-
-EXE_LIBS = -lfiniteVolume -lOpenFOAM -lOpenCL /home/juan/dev/bin/clSPARSE/clSPARSE-build/library/libclSPARSE.so # -lclSPARSE -lsampling
+EXE_INC = -I$(LIB_SRC)/finiteVolume/lnInclude -I$(LIB_SRC)/sampling/lnInclude -I$(LIB_SRC)/meshTools/lnInclude -I$(LIB_SRC)/OpenFOAM/lnInclude/ -I/home/juan/dev/git/clSPARSE/src/include/ 	#-I/home/juan/dev/git/clSPARSE/clSPARSE-build/library/ 	-I/home/juan/dev/git/clSPARSE/src/library/include/
 
 
 
@@ -63,3 +60,4 @@ EXE_LIBS = -lfiniteVolume -lOpenFOAM -lOpenCL /home/juan/dev/bin/clSPARSE/clSPAR
 
 
 
+EXE_LIBS = -lfiniteVolume -lOpenFOAM -lsampling -lOpenCL /home/juan/dev/bin/clSPARSE/clSPARSE-build/library/libclSPARSE.so 

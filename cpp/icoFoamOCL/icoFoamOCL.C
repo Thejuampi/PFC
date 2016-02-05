@@ -32,6 +32,8 @@ Description
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 #include "fvCFD.H"
 
+#define BUILD_CLVERSION 200
+
 int main(int argc, char *argv[])
 {
     #include "setRootCase.H"

@@ -1,12 +1,14 @@
 #ifndef CLSPARSE_PCG_DP_H
 #define CLSPARSE_PCG_DP_H
 
-#include <clSPARSE.h>
-#include <clSPARSE-2x.h>
-#include <clSPARSE-2x.hpp>
-#include <vector>
+#include "lduMatrix.H"
 
-#include "fvCFD.H"
+//#include <clSPARSE.h>
+//#include <clSPARSE-2x.h>
+//#include <clSPARSE-2x.hpp>
+//#include <vector>
+
+//#include "fvCFD.H"
 
 namespace Foam {
 
@@ -14,7 +16,9 @@ namespace Foam {
                            Class clSPARSE_PCG_DP Declaration
 \*---------------------------------------------------------------------------*/
 
-class clSPARSE_PCG_DP : public lduMatrix::solver
+class clSPARSE_PCG_DP
+:
+	public lduMatrix::solver
 {
 private:
     // Private Member Functions

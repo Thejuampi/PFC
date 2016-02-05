@@ -1,4 +1,3 @@
-#pragma once
 #ifndef CLSPARSE_PCG_INIT_H
 #define CLSPARSE_PCG_INIT_H
 
@@ -8,52 +7,124 @@
 #include <CL/cl.hpp>
 #endif
 
-#ifndef BUILD_CLVERSION
-#define BUILD_CLVERSION 200
-#endif
-
-#ifndef WM_DP
-#define WM_DP
-#endif
+//#ifndef BUILD_CLVERSION
+//#define BUILD_CLVERSION 200
+//#endif
+//
+//#ifndef WM_DP
+//#define WM_DP
+//#endif
 
 #include <clSPARSE.h>
-#include "clSPARSE-2x.hpp"
+#include <clSPARSE-2x.hpp>
 //#include <clSPARSE-2x.hpp"
 
-/*
- *
- *    Don't define variables in headers. Put declarations in header and definitions in one of the .c files.
- *    In config.h
- *
- *    extern const char *names[];
- *    In some .c file:
- *
- *    const char *names[] =
- *    {
- *       "brian", "stefan", "steve"
- *    };
- *
- */
-
-/**
- * If you have more than just main.cpp, and include your test.h, then each .cpp file will have its own copy of testNum.
- * If you want them to share then you need all but one to mark it as extern.
- */
+#include "lduMatrix.H"
 
 namespace clSparseUtils {
 
-///**
-// * @brief Variables de mpi
-// */
-//extern int ierr, my_id, num_procs;
+template< typename pType >
+class clMemRAII
+{
+    cl_command_queue clQueue;
+    pType* clMem;
+    cl_bool clOwner;
 
-/**
- * @brief Variables de OpenCL
- */
+public:
 
-//cl_int getDeviceId();
-//cl_int getPlatformId();
-//void init();
+    //temporary solution for situations when clMemRaII is allocating buffer,
+    // bug should not release it when calling the destructor.
+    // ProperFIX: write operator=(const clMemRAII&)
+    clMemRAII( const cl_command_queue cl_queue, void** cl_malloc,
+               const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE):
+        clMem( nullptr ), clOwner(false)
+    {
+        clQueue = cl_queue;
+        clMem = static_cast< pType* >( *cl_malloc );
+
+        if(cl_size > 0)
+        {
+            cl_context ctx = NULL;
+
+            ::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
+            cl_int status = 0;
+
+            clMem = static_cast< pType* > (clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
+            *cl_malloc = clMem;
+        }
+
+        ::clRetainCommandQueue( clQueue );
+    }
+
+    clMemRAII( const cl_command_queue cl_queue, void* cl_malloc,
+               const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE):
+        clMem( nullptr ), clOwner(false)
+    {
+        clQueue = cl_queue;
+        clMem = static_cast< pType* >( cl_malloc );
+
+        if(cl_size > 0)
+        {
+            cl_context ctx = NULL;
+
+            ::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
+            cl_int status = 0;
+
+            clMem = static_cast< pType* > (clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
+            clOwner = true;
+        }
+
+        ::clRetainCommandQueue( clQueue );
+    }
+
+    pType* clMapMem( cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int *clStatus = nullptr)
+    {
+        // Right now, we don't support returning an event to wait on
+        clBlocking = CL_TRUE;
+
+        cl_int _clStatus = ::clEnqueueSVMMap( clQueue, clBlocking, clFlags,
+                                              clMem, clSize * sizeof( pType ), 0, NULL, NULL );
+        if (clStatus != nullptr)
+        {
+            *clStatus = _clStatus;
+        }
+
+        return clMem;
+    }
+
+    void clWriteMem( cl_bool clBlocking, const size_t clOff, const size_t clSize, const void* srcPtr )
+    {
+        // Right now, we don't support returning an event to wait on
+        clBlocking = CL_TRUE;
+
+        cl_int clStatus = ::clEnqueueSVMMemcpy( clQueue, clBlocking, clMem, srcPtr,
+                                                  clSize * sizeof( pType ), 0, NULL, NULL );
+    }
+
+    void clFillMem (const pType pattern, const size_t clOff, const size_t clSize)
+    {
+        cl_int clStatus = ::clEnqueueSVMMemFill(clQueue, clMem,
+                                                &pattern, sizeof(pType),
+                                                clSize * sizeof(pType),
+                                                0, NULL, NULL);
+    }
+
+    ~clMemRAII( )
+    {
+        if( clMem )
+            ::clEnqueueSVMUnmap( clQueue, clMem, 0, NULL, NULL );
+
+        if(clOwner)
+        {
+            cl_context ctx = nullptr;
+            ::clGetCommandQueueInfo( clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
+            ::clSVMFree(ctx, clMem);
+        }
+
+        ::clReleaseCommandQueue( clQueue );
+    }
+};
+
 
 template<typename ValueType = double>
 void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix, cl_context context, cl_command_queue queue, clsparseControl control) {

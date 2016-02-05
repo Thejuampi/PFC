@@ -1,3 +1,2 @@
 DEPENDENCIES = \
-icoFoamOCL.dep\
-clsparse_pcg_dp.dep
+icoFoamOCL.dep

@@ -2,13 +2,10 @@
 #define CLSPARSE_PCG_DP_H
 
 #include "lduMatrix.H"
+#include <vector>
 
-//#include <clSPARSE.h>
-//#include <clSPARSE-2x.h>
-//#include <clSPARSE-2x.hpp>
-//#include <vector>
-
-//#include "fvCFD.H"
+#include <CL/cl.hpp>
+#include <clSPARSE.h>
 
 namespace Foam {
 

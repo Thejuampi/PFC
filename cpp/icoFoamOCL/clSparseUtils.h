@@ -1,25 +1,10 @@
 #ifndef CLSPARSE_PCG_INIT_H
 #define CLSPARSE_PCG_INIT_H
 
-#if defined(__APPLE__) || defined(__MACOSX)
-#include <OpenCL/cl.hpp>
-#else
-#include <CL/cl.hpp>
-#endif
-
-//#ifndef BUILD_CLVERSION
-//#define BUILD_CLVERSION 200
-//#endif
-//
-//#ifndef WM_DP
-//#define WM_DP
-//#endif
-
-#include <clSPARSE.h>
-#include <clSPARSE-2x.hpp>
-//#include <clSPARSE-2x.hpp"
 
 #include "lduMatrix.H"
+#include <CL/cl.hpp>
+#include <clSPARSE.h>
 
 namespace clSparseUtils {
 

@@ -1,2 +1,3 @@
 LOCAL_OBJECTS = \
-icoFoamOCL.o
+icoFoamOCL.o\
+clsparse_pcg_dp.o

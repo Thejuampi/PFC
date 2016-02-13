@@ -28,16 +28,19 @@
 
  \*---------------------------------------------------------------------------*/
 
+//#include "clSPARSE.h"
+#include <clSPARSE.h>
 #include "clSparseUtils.h"
 #include "clsparse_pcg_dp.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-namespace Foam {
-defineTypeNameAndDebug(clSPARSE_PCG_DP, 0);
+namespace Foam
+{
+	defineTypeNameAndDebug(clSPARSE_PCG_DP, 0);
 
-lduMatrix::solver::addsymMatrixConstructorToTable<clSPARSE_PCG_DP> addclSPARSE_PCG_DPSymMatrixConstructorToTable_;
-
+	lduMatrix::solver::addsymMatrixConstructorToTable<clSPARSE_PCG_DP>
+		addclSPARSE_PCG_DPSymMatrixConstructorToTable_;
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -61,33 +64,33 @@ Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP(const word& fieldName,
 				interfaceIntCoeffs, interfaces, solverControls)
 {
 
-	cl_status status = CL_SUCCESS;
-	cl_status = cl::Platform::get(&m_platforms);
-	int platform_id = getPlatformId();
-	platform_id = getPlatformId();
-	//TODO (juan) usar puntero?
-	m_platform = m_platforms[platform_id];
-	cl_status = m_platform.getDevices(CL_DEVICE_TYPE_GPU, &g_devices);
-	cl_device_id device_id = getDeviceId();
-    device_id = getDeviceId();
-    m_device = g_devices[device_id];
-    m_context = cl::Context(m_device);
-    m_queue(m_context, m_device);
-    status = clsparseSetup();
-    clsparseStatus p_clSparceStatus = clsparseSuccess;
-    cl_command_queue clCommandQueue = &m_queue();
-    m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparceStatus);
+//	cl_status status = CL_SUCCESS;
+//	cl_status = cl::Platform::get(&m_platforms);
+//	int platform_id = getPlatformId();
+//	platform_id = getPlatformId();
+//	//TODO (juan) usar puntero?
+//	m_platform = m_platforms[platform_id];
+//	cl_status = m_platform.getDevices(CL_DEVICE_TYPE_GPU, &g_devices);
+//	cl_device_id device_id = getDeviceId();
+//    device_id = getDeviceId();
+//    m_device = g_devices[device_id];
+//    m_context = cl::Context(m_device);
+//    m_queue(m_context, m_device);
+//    status = clsparseSetup();
+//    clsparseStatus p_clSparceStatus = clsparseSuccess;
+//    cl_command_queue clCommandQueue = &m_queue();
+//    m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparceStatus);
 
     //Ver cuantas veces es necesario hacer el init() de los vectores y/o matrices
 
 }
 
 cl_platform_id Foam::clSPARSE_PCG_DP::getPlatformId() {
-	//TODO (juan) Modificar esto para que obtenga el id de MPI?
 	return 0;
 }
 
 cl_device_id Foam::clSPARSE_PCG_DP::getDeviceId() {
+	//TODO (juan) Modificar esto para que obtenga el id de MPI?
 	return 0;
 }
 
@@ -100,14 +103,17 @@ cl_device_id Foam::clSPARSE_PCG_DP::getDeviceId() {
  * @param cmpt
  * @return
  */
-Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
-	(
-		Foam::scalarField& psi,
-        const Foam::scalarField& source,
-        const Foam::direction cmpt
-	) const
-	{
 
+//using namespace Foam;
+
+Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
+(
+    scalarField& psi,
+    const scalarField& source,
+    const direction cmpt
+) const
+{
+//
 	word precond_name = lduMatrix::preconditioner::getName(controlDict_);
 	word solverPrintMode = controlDict_.lookupOrDefault<word>("SolverPrintMode", "QUIET");
 	solverPerformance solverPerf(typeName + '(' + precond_name + ')', fieldName_);
@@ -140,9 +146,9 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 		clsparseInitVector(&cls_x);
 		clsparseInitCsrMatrix(&cls_matrix);
 
-		clSparseUtils::importarMatrizDP(matrix(), &cls_matrix, &(m_context()), &(m_queue()), m_clSparseControl);
-		clSparseUtils::importarVectorOpenFoam(source, &cls_b, &(m_context()), &(m_queue()) );
-		clSparseUtils::importarVectorOpenFoam(psi, &cls_x, &(m_context()), &(m_queue()) );
+		importarMatrizDP(matrix(), &cls_matrix, &(m_context()), &(m_queue()), m_clSparseControl);
+		importarVectorOpenFoam(source, &cls_b, &(m_context()), &(m_queue()) );
+		importarVectorOpenFoam(psi, &cls_x, &(m_context()), &(m_queue()) );
 
 		clSParseSolverControl solverControl = nullptr;
 		if (precond_name == "CLSPARSE_DIAGONAL") {
@@ -184,7 +190,7 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 	}
 
 	return solverPerf;
-
+//
 }
 
 // ************************************************************************* //

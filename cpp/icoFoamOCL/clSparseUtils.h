@@ -4,9 +4,8 @@
 
 #include "lduMatrix.H"
 #include <CL/cl.hpp>
-#include <clSPARSE.h>
-
-namespace clSparseUtils {
+#include "clSPARSE.h"
+//#include <clSPARSE.h">
 
 template< typename pType >
 class clMemRAII
@@ -111,13 +110,14 @@ public:
 };
 
 
-template<typename ValueType = double>
+//template<typename ValueType = double>
 void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix, cl_context context, cl_command_queue queue, clsparseControl control) {
 
 	//TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
 	clsparseInitCsrMatrix(p_clSparseMatrix);
 
 	// Matrix size
+
 	int n = ref_foamMatrix.diag().size();
 	int nnz = ref_foamMatrix.diag().size() + ref_foamMatrix.lower().size()
 			+ ref_foamMatrix.upper().size();
@@ -125,13 +125,13 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	// CSR values
 	int *row_offsets = NULL;
 	int *column_indices = NULL;
-	ValueType *matrix_values = NULL;
+	double *matrix_values = NULL;
 
 	// reservar lugar:
 	//TODO (juan) : ver si se puede hacer directamente en la memoria de la GPU
 	row_offsets = new (std::nothrow) int[n + 1];    // (n+1, &row_offset);
 	column_indices = new (std::nothrow) int[nnz];
-	matrix_values = new (std::nothrow) ValueType[nnz];
+	matrix_values = new (std::nothrow) double[nnz];
 
 	//Importar matriz aca
 	row_offsets[0] = 0;
@@ -214,7 +214,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	p_clSparseMatrix->values = ::clCreateBuffer(
 			context,
 			CL_MEM_READ_ONLY,
-			p_clSparseMatrix->num_nonzeros * sizeof(ValueType),
+			p_clSparseMatrix->num_nonzeros * sizeof(double),
 			NULL,
 			&cl_status
 		);
@@ -292,9 +292,9 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 
 }
 
-template<typename ValueType = double>
+//template<typename ValueType = double>
 void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector, cl_context context, cl_command_queue queue) {
-	size_t numeroElementos = (size_t) foamVector.size();
+	auto numeroElementos = foamVector.size();
 	cl_int cl_status = CL_SUCCESS;
 	vector->values = clCreateBuffer(context, CL_MEM_READ_ONLY, numeroElementos, NULL, &cl_status);
 	/**
@@ -308,7 +308,12 @@ void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *
 			0,
 			numeroElementos
 		);
-	std::copy(foamVector.begin(), foamVector.end(), fValues);
+
+	long idx = 0;
+	for(auto it = foamVector.begin(); it != foamVector.end(); ++it ) {
+		fValues[idx++] = *it;
+	}
+//	std::copy(foamVector.begin(), foamVector.end(), fValues);
 }
 
 #endif // CLSPARSE_PCG_INIT_H

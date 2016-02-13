@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <CL/cl.hpp>
+//#include "clSPARSE.h"
 #include <clSPARSE.h>
 
 namespace Foam {
@@ -36,8 +37,6 @@ private:
         clsparseControl m_clSparseControl;
         cl::Context m_context;
 
-        cl_platform_id getPlatformId();
-        cl_device_id getDeviceId();
 
 public:
 
@@ -63,6 +62,9 @@ public:
         const scalarField& source,
         const direction cmpt=0
     ) const;
+
+    cl_platform_id getPlatformId();
+    cl_device_id getDeviceId();
 
 };
 

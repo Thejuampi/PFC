@@ -54,42 +54,44 @@ namespace Foam
  * @param interfaces
  * @param solverControls
  */
-Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP(const word& fieldName,
+Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
+(
+		const word& fieldName,
 		const lduMatrix& matrix,
 		const FieldField<Field, scalar>& interfaceBouCoeffs,
 		const FieldField<Field, scalar>& interfaceIntCoeffs,
 		const lduInterfaceFieldPtrsList& interfaces,
-		const dictionary& solverControls) :
+		const dictionary& solverControls)
+:
 		lduMatrix::solver(fieldName, matrix, interfaceBouCoeffs,
-				interfaceIntCoeffs, interfaces, solverControls)
+		interfaceIntCoeffs, interfaces, solverControls)
 {
 
-//	cl_status status = CL_SUCCESS;
-//	cl_status = cl::Platform::get(&m_platforms);
-//	int platform_id = getPlatformId();
-//	platform_id = getPlatformId();
-//	//TODO (juan) usar puntero?
-//	m_platform = m_platforms[platform_id];
-//	cl_status = m_platform.getDevices(CL_DEVICE_TYPE_GPU, &g_devices);
-//	cl_device_id device_id = getDeviceId();
-//    device_id = getDeviceId();
-//    m_device = g_devices[device_id];
-//    m_context = cl::Context(m_device);
-//    m_queue(m_context, m_device);
-//    status = clsparseSetup();
-//    clsparseStatus p_clSparceStatus = clsparseSuccess;
-//    cl_command_queue clCommandQueue = &m_queue();
-//    m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparceStatus);
+	cl_status = CL_SUCCESS;
+	cl_status = cl::Platform::get(&m_platforms);
+    auto platform_id = getPlatformId();
+	//TODO (juan) usar puntero?
+	m_platform = m_platforms[platform_id];
+	cl_status = m_platform.getDevices(CL_DEVICE_TYPE_GPU, &g_devices);
+    auto device_id = getDeviceId();
+    device_id = getDeviceId();
+    m_device = g_devices[device_id];
+    m_context = cl::Context(m_device);
+    m_queue = cl::CommandQueue(m_context, m_device);
+    cl_status = clsparseSetup();
+    clsparseStatus p_clSparceStatus = clsparseSuccess;
+    cl_command_queue &clCommandQueue = m_queue();
+    m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparceStatus);
 
     //Ver cuantas veces es necesario hacer el init() de los vectores y/o matrices
 
 }
 
-cl_platform_id Foam::clSPARSE_PCG_DP::getPlatformId() {
+std::size_t Foam::clSPARSE_PCG_DP::getPlatformId() {
 	return 0;
 }
 
-cl_device_id Foam::clSPARSE_PCG_DP::getDeviceId() {
+std::size_t Foam::clSPARSE_PCG_DP::getDeviceId() {
 	//TODO (juan) Modificar esto para que obtenga el id de MPI?
 	return 0;
 }
@@ -146,9 +148,12 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 		clsparseInitVector(&cls_x);
 		clsparseInitCsrMatrix(&cls_matrix);
 
-		importarMatrizDP(matrix(), &cls_matrix, &(m_context()), &(m_queue()), m_clSparseControl);
-		importarVectorOpenFoam(source, &cls_b, &(m_context()), &(m_queue()) );
-		importarVectorOpenFoam(psi, &cls_x, &(m_context()), &(m_queue()) );
+        cl_context context = m_context();
+        cl_command_queue queue = m_queue();
+
+        importarMatrizDP(matrix(), &cls_matrix, context, queue, m_clSparseControl);
+        importarVectorOpenFoam(source, &cls_b, context, queue );
+        importarVectorOpenFoam(psi, &cls_x, context, queue );
 
 		clSParseSolverControl solverControl = nullptr;
 		if (precond_name == "CLSPARSE_DIAGONAL") {

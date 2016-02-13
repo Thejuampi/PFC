@@ -63,8 +63,8 @@ public:
         const direction cmpt=0
     ) const;
 
-    cl_platform_id getPlatformId();
-    cl_device_id getDeviceId();
+    std::size_t getPlatformId();
+    std::size_t getDeviceId();
 
 };
 

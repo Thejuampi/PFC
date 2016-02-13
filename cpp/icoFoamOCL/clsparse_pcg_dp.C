@@ -79,9 +79,9 @@ Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
     m_context = cl::Context(m_device);
     m_queue = cl::CommandQueue(m_context, m_device);
     cl_status = clsparseSetup();
-    clsparseStatus p_clSparceStatus = clsparseSuccess;
+    clsparseStatus p_clSparseStatus = clsparseSuccess;
     cl_command_queue &clCommandQueue = m_queue();
-    m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparceStatus);
+    m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparseStatus);
 
     //Ver cuantas veces es necesario hacer el init() de los vectores y/o matrices
 

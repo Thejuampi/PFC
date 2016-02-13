@@ -41,7 +41,7 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("clSPARCE_PCG_DP")
+    TypeName("clSPARSE_PCG_DP")
 
     clSPARSE_PCG_DP(
         const word& fieldName,

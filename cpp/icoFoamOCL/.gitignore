@@ -2,3 +2,4 @@
 /clSparseUtils.dep
 /icoFoamOCL.dep
 /Make/linux64GccDPOpt/
+*.sh

@@ -35,6 +35,8 @@
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
+#define DD
+
 namespace Foam
 {
 	defineTypeNameAndDebug(clSPARSE_PCG_DP, 0);
@@ -66,20 +68,32 @@ Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
 		lduMatrix::solver(fieldName, matrix, interfaceBouCoeffs,
 		interfaceIntCoeffs, interfaces, solverControls)
 {
-
+#ifdef DD
+	Info<<"[INFO] " << "Construyendo solver clSPARSE_PCG_DP\n";
+	Info<<"[INFO] " << "Construyendo m_platforms";
 	cl_status = CL_SUCCESS;
-	cl_status = cl::Platform::get(&m_platforms);
+#endif
+
+	std::vector<cl::Platform> platforms;
+	cl_status = cl::Platform::get(&platforms);
+
+	verificarError(cl_status);
+
     auto platform_id = getPlatformId();
 	//TODO (juan) usar puntero?
-	m_platform = m_platforms[platform_id];
-	cl_status = m_platform.getDevices(CL_DEVICE_TYPE_GPU, &g_devices);
-    auto device_id = getDeviceId();
+	cl::Platform platform = platforms[platform_id];
+//	cl_status = platform.getDevices(CL_DEVICE_TYPE_CPU, &m_devices);
+	cl_status = platform.getDevices(CL_DEVICE_TYPE_ALL, &m_devices);
+	verificarError(cl_status);
+
+	auto device_id = getDeviceId();
     device_id = getDeviceId();
-    m_device = g_devices[device_id];
+    m_device = m_devices[device_id];
     m_context = cl::Context(m_device);
     m_queue = cl::CommandQueue(m_context, m_device);
-    cl_status = clsparseSetup();
+
     clsparseStatus p_clSparseStatus = clsparseSuccess;
+    p_clSparseStatus  = clsparseSetup();
     cl_command_queue &clCommandQueue = m_queue();
     m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparseStatus);
 
@@ -110,12 +124,14 @@ std::size_t Foam::clSPARSE_PCG_DP::getDeviceId() {
 
 Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 (
-    scalarField& psi,
-    const scalarField& source,
-    const direction cmpt
+    Foam::scalarField& psi,
+    const Foam::scalarField& source,
+    const Foam::direction cmpt
 ) const
 {
 //
+	Info << "[INFO] - Llamada a Foam::clSPARSE_PCG_DP::solve() \n";
+
 	word precond_name = lduMatrix::preconditioner::getName(controlDict_);
 	word solverPrintMode = controlDict_.lookupOrDefault<word>("SolverPrintMode", "QUIET");
 	solverPerformance solverPerf(typeName + '(' + precond_name + ')', fieldName_);
@@ -138,21 +154,33 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 	solverPerf.initialResidual() = gSumMag(rA) / normFactor;
 	solverPerf.finalResidual() = solverPerf.initialResidual();
 
+
+	Info << "[INFO]  - llamada a solverPerf.checkConvergence(tolerance_, relTol_)\n";
 	if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
 		clsparseCsrMatrix cls_matrix;
 		cldenseVector cls_b;
 		cldenseVector cls_x;
 
-		clsparseInitVector(&cls_b);
-		clsparseInitVector(&cls_x);
-		clsparseInitCsrMatrix(&cls_matrix);
+		clsparseStatus status = clsparseSuccess;
+		Info <<"[INFO] "<<"Iniciando Vectores y Matrices\n";
+		status = clsparseInitVector(&cls_b);
+		verificarError(status);
+
+		status = clsparseInitVector(&cls_x);
+		verificarError(status);
+
+		status = clsparseInitCsrMatrix(&cls_matrix);
+		verificarError(status);
 
         cl_context context = m_context();
         cl_command_queue queue = m_queue();
 
+        Info <<"[INFO] "<<"Llamada a importarMatrizDP\n";
         importarMatrizDP(matrix(), &cls_matrix, context, queue, m_clSparseControl);
+        Info<<"[INFO] " <<"Llamada a importarVectorOpenFoam\n";
         importarVectorOpenFoam(source, &cls_b, context, queue );
+        Info<<"[INFO] " <<"Llamada a importarVectorOpenFoam\n";
         importarVectorOpenFoam(psi, &cls_x, context, queue );
 
 		clSParseSolverControl solverControl = nullptr;

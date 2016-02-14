@@ -32,7 +32,7 @@ private:
         cl::CommandQueue m_queue;
         cl_int cl_status;
         std::vector<cl::Platform> m_platforms;
-        std::vector<cl::Device> g_devices;
+        std::vector<cl::Device> m_devices;
 
         clsparseControl m_clSparseControl;
         cl::Context m_context;

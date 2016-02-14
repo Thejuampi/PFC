@@ -1,86 +1,509 @@
-#pragma once
 #ifndef CLSPARSE_PCG_INIT_H
 #define CLSPARSE_PCG_INIT_H
 
-#include <stdio.h>
-#include <iostream>
-#include <vector>
-
-//#ifndef OMPI_MPI_H
-//#include <mpi/mpi.h>
-//#endif
 
 #include "lduMatrix.H"
-
-#if defined(__APPLE__) || defined(__MACOSX)
-#include <OpenCL/cl.hpp>
-#else
 #include <CL/cl.hpp>
+#include "clSPARSE.h"
+//#include <clSPARSE.h">
+
+template< typename pType >
+class clMemRAII
+{
+    cl_command_queue clQueue;
+    pType* clMem;
+    cl_bool clOwner;
+
+public:
+
+    //temporary solution for situations when clMemRaII is allocating buffer,
+    // bug should not release it when calling the destructor.
+    // ProperFIX: write operator=(const clMemRAII&)
+    clMemRAII( const cl_command_queue cl_queue, void** cl_malloc,
+               const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE):
+        clMem( nullptr ), clOwner(false)
+    {
+        clQueue = cl_queue;
+        clMem = static_cast< pType* >( *cl_malloc );
+
+        if(cl_size > 0)
+        {
+            cl_context ctx = NULL;
+
+            ::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
+            cl_int status = 0;
+
+            clMem = static_cast< pType* > (clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
+            *cl_malloc = clMem;
+        }
+
+        ::clRetainCommandQueue( clQueue );
+    }
+
+    clMemRAII( const cl_command_queue cl_queue, void* cl_malloc,
+               const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE):
+        clMem( nullptr ), clOwner(false)
+    {
+        clQueue = cl_queue;
+        clMem = static_cast< pType* >( cl_malloc );
+
+        if(cl_size > 0)
+        {
+            cl_context ctx = NULL;
+
+            ::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
+            cl_int status = 0;
+
+            clMem = static_cast< pType* > (clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
+            clOwner = true;
+        }
+
+        ::clRetainCommandQueue( clQueue );
+    }
+
+    pType* clMapMem( cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int *clStatus = nullptr)
+    {
+        // Right now, we don't support returning an event to wait on
+        clBlocking = CL_TRUE;
+
+        cl_int _clStatus = ::clEnqueueSVMMap( clQueue, clBlocking, clFlags,
+                                              clMem, clSize * sizeof( pType ), 0, NULL, NULL );
+        if (clStatus != nullptr)
+        {
+            *clStatus = _clStatus;
+        }
+
+        return clMem;
+    }
+
+    void clWriteMem( cl_bool clBlocking, const size_t clOff, const size_t clSize, const void* srcPtr )
+    {
+        // Right now, we don't support returning an event to wait on
+        clBlocking = CL_TRUE;
+
+        cl_int clStatus = ::clEnqueueSVMMemcpy( clQueue, clBlocking, clMem, srcPtr,
+                                                  clSize * sizeof( pType ), 0, NULL, NULL );
+    }
+
+    void clFillMem (const pType pattern, const size_t clOff, const size_t clSize)
+    {
+        cl_int clStatus = ::clEnqueueSVMMemFill(clQueue, clMem,
+                                                &pattern, sizeof(pType),
+                                                clSize * sizeof(pType),
+                                                0, NULL, NULL);
+    }
+
+    ~clMemRAII( )
+    {
+        if( clMem )
+            ::clEnqueueSVMUnmap( clQueue, clMem, 0, NULL, NULL );
+
+        if(clOwner)
+        {
+            cl_context ctx = nullptr;
+            ::clGetCommandQueueInfo( clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
+            ::clSVMFree(ctx, clMem);
+        }
+
+        ::clReleaseCommandQueue( clQueue );
+    }
+};
+
+
+#define DD_UTIL
+
+void info(std::string msj) {
+#ifdef DD_UTIL
+	Foam::Info << "[INFO] - " << msj <<"\n";
 #endif
+}
 
-#define BUILD_CLVERSION 200
+template<class M>
+void info(M& m) {
+#ifdef DD_UTIL
+	std::stringstream ss;
+	ss << m;
+	info(ss.str());
+#endif
+}
 
 
-#include <clSPARSE.h>
-#include "clSPARSE-2x.hpp"
-//#include <clSPARSE-2x.hpp"
+std::string codes[] = {
+	"CL_SUCCESS",
+	"CL_DEVICE_NOT_FOUND",
+	"CL_DEVICE_NOT_AVAILABLE",
+	"CL_COMPILER_NOT_AVAILABLE",
+	"CL_MEM_OBJECT_ALLOCATION_FAILURE",
+	"CL_OUT_OF_RESOURCES",
+	"CL_OUT_OF_HOST_MEMORY",
+	"CL_PROFILING_INFO_NOT_AVAILABLE",
+	"CL_MEM_COPY_OVERLAP",
+	"CL_IMAGE_FORMAT_MISMATCH",
+	"CL_IMAGE_FORMAT_NOT_SUPPORTED",
+	"CL_BUILD_PROGRAM_FAILURE",
+	"CL_MAP_FAILURE",
+	"CL_MISALIGNED_SUB_BUFFER_OFFSET",
+	"CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST",
+	"CL_COMPILE_PROGRAM_FAILURE",
+	"CL_LINKER_NOT_AVAILABLE",
+	"CL_LINK_PROGRAM_FAILURE",
+	"CL_DEVICE_PARTITION_FAILED",
+	"CL_KERNEL_ARG_INFO_NOT_AVAILABLE",
+	"NULL",
+	"NULL",
+	"NULL",
+	"NULL",
+	"NULL",
+	"NULL",
+	"NULL",
+	"NULL",
+	"NULL",
+	"NULL",
+	"CL_INVALID_VALUE",
+	"CL_INVALID_DEVICE_TYPE",
+	"CL_INVALID_PLATFORM",
+	"CL_INVALID_DEVICE",
+	"CL_INVALID_CONTEXT",
+	"CL_INVALID_QUEUE_PROPERTIES",
+	"CL_INVALID_COMMAND_QUEUE",
+	"CL_INVALID_HOST_PTR",
+	"CL_INVALID_MEM_OBJECT",
+	"CL_INVALID_IMAGE_FORMAT_DESCRIPTO",
+	"CL_INVALID_IMAGE_SIZE",
+	"CL_INVALID_SAMPLER",
+	"CL_INVALID_BINARY",
+	"CL_INVALID_BUILD_OPTIONS",
+	"CL_INVALID_PROGRAM",
+	"CL_INVALID_PROGRAM_EXECUTABLE",
+	"CL_INVALID_KERNEL_NAME",
+	"CL_INVALID_KERNEL_DEFINITION",
+	"CL_INVALID_KERNEL",
+	"CL_INVALID_ARG_INDEX",
+	"CL_INVALID_ARG_VALUE",
+	"CL_INVALID_ARG_SIZE",
+	"CL_INVALID_KERNEL_ARGS",
+	"CL_INVALID_WORK_DIMENSION",
+	"CL_INVALID_WORK_GROUP_SIZE",
+	"CL_INVALID_WORK_ITEM_SIZE",
+	"CL_INVALID_GLOBAL_OFFSET",
+	"CL_INVALID_EVENT_WAIT_LIST",
+	"CL_INVALID_EVENT",
+	"CL_INVALID_OPERATION",
+	"CL_INVALID_GL_OBJECT",
+	"CL_INVALID_BUFFER_SIZE",
+	"CL_INVALID_MIP_LEVEL",
+	"CL_INVALID_GLOBAL_WORK_SIZE",
+	"CL_INVALID_PROPERTY",
+	"CL_INVALID_IMAGE_DESCRIPTOR"   ,
+	"CL_INVALID_COMPILER_OPTIONS"    ,
+	"CL_INVALID_LINKER_OPTIONS"       ,
+	"CL_INVALID_DEVICE_PARTITION_COUNT",
+	"CL_INVALID_PIPE_SIZE"             ,
+	"CL_INVALID_DEVICE_QUEUE"
+};
 
-/*
- *
- *    Don't define variables in headers. Put declarations in header and definitions in one of the .c files.
- *    In config.h
- *
- *    extern const char *names[];
- *    In some .c file:
- *
- *    const char *names[] =
- *    {
- *       "brian", "stefan", "steve"
- *    };
- *
- */
+void verificarError(int code) {
 
-/**
- * If you have more than just main.cpp, and include your test.h, then each .cpp file will have its own copy of testNum.
- * If you want them to share then you need all but one to mark it as extern.
- */
-
-namespace clSparseUtils {
-
-///**
-// * @brief Variables de mpi
-// */
-//extern int ierr, my_id, num_procs;
-
-/**
- * @brief Variables de OpenCL
- */
-extern cl::Device g_device;
-extern cl::Platform g_platform;
-extern cl::CommandQueue g_queue;
-extern cl_int cl_status;
-extern std::vector<cl::Platform> g_platforms;
-extern std::vector<cl::Device> g_devices;
-
-/**
- * @brief Varibales de clSPARSE
- */
-extern cldenseVector g_x;
-extern cldenseVector g_b;
-extern clsparseCsrMatrix g_A;
-extern clsparseStatus status;
-extern clsparseControl g_clSparseControl;
-extern cl::Context g_context;
-
-cl_int getDeviceId();
-cl_int getPlatformId();
-void init();
-
-//template <typename ValueType=double>
-void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix);
-//template <typename ValueType=double>
-void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector);
+	if(code != CL_SUCCESS) {
+		try {
+			std::string& error_description = codes[-code];
+			Foam::Info << "[Error] CODE:" << code << " = " << codes[-code] <<"\n";
+		} catch(std::exception& e){
+			Foam::Info << "Excepción:" << e.what();
+		}
+		exit(code);
+	}
 
 }
+
+
+//template<typename ValueType = double>
+void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix, cl_context context, cl_command_queue queue, clsparseControl control) {
+
+	//TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
+
+//	clsparseInitCsrMatrix(p_clSparseMatrix);
+
+	// Matrix size
+
+	int n = ref_foamMatrix.diag().size();
+	int nnz = ref_foamMatrix.diag().size() + ref_foamMatrix.lower().size()
+			+ ref_foamMatrix.upper().size();
+
+	info("Tamaño diagonal \"n\"");
+	info(n);
+	info("Nro elementos no nulos \"nnz\"");
+	info(nnz);
+
+	// CSR values
+	int *row_offsets = NULL;
+	int *column_indices = NULL;
+	double *matrix_values = NULL;
+
+	// reservar lugar:
+	//TODO (juan) : ver si se puede hacer directamente en la memoria de la GPU
+
+	info("Alocando memoria local");
+	row_offsets = new (std::nothrow) int[n + 1];    // (n+1, &row_offset);
+	column_indices = new (std::nothrow) int[nnz];
+	matrix_values = new (std::nothrow) double[nnz];
+
+#ifdef DD_UTIL
+	if(row_offsets == NULL || column_indices == NULL || matrix_values == NULL) {
+		info("Error al alocar memoria local");
+	}
+#endif
+
+	//Importar matriz aca
+	row_offsets[0] = 0;
+
+	info("INICIO - row_offsets a 1");
+//	std::memset(row_offsets + 1, 1, n);
+	std::fill_n(row_offsets, n, 1);
+	info("FIN - row_offsets a 1");
+
+	Foam::UList<int>::const_iterator it_low =
+			ref_foamMatrix.lduAddr().lowerAddr().begin();
+	Foam::UList<int>::const_iterator it_up =
+			ref_foamMatrix.lduAddr().upperAddr().begin();
+
+
+	info("INICIO - Seteando row offsets");
+	for (int i = 0; i < ref_foamMatrix.lower().size(); ++i) {
+		row_offsets[*(it_low++) + 1]++;
+		row_offsets[*(it_up++) + 1]++;
+	}
+
+	//CSR
+	//TODO (juan) ver como se puede mejorar esto
+	int sum = 0;
+	for (int i = 0; i < n; ++i) {
+		int temp = row_offsets[i];
+		row_offsets[i] = sum;
+		sum += temp;
+	}
+	row_offsets[n] = sum;
+	info("FIN - Seteando row offsets");
+
+
+
+	Foam::UList<double>::const_iterator it_val = ref_foamMatrix.lower().begin();
+	it_low = ref_foamMatrix.lduAddr().lowerAddr().begin();
+	it_up = ref_foamMatrix.lduAddr().upperAddr().begin();
+
+
+	info("INICIO - Fill col and val arrays for lower part");
+	// fill col and val arrays for lower part
+	for (int i = 0; i < ref_foamMatrix.lower().size(); ++i) {
+		// row index for lower = upper + 1
+//		info("int r_lower = *it_up + 1");
+		int r_lower = *it_up + 1;
+//		info("int dest_lower = row_offsets[r_lower]");
+		int dest_lower = row_offsets[r_lower];
+
+
+//		info("r_lower:");
+//		info(r_lower);
+//		info("dest_lower:");
+//		info(dest_lower);
+
+//		info("column_indices[dest_lower] = *it_low");
+		column_indices[dest_lower] = *it_low;
+//		info("matrix_values[dest_lower] = *it_val");
+		matrix_values[dest_lower] = *it_val;
+//		info("++row_offsets[r_lower]");
+		++row_offsets[r_lower];
+
+		++it_low;
+		++it_up;
+		++it_val;
+	}
+	info("FIN - Fill col and val arrays for lower part");
+
+	info("INICIO - fill diagonal part");
+	// fill diagonal part
+	it_val = ref_foamMatrix.diag().begin();
+	for (int i = 0; i < ref_foamMatrix.diag().size(); ++i) {
+		int dest_diag = row_offsets[i + 1];
+		matrix_values[dest_diag] = *it_val;
+		column_indices[dest_diag] = i;
+		++row_offsets[i + 1];
+		++it_val;
+	}
+	it_low = ref_foamMatrix.lduAddr().lowerAddr().begin();
+	it_up = ref_foamMatrix.lduAddr().upperAddr().begin();
+	it_val = ref_foamMatrix.upper().begin();
+	info("FIN - fill diagonal part");
+
+	// fill upper part
+	info("INICIO - fill upper part");
+	for (int i = 0; i < ref_foamMatrix.upper().size(); ++i) {
+		// row index for upper part = lower + 1
+		int r_upper = *it_low + 1;
+		int dest_upper = row_offsets[r_upper];
+
+		column_indices[dest_upper] = *it_up;
+		matrix_values[dest_upper] = *it_val;
+		++row_offsets[r_upper];
+
+		++it_low;
+		++it_up;
+		++it_val;
+	}
+	info("FIN - fill upper part");
+
+#ifdef DD_UTIL
+//	if(p_clSparseMatrix == NULL) {
+		info("p_clSparseMatrix:");
+		info(p_clSparseMatrix);
+//		exit(-1);
+//	}
+
+#endif
+
+	info("p_clSparseMatrix->num_nonzeros = nnz");
+	p_clSparseMatrix->num_nonzeros = nnz;
+	info("p_clSparseMatrix->num_cols = n");
+	p_clSparseMatrix->num_cols = n;
+	info("p_clSparseMatrix->num_rows = n");
+	p_clSparseMatrix->num_rows = n;
+
+	cl_int cl_status = CL_SUCCESS;
+
+	// REVISAR: probablemente no funcione bien con el "ValueType"
+
+	info("p_clSparseMatrix->values = ::clCreateBuffer()");
+	p_clSparseMatrix->values = ::clCreateBuffer(
+			context,
+			CL_MEM_READ_ONLY,
+			p_clSparseMatrix->num_nonzeros * sizeof(double),
+			NULL,
+			&cl_status
+		);
+	verificarError(cl_status);
+
+
+	info("p_clSparseMatrix->colIndices = ::clCreateBuffer");
+	p_clSparseMatrix->colIndices = ::clCreateBuffer(
+			context,
+			CL_MEM_READ_ONLY,
+			p_clSparseMatrix->num_nonzeros * sizeof(cl_int),
+			NULL,
+			&cl_status
+		);
+	verificarError(cl_status);
+
+	info("p_clSparseMatrix->rowOffsets = ::clCreateBuffer()");
+	p_clSparseMatrix->rowOffsets = ::clCreateBuffer(
+			context,
+			CL_MEM_READ_ONLY,
+			(p_clSparseMatrix->num_rows + 1) * sizeof(cl_int),
+			NULL,
+			&cl_status
+		);
+	verificarError(cl_status);
+
+//	info("p_clSparseMatrix->rowBlocks = ::clCreateBuffer()");
+//	p_clSparseMatrix->rowBlocks = ::clCreateBuffer(
+//			context,
+//			CL_MEM_READ_ONLY,
+//			p_clSparseMatrix->rowBlockSize * sizeof(cl_ulong),
+//			NULL,
+//			&cl_status
+//		);
+//	verificarError(cl_status);
+
+	//OpenCL 2.0: usa clSVMAlloc <- para delegar la alocación de memoria en la GPU
+	//FIXME!: ver como modificar cl_float/cl_double segun el TypeName
+
+	info("INICIO clMemRAII");
+	clMemRAII<cl_double> rCsrValues(queue, p_clSparseMatrix->values);
+	clMemRAII<cl_int> rCsrColIndices(queue, p_clSparseMatrix->colIndices);
+	clMemRAII<cl_int> rCsrRowOffsets(queue, p_clSparseMatrix->rowOffsets);
+	info("FIN clMemRAII");
+
+	//FIXME! (juan) : ver como hacer cuando TypeName es float o es double
+	//FIXME!: ver como modificar cl_float/cl_double segun el TypeName
+
+	info("INICIO - clMapMem");
+	cl_double* fCsrValues = rCsrValues.clMapMem(
+			CL_TRUE,
+			CL_MAP_WRITE_INVALIDATE_REGION,
+			0 /*p_clSparseMatrix->valOffset*/,
+			nnz
+		);
+	cl_int* iCsrColIndices = rCsrColIndices.clMapMem(
+			CL_TRUE,
+			CL_MAP_WRITE_INVALIDATE_REGION,
+			0 /*p_clSparseMatrix->colIndOffset*/,
+			nnz
+		);
+	cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem(
+			CL_TRUE,
+			CL_MAP_WRITE_INVALIDATE_REGION,
+			0 /*p_clSparseMatrix->rowOffOffset*/,
+			p_clSparseMatrix->num_rows + 1
+		);
+	info("FIN - clMapMem");
+
+	//Esto de puede mejorar al copiar directamente al espacio de memoria de la GPU.
+	// Por ahora lo dejo así porque necesito probar que funcione correctamente.
+	// TODO:(juan) refactorizar esto. Hacer la asignación directamente al copiar los valores desde openFOAM
+
+
+	info("INICIO - memcpy");
+	for(size_t i = 0; i < nnz ; ++i) {
+		fCsrValues[i] = matrix_values[i];
+		iCsrColIndices[i] = column_indices[i];
+	}
+	for(size_t i = 0; i < n; ++i) {
+		iCsrRowOffsets[i] = row_offsets[i];
+	}
+	info("FIN - memcpy");
+
+
+	info("clsparseCsrMetaSize(p_clSparseMatrix, control)");
+
+//	std::cin.get();
+
+	clsparseCsrMetaSize(p_clSparseMatrix, control);
+	info("p_clSparseMatrix->rowBlocks = ::clCreateBuffer()");
+	p_clSparseMatrix->rowBlocks = ::clCreateBuffer(
+			context,
+			CL_MEM_READ_WRITE,
+			p_clSparseMatrix->rowBlockSize * sizeof(cl_ulong),
+			NULL,
+			&cl_status
+		);
+	verificarError(cl_status);
+	info("clsparseCsrMetaCompute(p_clSparseMatrix, control)");
+	clsparseCsrMetaCompute(p_clSparseMatrix, control);
+
+}
+
+//template<typename ValueType = double>
+void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector, cl_context context, cl_command_queue queue) {
+	auto numeroElementos = foamVector.size();
+	cl_int cl_status = CL_SUCCESS;
+	vector->values = clCreateBuffer(context, CL_MEM_READ_ONLY, numeroElementos, NULL, &cl_status);
+	/**
+	 * TODO (juan): Ver que es mas eficiente. Usar el mapeo de memoria de OpenCL 2.0 o copiar los datos directamente
+	 *
+	 */
+	clMemRAII<cl_double> rValues(queue, vector->values);
+	cl_double* fValues = rValues.clMapMem(
+			CL_TRUE,
+			CL_MAP_WRITE_INVALIDATE_REGION,
+			0,
+			numeroElementos
+		);
+
+	long idx = 0;
+	for(auto it = foamVector.begin(); it != foamVector.end(); ++it ) {
+		fValues[idx++] = *it;
+	}
+//	std::copy(foamVector.begin(), foamVector.end(), fValues);
+}
+
 
 #endif // CLSPARSE_PCG_INIT_H

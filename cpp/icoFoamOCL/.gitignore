@@ -1,3 +1,5 @@
 /clsparse_pcg_dp.dep
 /clSparseUtils.dep
 /icoFoamOCL.dep
+/Make/linux64GccDPOpt/
+*.sh

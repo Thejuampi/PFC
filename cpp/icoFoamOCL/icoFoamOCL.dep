@@ -666,10 +666,6 @@ icoFoamOCL.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/argListI.H
 icoFoamOCL.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/timeSelector.H
 icoFoamOCL.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/scalarRanges.H
 icoFoamOCL.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/scalarRange.H
-icoFoamOCL.dep: clSparseUtils.h
-icoFoamOCL.dep: /home/juan/dev/git/clSPARSE/src/library/include/clSPARSE-2x.hpp
-icoFoamOCL.dep: /home/juan/dev/git/clSPARSE/src/include/clSPARSE-2x.h
-icoFoamOCL.dep: /home/juan/dev/git/clSPARSE/src/include/clSPARSE-xx.h
 icoFoamOCL.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/setRootCase.H
 icoFoamOCL.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/createTime.H
 icoFoamOCL.dep: $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/createMesh.H

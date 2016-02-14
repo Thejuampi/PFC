@@ -1,3 +1,2 @@
 include icoFoamOCL.dep
 include clsparse_pcg_dp.dep
-include clSparseUtils.dep

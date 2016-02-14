@@ -2,6 +2,11 @@
 #define CLSPARSE_PCG_DP_H
 
 #include "lduMatrix.H"
+#include <vector>
+
+#include <CL/cl.hpp>
+//#include "clSPARSE.h"
+#include <clSPARSE.h>
 
 namespace Foam {
 
@@ -9,7 +14,9 @@ namespace Foam {
                            Class clSPARSE_PCG_DP Declaration
 \*---------------------------------------------------------------------------*/
 
-class clSPARSE_PCG_DP : public lduMatrix::solver
+class clSPARSE_PCG_DP
+:
+	public lduMatrix::solver
 {
 private:
     // Private Member Functions
@@ -20,10 +27,21 @@ private:
         //- Disallow default bitwise assignment
         void operator=(const clSPARSE_PCG_DP&);
 
+        cl::Device m_device;
+        cl::Platform m_platform;
+        cl::CommandQueue m_queue;
+        cl_int cl_status;
+        std::vector<cl::Platform> m_platforms;
+        std::vector<cl::Device> m_devices;
+
+        clsparseControl m_clSparseControl;
+        cl::Context m_context;
+
+
 public:
 
     //- Runtime type information
-    TypeName("clSPARCE_PCG_DP")
+    TypeName("clSPARSE_PCG_DP")
 
     clSPARSE_PCG_DP(
         const word& fieldName,
@@ -44,7 +62,13 @@ public:
         const scalarField& source,
         const direction cmpt=0
     ) const;
+
+    std::size_t getPlatformId();
+    std::size_t getDeviceId();
+
 };
+
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

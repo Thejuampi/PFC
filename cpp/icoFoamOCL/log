@@ -1,0 +1,14 @@
+Making dependency list for source file clsparse_pcg_dp.C
+could not open file clsparse_export.h for source file clsparse_pcg_dp.C due to No such file or directory
+SOURCE=clsparse_pcg_dp.C ;  g++ -m64 -std=c++11 -Dlinux64 -DWM_DP -Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor -O3  -DNoRepository -ftemplate-depth-100 -I/opt/openfoam240/src/finiteVolume/lnInclude -I/opt/openfoam240/src/sampling/lnInclude -I/opt/openfoam240/src/meshTools/lnInclude -I/home/juan/dev/git/clSPARSE/src/include/  -IlnInclude -I. -I/opt/openfoam240/src/OpenFOAM/lnInclude -I/opt/openfoam240/src/OSspecific/POSIX/lnInclude   -fPIC -c $SOURCE -o Make/linux64GccDPOpt/clsparse_pcg_dp.o
+In file included from clsparse_pcg_dp.C:33:0:
+clSparseUtils.h: In instantiation of ‘clMemRAII<pType>::clMemRAII(cl_command_queue, void*, size_t, cl_svm_mem_flags) [with pType = double; cl_command_queue = _cl_command_queue*; size_t = long unsigned int; cl_svm_mem_flags = long unsigned int]’:
+clSparseUtils.h:271:65:   required from here
+clSparseUtils.h:55:20: warning: unused variable ‘status’ [-Wunused-variable]
+             cl_int status = 0;
+                    ^
+clSparseUtils.h: In instantiation of ‘clMemRAII<pType>::clMemRAII(cl_command_queue, void*, size_t, cl_svm_mem_flags) [with pType = int; cl_command_queue = _cl_command_queue*; size_t = long unsigned int; cl_svm_mem_flags = long unsigned int]’:
+clSparseUtils.h:272:70:   required from here
+clSparseUtils.h:55:20: warning: unused variable ‘status’ [-Wunused-variable]
+g++ -m64 -std=c++11 -Dlinux64 -DWM_DP -Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor -O3  -DNoRepository -ftemplate-depth-100 -I/opt/openfoam240/src/finiteVolume/lnInclude -I/opt/openfoam240/src/sampling/lnInclude -I/opt/openfoam240/src/meshTools/lnInclude -I/home/juan/dev/git/clSPARSE/src/include/  -IlnInclude -I. -I/opt/openfoam240/src/OpenFOAM/lnInclude -I/opt/openfoam240/src/OSspecific/POSIX/lnInclude   -fPIC -Xlinker --add-needed -Xlinker --no-as-needed Make/linux64GccDPOpt/icoFoamOCL.o Make/linux64GccDPOpt/clsparse_pcg_dp.o -L/opt/openfoam240/platforms/linux64GccDPOpt/lib \
+	     -lfiniteVolume -lOpenFOAM -lOpenCL /usr/local/lib64/libclSPARSE.so  -lOpenFOAM -ldl   -lm -o ./icoFoamOCL

@@ -1,0 +1,14 @@
+EXE_INC = \
+	-I$(LIB_SRC)/OpenFOAM/matrices/lduMatrix/lduMatrix/ \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/sampling/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude \
+    -I$(LIB_SRC)/OpenFOAM/lnInclude/ \
+    -I/home/juan/dev/git/clSPARSE/src/include/ \
+
+EXE_LIBS = \
+    -lfiniteVolume \
+    -lOpenFOAM \
+    -lsampling \
+    -lOpenCL \
+    /usr/local/lib64/libclSPARSE.so \

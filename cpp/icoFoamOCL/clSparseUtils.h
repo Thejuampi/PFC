@@ -7,7 +7,7 @@
 #include "clSPARSE.h"
 //#include <clSPARSE.h">
 
-template< typename pType >
+template< typename pType=double >
 class clMemRAII
 {
     cl_command_queue clQueue;
@@ -430,20 +430,26 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,
 			0 /*p_clSparseMatrix->valOffset*/,
-			nnz
+			nnz,
+			&cl_status
 		);
+	verificarError(cl_status);
 	cl_int* iCsrColIndices = rCsrColIndices.clMapMem(
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,
 			0 /*p_clSparseMatrix->colIndOffset*/,
-			nnz
+			nnz,
+			&cl_status
 		);
+	verificarError(cl_status);
 	cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem(
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,
 			0 /*p_clSparseMatrix->rowOffOffset*/,
-			p_clSparseMatrix->num_rows + 1
+			p_clSparseMatrix->num_rows + 1,
+			&cl_status
 		);
+	verificarError(cl_status);
 	info("FIN - clMapMem");
 
 	//Esto de puede mejorar al copiar directamente al espacio de memoria de la GPU.
@@ -453,6 +459,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 
 	info("INICIO - memcpy");
 	for(size_t i = 0; i < nnz ; ++i) {
+//		info(i);
 		fCsrValues[i] = matrix_values[i];
 		iCsrColIndices[i] = column_indices[i];
 	}

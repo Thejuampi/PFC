@@ -3,6 +3,7 @@
 
 
 #include "lduMatrix.H"
+#include <CL/cl.h>
 #include <CL/cl.hpp>
 #include "clSPARSE.h"
 //#include <clSPARSE.h">
@@ -384,7 +385,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 
 
 	info("p_clSparseMatrix->colIndices = ::clCreateBuffer");
-	p_clSparseMatrix->colIndices = ::clCreateBuffer(
+	p_clSparseMatrix->col_indices = ::clCreateBuffer(
 			context,
 			CL_MEM_READ_ONLY,
 			p_clSparseMatrix->num_nonzeros * sizeof(cl_int),
@@ -394,7 +395,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	verificarError(cl_status);
 
 	info("p_clSparseMatrix->rowOffsets = ::clCreateBuffer()");
-	p_clSparseMatrix->rowOffsets = ::clCreateBuffer(
+	p_clSparseMatrix->row_pointer= ::clCreateBuffer(
 			context,
 			CL_MEM_READ_ONLY,
 			(p_clSparseMatrix->num_rows + 1) * sizeof(cl_int),
@@ -418,8 +419,8 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 
 	info("INICIO clMemRAII");
 	clMemRAII<cl_double> rCsrValues(queue, p_clSparseMatrix->values);
-	clMemRAII<cl_int> rCsrColIndices(queue, p_clSparseMatrix->colIndices);
-	clMemRAII<cl_int> rCsrRowOffsets(queue, p_clSparseMatrix->rowOffsets);
+	clMemRAII<cl_int> rCsrColIndices(queue, p_clSparseMatrix->col_indices);
+	clMemRAII<cl_int> rCsrRowOffsets(queue, p_clSparseMatrix->row_pointer);
 	info("FIN clMemRAII");
 
 	//FIXME! (juan) : ver como hacer cuando TypeName es float o es double
@@ -475,7 +476,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 
 	clsparseCsrMetaSize(p_clSparseMatrix, control);
 	info("p_clSparseMatrix->rowBlocks = ::clCreateBuffer()");
-	p_clSparseMatrix->rowBlocks = ::clCreateBuffer(
+	p_clSparseMatrix->row_pointer= ::clCreateBuffer(
 			context,
 			CL_MEM_READ_WRITE,
 			p_clSparseMatrix->rowBlockSize * sizeof(cl_ulong),
@@ -484,7 +485,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 		);
 	verificarError(cl_status);
 	info("clsparseCsrMetaCompute(p_clSparseMatrix, control)");
-	clsparseCsrMetaCompute(p_clSparseMatrix, control);
+	clsparseCsrMetaCreate(p_clSparseMatrix, control);
 
 }
 

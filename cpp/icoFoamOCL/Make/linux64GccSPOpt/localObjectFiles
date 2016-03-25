@@ -1,0 +1,3 @@
+LOCAL_OBJECTS = \
+icoFoamOCL.o\
+clsparse_pcg_dp.o

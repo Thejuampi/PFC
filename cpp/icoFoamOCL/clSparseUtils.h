@@ -63,6 +63,7 @@ public:
                const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE):
         clMem( nullptr ), clOwner(false)
     {
+    	info("COnstruyendo clMemRAII");
         clQueue = cl_queue;
         clMem = static_cast< pType* >( cl_malloc );
 
@@ -74,6 +75,8 @@ public:
             cl_int status = 0;
 
             clMem = static_cast< pType* > (clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
+            info("clMem:");
+            info(clMem);
             clOwner = true;
         }
 
@@ -421,15 +424,16 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	//FIXME!: ver como modificar cl_float/cl_double segun el TypeName
 
 	info("INICIO clMemRAII");
-	clMemRAII<cl_double> rCsrValues(queue, p_clSparseMatrix->values);
-	clMemRAII<cl_int> rCsrColIndices(queue, p_clSparseMatrix->col_indices);
-	clMemRAII<cl_int> rCsrRowOffsets(queue, p_clSparseMatrix->row_pointer);
+	clMemRAII<cl_double> rCsrValues(queue, p_clSparseMatrix->values, p_clSparseMatrix->num_nonzeros);
+	clMemRAII<cl_int> rCsrColIndices(queue, p_clSparseMatrix->col_indices, p_clSparseMatrix->num_nonzeros);
+	clMemRAII<cl_int> rCsrRowOffsets(queue, p_clSparseMatrix->row_pointer, p_clSparseMatrix->num_rows+1); //???
 	info("FIN clMemRAII");
 
 	//FIXME! (juan) : ver como hacer cuando TypeName es float o es double
 	//FIXME!: ver como modificar cl_float/cl_double segun el TypeName
 
 	info("INICIO - clMapMem : fCsrValues");
+
 	cl_double* fCsrValues = rCsrValues.clMapMem(
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,

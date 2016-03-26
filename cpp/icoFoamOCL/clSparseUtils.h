@@ -219,7 +219,7 @@ void verificarError(int code) {
 
 
 //template<typename ValueType = double>
-void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix, cl_context context, cl_command_queue queue, clsparseControl control) {
+void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix, cl_context context, cl_command_queue queue, clsparseCreateResult createResult) {
 
 	//TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
 
@@ -470,34 +470,35 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	info("FIN - memcpy");
 
 
-	info("clsparseCsrMetaSize(p_clSparseMatrix, control)");
+	info("clsparseCsrMetaSize(p_clSparseMatrix, createResult)");
 
 //	std::cin.get();
 
-	clsparseCsrMetaSize(p_clSparseMatrix, control);
-	info("p_clSparseMatrix->rowBlocks = ::clCreateBuffer()");
-	p_clSparseMatrix->row_pointer= ::clCreateBuffer(
-			context,
-			CL_MEM_READ_WRITE,
-			p_clSparseMatrix->rowBlockSize * sizeof(cl_ulong),
-			NULL,
-			&cl_status
-		);
-	verificarError(cl_status);
-	info("clsparseCsrMetaCompute(p_clSparseMatrix, control)");
-	clsparseCsrMetaCreate(p_clSparseMatrix, control);
+//	clsparseCsrMetaSize(p_clSparseMatrix, control);
+//	info("p_clSparseMatrix->rowBlocks = ::clCreateBuffer()");
+//	p_clSparseMatrix->row_pointer= ::clCreateBuffer(
+//			context,
+//			CL_MEM_READ_WRITE,
+//			p_clSparseMatrix->rowBlockSize * sizeof(cl_ulong),
+//			NULL,
+//			&cl_status
+//		);
+//	verificarError(cl_status);
+//	info("clsparseCsrMetaCompute(p_clSparseMatrix, control)");
+	clsparseCsrMetaCreate(p_clSparseMatrix, createResult.control);
 
 }
 
 //template<typename ValueType = double>
 void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector, cl_context context, cl_command_queue queue) {
-	auto numeroElementos = foamVector.size();
+	size_t numeroElementos = (size_t)foamVector.size();
 	cl_int cl_status = CL_SUCCESS;
 	vector->values = clCreateBuffer(context, CL_MEM_READ_ONLY, numeroElementos, NULL, &cl_status);
 	/**
 	 * TODO (juan): Ver que es mas eficiente. Usar el mapeo de memoria de OpenCL 2.0 o copiar los datos directamente
 	 *
 	 */
+
 	clMemRAII<cl_double> rValues(queue, vector->values);
 	cl_double* fValues = rValues.clMapMem(
 			CL_TRUE,

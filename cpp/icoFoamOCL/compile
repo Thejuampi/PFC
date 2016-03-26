@@ -1,0 +1,474 @@
+Making dependency list for source file clsparse_pcg_dp.C
+could not open file clsparse_export.h for source file clsparse_pcg_dp.C due to No such file or directory
+SOURCE=clsparse_pcg_dp.C ;  g++ -m64 -std=c++11 -Dlinux64 -DWM_DP -Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor -O3  -DNoRepository -ftemplate-depth-100 -I/opt/openfoam231/src/finiteVolume/lnInclude -I/opt/openfoam231/src/sampling/lnInclude -I/opt/openfoam231/src/meshTools/lnInclude -I/home/juan/dev/git/clSPARSE/src/include/ -I/opt/AMDAPPSDK-3.0/include/  -IlnInclude -I. -I/opt/openfoam231/src/OpenFOAM/lnInclude -I/opt/openfoam231/src/OSspecific/POSIX/lnInclude   -fPIC -c $SOURCE -o Make/linux64GccDPOpt/clsparse_pcg_dp.o
+In file included from clSparseUtils.h:7:0,
+                 from clsparse_pcg_dp.C:33:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Context::Context(const std::vector<cl::Device>&, cl_context_properties*, void (*)(const char*, const void*, size_t, void*), void*, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:2383:35: warning: use of old-style cast [-Wold-style-cast]
+             properties, (cl_uint) numDevices,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Context::Context(cl_device_type, cl_context_properties*, void (*)(const char*, const void*, size_t, void*), void*, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:2439:68: warning: use of old-style cast [-Wold-style-cast]
+             prop[1] = (cl_context_properties)Platform::get(&error)();
+                                                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::Context::getSupportedImageFormats(cl_mem_flags, cl_mem_object_type, std::vector<cl::ImageFormat>*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:2603:32: warning: use of old-style cast [-Wold-style-cast]
+             (cl_image_format*) value, 
+                                ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In static member function ‘static cl_int cl::Event::waitForEvents(const std::vector<cl::Event>&)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:2791:39: warning: use of old-style cast [-Wold-style-cast]
+                 (cl_uint) events.size(), (cl_event*)&events.front()),
+                                       ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:2791:67: warning: use of old-style cast [-Wold-style-cast]
+                 (cl_uint) events.size(), (cl_event*)&events.front()),
+                                                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In function ‘cl_int cl::WaitForEvents(const std::vector<cl::Event>&)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:2860:35: warning: use of old-style cast [-Wold-style-cast]
+             (cl_uint) events.size(), (cl_event*)&events.front()),
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:2860:63: warning: use of old-style cast [-Wold-style-cast]
+             (cl_uint) events.size(), (cl_event*)&events.front()),
+                                                               ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Sampler::Sampler(const cl::Context&, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4240:21: warning: ‘_cl_sampler* clCreateSampler(cl_context, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int*)’ is deprecated (declared at /opt/AMDAPPSDK-3.0/include/CL/cl.h:1366) [-Wdeprecated-declarations]
+         object_ = ::clCreateSampler(
+                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4245:19: warning: ‘_cl_sampler* clCreateSampler(cl_context, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int*)’ is deprecated (declared at /opt/AMDAPPSDK-3.0/include/CL/cl.h:1366) [-Wdeprecated-declarations]
+             &error);
+                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl::NDRange::operator const size_t*() const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4360:34: warning: use of old-style cast [-Wold-style-cast]
+         return (const ::size_t*) sizes_; 
+                                  ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Program::Program(const STRING_CLASS&, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4587:33: warning: use of old-style cast [-Wold-style-cast]
+             context(), (cl_uint)1, &strings, &length, &error);
+                                 ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Program::Program(const STRING_CLASS&, bool, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4622:33: warning: use of old-style cast [-Wold-style-cast]
+             context(), (cl_uint)1, &strings, &length, &error);
+                                 ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Program::Program(const cl::Context&, const STRING_CLASS&, bool, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4656:33: warning: use of old-style cast [-Wold-style-cast]
+             context(), (cl_uint)1, &strings, &length, &error);
+                                 ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Program::Program(const cl::Context&, const Sources&, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4685:51: warning: use of old-style cast [-Wold-style-cast]
+         const ::size_t n = (::size_t)sources.size();
+                                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4690:39: warning: use of old-style cast [-Wold-style-cast]
+             strings[i] = sources[(int)i].first;
+                                       ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4691:39: warning: use of old-style cast [-Wold-style-cast]
+             lengths[i] = sources[(int)i].second;
+                                       ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4695:33: warning: use of old-style cast [-Wold-style-cast]
+             context(), (cl_uint)n, strings, lengths, &error);
+                                 ^
+In file included from clSparseUtils.h:7:0,
+                 from clsparse_pcg_dp.C:33:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Program::Program(const cl::Context&, const std::vector<cl::Device>&, const Binaries&, std::vector<int>*, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4747:59: warning: use of old-style cast [-Wold-style-cast]
+             images[i] = (const unsigned char*)binaries[i].first;
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4748:40: warning: use of old-style cast [-Wold-style-cast]
+             lengths[i] = binaries[(int)i].second;
+                                        ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4761:47: warning: use of old-style cast [-Wold-style-cast]
+             context(), (cl_uint) devices.size(),
+                                               ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::Program::Program(const cl::Context&, const std::vector<cl::Device>&, const STRING_CLASS&, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4796:36: warning: use of old-style cast [-Wold-style-cast]
+             (cl_uint) devices.size(),
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::Program::build(const std::vector<cl::Device>&, const char*, void (*)(cl_program, void*), void*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4844:30: warning: use of old-style cast [-Wold-style-cast]
+                 devices.size(),
+                              ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::Program::createKernels(std::vector<cl::Kernel>*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:4943:47: warning: use of old-style cast [-Wold-style-cast]
+             object_, numKernels, (cl_kernel*) value, NULL);
+                                               ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In function ‘cl::Program cl::linkProgram(std::vector<cl::Program>, const char*, void (*)(cl_program, void*), void*, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5009:37: warning: use of old-style cast [-Wold-style-cast]
+         (cl_uint)inputPrograms.size(),
+                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::CommandQueue::CommandQueue(cl_command_queue_properties, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5084:25: warning: ‘_cl_command_queue* clCreateCommandQueue(cl_context, cl_device_id, cl_command_queue_properties, cl_int*)’ is deprecated (declared at /opt/AMDAPPSDK-3.0/include/CL/cl.h:1359) [-Wdeprecated-declarations]
+             object_ = ::clCreateCommandQueue(
+                         ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5085:56: warning: ‘_cl_command_queue* clCreateCommandQueue(cl_context, cl_device_id, cl_command_queue_properties, cl_int*)’ is deprecated (declared at /opt/AMDAPPSDK-3.0/include/CL/cl.h:1359) [-Wdeprecated-declarations]
+                 context(), device(), properties, &error);
+                                                        ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In constructor ‘cl::CommandQueue::CommandQueue(const cl::Context&, const cl::Device&, cl_command_queue_properties, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5101:21: warning: ‘_cl_command_queue* clCreateCommandQueue(cl_context, cl_device_id, cl_command_queue_properties, cl_int*)’ is deprecated (declared at /opt/AMDAPPSDK-3.0/include/CL/cl.h:1359) [-Wdeprecated-declarations]
+         object_ = ::clCreateCommandQueue(
+                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5102:52: warning: ‘_cl_command_queue* clCreateCommandQueue(cl_context, cl_device_id, cl_command_queue_properties, cl_int*)’ is deprecated (declared at /opt/AMDAPPSDK-3.0/include/CL/cl.h:1359) [-Wdeprecated-declarations]
+             context(), device(), properties, &error);
+                                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueReadBuffer(const cl::Buffer&, cl_bool, size_t, size_t, void*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5227:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5228:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueWriteBuffer(const cl::Buffer&, cl_bool, size_t, size_t, const void*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5252:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5253:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueCopyBuffer(const cl::Buffer&, const cl::Buffer&, size_t, size_t, size_t, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5276:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5277:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueReadBufferRect(const cl::Buffer&, cl_bool, const cl::size_t<3>&, const cl::size_t<3>&, const cl::size_t<3>&, size_t, size_t, size_t, size_t, void*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5307:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)buffer_offset,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5308:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)host_offset,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5309:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)region,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5315:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5316:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueWriteBufferRect(const cl::Buffer&, cl_bool, const cl::size_t<3>&, const cl::size_t<3>&, const cl::size_t<3>&, size_t, size_t, size_t, size_t, void*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5346:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)buffer_offset,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5347:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)host_offset,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5348:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)region,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5354:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5355:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueCopyBufferRect(const cl::Buffer&, const cl::Buffer&, const cl::size_t<3>&, const cl::size_t<3>&, const cl::size_t<3>&, size_t, size_t, size_t, size_t, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5384:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)src_origin, 
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5385:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)dst_origin, 
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5386:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)region,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5391:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5392:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueFillBuffer(const cl::Buffer&, PatternType, size_t, size_t, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5427:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5428:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueReadImage(const cl::Image&, cl_bool, const cl::size_t<3>&, const cl::size_t<3>&, size_t, size_t, void*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5453:64: warning: use of old-style cast [-Wold-style-cast]
+                 object_, image(), blocking, (const ::size_t *) origin,
+                                                                ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5454:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) region, row_pitch, slice_pitch, ptr,
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5455:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5456:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueWriteImage(const cl::Image&, cl_bool, const cl::size_t<3>&, const cl::size_t<3>&, size_t, size_t, void*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5480:64: warning: use of old-style cast [-Wold-style-cast]
+                 object_, image(), blocking, (const ::size_t *) origin,
+                                                                ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5481:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) region, row_pitch, slice_pitch, ptr,
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5482:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5483:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueCopyImage(const cl::Image&, const cl::Image&, const cl::size_t<3>&, const cl::size_t<3>&, const cl::size_t<3>&, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5505:59: warning: use of old-style cast [-Wold-style-cast]
+                 object_, src(), dst(), (const ::size_t *) src_origin,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5506:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)dst_origin, (const ::size_t *) region,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5506:66: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *)dst_origin, (const ::size_t *) region,
+                                                                  ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5507:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5508:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueFillImage(const cl::Image&, cl_float4, const cl::size_t<3>&, const cl::size_t<3>&, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5540:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) origin, 
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5541:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) region,
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5542:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5543:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueFillImage(const cl::Image&, cl_int4, const cl::size_t<3>&, const cl::size_t<3>&, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5574:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) origin, 
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5575:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) region,
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5576:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5577:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueFillImage(const cl::Image&, cl_uint4, const cl::size_t<3>&, const cl::size_t<3>&, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5608:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) origin, 
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5609:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) region,
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5610:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5611:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueCopyImageToBuffer(const cl::Image&, const cl::Buffer&, const cl::size_t<3>&, const cl::size_t<3>&, size_t, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5634:59: warning: use of old-style cast [-Wold-style-cast]
+                 object_, src(), dst(), (const ::size_t *) src_origin,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5635:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) region, dst_offset,
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5636:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5637:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueCopyBufferToImage(const cl::Buffer&, const cl::Image&, size_t, const cl::size_t<3>&, const cl::size_t<3>&, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5660:36: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) dst_origin, (const ::size_t *) region,
+                                    ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5660:67: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t *) dst_origin, (const ::size_t *) region,
+                                                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5661:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5662:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘void* cl::CommandQueue::enqueueMapBuffer(const cl::Buffer&, cl_bool, cl_map_flags, size_t, size_t, const std::vector<cl::Event>*, cl::Event*, cl_int*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5685:55: warning: use of old-style cast [-Wold-style-cast]
+             (events != NULL) ? (cl_uint) events->size() : 0,
+                                                       ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5686:81: warning: use of old-style cast [-Wold-style-cast]
+             (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                 ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5687:25: warning: use of old-style cast [-Wold-style-cast]
+             (cl_event*) event,
+                         ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘void* cl::CommandQueue::enqueueMapImage(const cl::Image&, cl_bool, cl_map_flags, const cl::size_t<3>&, const cl::size_t<3>&, size_t*, size_t*, const std::vector<cl::Event>*, cl::Event*, cl_int*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5712:32: warning: use of old-style cast [-Wold-style-cast]
+             (const ::size_t *) origin, (const ::size_t *) region,
+                                ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5712:59: warning: use of old-style cast [-Wold-style-cast]
+             (const ::size_t *) origin, (const ::size_t *) region,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5714:55: warning: use of old-style cast [-Wold-style-cast]
+             (events != NULL) ? (cl_uint) events->size() : 0,
+                                                       ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5715:81: warning: use of old-style cast [-Wold-style-cast]
+             (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                 ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5716:25: warning: use of old-style cast [-Wold-style-cast]
+             (cl_event*) event,
+                         ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueUnmapMemObject(const cl::Memory&, void*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5736:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5737:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueMarkerWithWaitList(const std::vector<cl::Event>*, cl::Event*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5767:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5768:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueBarrierWithWaitList(const std::vector<cl::Event>*, cl::Event*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5797:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5798:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueMigrateMemObjects(const std::vector<cl::Memory>&, cl_mem_migration_flags, const std::vector<cl::Event>*, cl::Event*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5822:50: warning: use of old-style cast [-Wold-style-cast]
+         for( int i = 0; i < (int)memObjects.size(); ++i ) {
+                                                  ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5830:42: warning: use of old-style cast [-Wold-style-cast]
+                 (cl_uint)memObjects.size(), 
+                                          ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5833:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5834:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueNDRangeKernel(const cl::Kernel&, const cl::NDRange&, const cl::NDRange&, const cl::NDRange&, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5856:64: warning: use of old-style cast [-Wold-style-cast]
+                 object_, kernel(), (cl_uint) global.dimensions(),
+                                                                ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5857:62: warning: use of old-style cast [-Wold-style-cast]
+                 offset.dimensions() != 0 ? (const ::size_t*) offset : NULL,
+                                                              ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5858:35: warning: use of old-style cast [-Wold-style-cast]
+                 (const ::size_t*) global,
+                                   ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5859:61: warning: use of old-style cast [-Wold-style-cast]
+                 local.dimensions() != 0 ? (const ::size_t*) local : NULL,
+                                                             ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5860:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5861:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueTask(const cl::Kernel&, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5878:15: warning: ‘cl_int clEnqueueTask(cl_command_queue, cl_kernel, cl_uint, _cl_event* const*, _cl_event**)’ is deprecated (declared at /opt/AMDAPPSDK-3.0/include/CL/cl.h:1373) [-Wdeprecated-declarations]
+             ::clEnqueueTask(
+               ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5880:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5881:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5882:46: warning: ‘cl_int clEnqueueTask(cl_command_queue, cl_kernel, cl_uint, _cl_event* const*, _cl_event**)’ is deprecated (declared at /opt/AMDAPPSDK-3.0/include/CL/cl.h:1373) [-Wdeprecated-declarations]
+                 (event != NULL) ? &tmp : NULL),
+                                              ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueNativeKernel(void (*)(void*), std::pair<void*, long unsigned int>, const std::vector<cl::Memory>*, const std::vector<const void*>*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5913:69: warning: use of old-style cast [-Wold-style-cast]
+                 (mem_objects != NULL) ? (cl_uint) mem_objects->size() : 0,
+                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5915:71: warning: use of old-style cast [-Wold-style-cast]
+                 (mem_locs != NULL) ? (const void **) &mem_locs->front() : NULL,
+                                                                       ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5916:59: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL) ? (cl_uint) events->size() : 0,
+                                                           ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5917:85: warning: use of old-style cast [-Wold-style-cast]
+                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                     ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueAcquireGLObjects(const std::vector<cl::Memory>*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5960:70: warning: use of old-style cast [-Wold-style-cast]
+                  (mem_objects != NULL) ? (cl_uint) mem_objects->size() : 0,
+                                                                      ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5961:79: warning: use of old-style cast [-Wold-style-cast]
+                  (mem_objects != NULL) ? (const cl_mem *) &mem_objects->front(): NULL,
+                                                                               ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5962:60: warning: use of old-style cast [-Wold-style-cast]
+                  (events != NULL) ? (cl_uint) events->size() : 0,
+                                                            ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5963:86: warning: use of old-style cast [-Wold-style-cast]
+                  (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                      ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In member function ‘cl_int cl::CommandQueue::enqueueReleaseGLObjects(const std::vector<cl::Memory>*, const std::vector<cl::Event>*, cl::Event*) const’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5982:70: warning: use of old-style cast [-Wold-style-cast]
+                  (mem_objects != NULL) ? (cl_uint) mem_objects->size() : 0,
+                                                                      ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5983:79: warning: use of old-style cast [-Wold-style-cast]
+                  (mem_objects != NULL) ? (const cl_mem *) &mem_objects->front(): NULL,
+                                                                               ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5984:60: warning: use of old-style cast [-Wold-style-cast]
+                  (events != NULL) ? (cl_uint) events->size() : 0,
+                                                            ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:5985:86: warning: use of old-style cast [-Wold-style-cast]
+                  (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                      ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In function ‘void* cl::enqueueMapBuffer(const cl::Buffer&, cl_bool, cl_map_flags, size_t, size_t, const std::vector<cl::Event>*, cl::Event*, cl_int*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:6163:55: warning: use of old-style cast [-Wold-style-cast]
+             (events != NULL) ? (cl_uint) events->size() : 0,
+                                                       ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:6164:81: warning: use of old-style cast [-Wold-style-cast]
+             (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                 ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:6165:25: warning: use of old-style cast [-Wold-style-cast]
+             (cl_event*) event,
+                         ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp: In function ‘cl_int cl::enqueueUnmapMemObject(const cl::Memory&, void*, const std::vector<cl::Event>*, cl::Event*)’:
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:6192:55: warning: use of old-style cast [-Wold-style-cast]
+             (events != NULL) ? (cl_uint) events->size() : 0,
+                                                       ^
+/opt/AMDAPPSDK-3.0/include/CL/cl.hpp:6193:81: warning: use of old-style cast [-Wold-style-cast]
+             (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+                                                                                 ^
+In file included from clsparse_pcg_dp.C:33:0:
+clSparseUtils.h: In function ‘void verificarError(int)’:
+clSparseUtils.h:210:17: warning: unused variable ‘error_description’ [-Wunused-variable]
+    std::string& error_description = codes[-code];
+                 ^
+clSparseUtils.h: In function ‘void importarMatrizDP(const Foam::lduMatrix&, clsparseCsrMatrix*, cl_context, cl_command_queue, clsparseCreateResult)’:
+clSparseUtils.h:462:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+  for(size_t i = 0; i < nnz ; ++i) {
+                        ^
+clSparseUtils.h:467:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+  for(size_t i = 0; i < n; ++i) {
+                        ^
+clSparseUtils.h: In function ‘void importarVectorOpenFoam(const scalarField&, cldenseVector*, cl_context, cl_command_queue)’:
+clSparseUtils.h:494:51: warning: use of old-style cast [-Wold-style-cast]
+  size_t numeroElementos = (size_t)foamVector.size();
+                                                   ^
+clsparse_pcg_dp.C: In constructor ‘Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP(const Foam::word&, const Foam::lduMatrix&, const Foam::FieldField<Foam::Field, double>&, const Foam::FieldField<Foam::Field, double>&, const lduInterfaceFieldPtrsList&, const Foam::dictionary&)’:
+clsparse_pcg_dp.C:95:20: warning: variable ‘p_clSparseStatus’ set but not used [-Wunused-but-set-variable]
+     clsparseStatus p_clSparseStatus = clsparseSuccess;
+                    ^
+clsparse_pcg_dp.C: In member function ‘virtual Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField&, const scalarField&, Foam::direction) const’:
+clsparse_pcg_dp.C:186:51: error: conversion from ‘std::nullptr_t’ to non-scalar type ‘clsparseCreateSolverResult {aka _clsparseCreateSolverResult}’ requested
+         clsparseCreateSolverResult solverResult = nullptr;
+                                                   ^
+In file included from clsparse_pcg_dp.C:33:0:
+clSparseUtils.h: In instantiation of ‘clMemRAII<pType>::clMemRAII(cl_command_queue, void*, size_t, cl_svm_mem_flags) [with pType = double; cl_command_queue = _cl_command_queue*; size_t = long unsigned int; cl_svm_mem_flags = long unsigned int]’:
+clSparseUtils.h:421:65:   required from here
+clSparseUtils.h:56:20: warning: unused variable ‘status’ [-Wunused-variable]
+             cl_int status = 0;
+                    ^
+clSparseUtils.h: In instantiation of ‘clMemRAII<pType>::clMemRAII(cl_command_queue, void*, size_t, cl_svm_mem_flags) [with pType = int; cl_command_queue = _cl_command_queue*; size_t = long unsigned int; cl_svm_mem_flags = long unsigned int]’:
+clSparseUtils.h:422:71:   required from here
+clSparseUtils.h:56:20: warning: unused variable ‘status’ [-Wunused-variable]
+make: *** [Make/linux64GccDPOpt/clsparse_pcg_dp.o] Error 1

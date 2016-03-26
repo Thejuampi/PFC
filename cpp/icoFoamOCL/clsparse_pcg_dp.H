@@ -34,7 +34,7 @@ private:
         std::vector<cl::Platform> m_platforms;
         std::vector<cl::Device> m_devices;
 
-        clsparseControl m_clSparseControl;
+        clsparseCreateResult m_clSparseResult;
         cl::Context m_context;
 
 

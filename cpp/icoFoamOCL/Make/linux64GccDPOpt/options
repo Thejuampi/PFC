@@ -59,4 +59,4 @@ EXE_INC = 	-I$(LIB_SRC)/finiteVolume/lnInclude -I$(LIB_SRC)/sampling/lnInclude -
 
 
 
-EXE_LIBS = -lfiniteVolume -lOpenFOAM -lOpenCL /usr/local/lib64/libclSPARSE.so 
+EXE_LIBS = -lfiniteVolume -lOpenFOAM 	/usr/lib/libOpenCL.so.1 /usr/local/lib64/libclSPARSE.so 

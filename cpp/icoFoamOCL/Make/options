@@ -8,5 +8,5 @@ EXE_INC = \
 EXE_LIBS = \
     -lfiniteVolume \
     -lOpenFOAM \
-    -lOpenCL \
+	/usr/lib/libOpenCL.so.1 \
     /usr/local/lib64/libclSPARSE.so \

@@ -52,7 +52,8 @@
 
 # 4 "<command-line>" 2
 # 1 "options"
-EXE_INC = 	-I$(LIB_SRC)/finiteVolume/lnInclude -I$(LIB_SRC)/sampling/lnInclude -I$(LIB_SRC)/meshTools/lnInclude -I/home/juan/dev/git/clSPARSE/src/include/ 
+EXE_INC = 	-I$(LIB_SRC)/finiteVolume/lnInclude -I$(LIB_SRC)/sampling/lnInclude -I$(LIB_SRC)/meshTools/lnInclude -I/home/juan/dev/git/clSPARSE/src/include/ -I/opt/AMDAPPSDK-3.0/include/ 
+
 
 
 

@@ -7,6 +7,5 @@ EXE_INC = \
 
 EXE_LIBS = \
     -lfiniteVolume \
-    -lOpenFOAM \
-	/usr/lib/libOpenCL.so.1 \
+	/opt/AMDAPPSDK-3.0/lib/x86_64/sdk/libamdocl64.so \
     /usr/local/lib64/libclSPARSE.so \

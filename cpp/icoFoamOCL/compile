@@ -472,3 +472,8 @@ clSparseUtils.h: In instantiation of ‘clMemRAII<pType>::clMemRAII(cl_command_q
 clSparseUtils.h:422:71:   required from here
 clSparseUtils.h:56:20: warning: unused variable ‘status’ [-Wunused-variable]
 make: *** [Make/linux64GccDPOpt/clsparse_pcg_dp.o] Error 1
+g++ -m64 -std=c++11 -Dlinux64 -DWM_DP -Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor -O3  -DNoRepository -ftemplate-depth-100 -I/opt/openfoam231/src/finiteVolume/lnInclude -I/opt/openfoam231/src/sampling/lnInclude -I/opt/openfoam231/src/meshTools/lnInclude -I/home/juan/dev/git/clSPARSE/src/include/ -I/opt/AMDAPPSDK-3.0/include/  -IlnInclude -I. -I/opt/openfoam231/src/OpenFOAM/lnInclude -I/opt/openfoam231/src/OSspecific/POSIX/lnInclude   -fPIC -Xlinker --add-needed -Xlinker --no-as-needed Make/linux64GccDPOpt/icoFoamOCL.o Make/linux64GccDPOpt/clsparse_pcg_dp.o -L/opt/openfoam231/platforms/linux64GccDPOpt/lib \
+	     -lfiniteVolume -lOpenFOAM 	-lOpenCL /usr/local/lib64/libclSPARSE.so  -lOpenFOAM -ldl   -lm -o ./icoFoamOCL
+/usr/bin/ld: no se puede encontrar -lOpenCL
+collect2: error: ld returned 1 exit status
+make: *** [icoFoamOCL] Error 1

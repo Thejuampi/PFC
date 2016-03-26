@@ -8,6 +8,24 @@
 #include "clSPARSE.h"
 //#include <clSPARSE.h">
 
+#define DD_UTIL
+
+void info(std::string msj) {
+#ifdef DD_UTIL
+	Foam::Info << "[INFO] - " << msj <<"\n";
+#endif
+}
+
+template<class M>
+void info(M& m) {
+#ifdef DD_UTIL
+	std::stringstream ss;
+	ss << m;
+	info(ss.str());
+#endif
+}
+
+
 template< typename pType=double >
 class clMemRAII
 {
@@ -67,6 +85,7 @@ public:
         // Right now, we don't support returning an event to wait on
         clBlocking = CL_TRUE;
 
+        info("clMapMem");
         cl_int _clStatus = ::clEnqueueSVMMap( clQueue, clBlocking, clFlags,
                                               clMem, clSize * sizeof( pType ), 0, NULL, NULL );
         if (clStatus != nullptr)
@@ -79,6 +98,7 @@ public:
 
     void clWriteMem( cl_bool clBlocking, const size_t clOff, const size_t clSize, const void* srcPtr )
     {
+        info("clWriteMem");
         // Right now, we don't support returning an event to wait on
         clBlocking = CL_TRUE;
 
@@ -88,6 +108,7 @@ public:
 
     void clFillMem (const pType pattern, const size_t clOff, const size_t clSize)
     {
+        info("clFillMem");
         cl_int clStatus = ::clEnqueueSVMMemFill(clQueue, clMem,
                                                 &pattern, sizeof(pType),
                                                 clSize * sizeof(pType),
@@ -109,24 +130,6 @@ public:
         ::clReleaseCommandQueue( clQueue );
     }
 };
-
-
-#define DD_UTIL
-
-void info(std::string msj) {
-#ifdef DD_UTIL
-	Foam::Info << "[INFO] - " << msj <<"\n";
-#endif
-}
-
-template<class M>
-void info(M& m) {
-#ifdef DD_UTIL
-	std::stringstream ss;
-	ss << m;
-	info(ss.str());
-#endif
-}
 
 
 std::string codes[] = {
@@ -426,7 +429,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	//FIXME! (juan) : ver como hacer cuando TypeName es float o es double
 	//FIXME!: ver como modificar cl_float/cl_double segun el TypeName
 
-	info("INICIO - clMapMem");
+	info("INICIO - clMapMem : fCsrValues");
 	cl_double* fCsrValues = rCsrValues.clMapMem(
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,
@@ -435,6 +438,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 			&cl_status
 		);
 	verificarError(cl_status);
+	info("INICIO - clMapMem : iCsrColIndices");
 	cl_int* iCsrColIndices = rCsrColIndices.clMapMem(
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,
@@ -443,6 +447,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 			&cl_status
 		);
 	verificarError(cl_status);
+	info("INICIO - clMapMem : iCsrRowOffsets");
 	cl_int* iCsrRowOffsets = rCsrRowOffsets.clMapMem(
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,

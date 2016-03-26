@@ -83,7 +83,7 @@ Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
 	//TODO (juan) usar puntero?
 	cl::Platform platform = platforms[platform_id];
 //	cl_status = platform.getDevices(CL_DEVICE_TYPE_CPU, &m_devices);
-	cl_status = platform.getDevices(CL_DEVICE_TYPE_ALL, &m_devices);
+	cl_status = platform.getDevices(CL_DEVICE_TYPE_GPU, &m_devices);
 	verificarError(cl_status);
 
 	auto device_id = getDeviceId();

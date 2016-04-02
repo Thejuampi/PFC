@@ -8,4 +8,4 @@ EXE_INC = \
 EXE_LIBS = \
     -lfiniteVolume \
 	/opt/AMDAPPSDK-3.0/lib/x86_64/sdk/libamdocl64.so \
-    /usr/local/lib64/libclSPARSE.so \
+    /home/juan/dev/git/clSPARSE/clSPARSE-build/library/libclSPARSE.so \

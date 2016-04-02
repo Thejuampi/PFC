@@ -23,9 +23,9 @@ solvers
 
         preconditioner          CLSPARSE_DIAGONAL;
 
-        tolerance               1e-05;
+        tolerance               1e-02;
         relTol                  0;
-        maxIter                 1000;
+        maxIter                 10;
 
     }
 

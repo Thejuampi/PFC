@@ -18,18 +18,22 @@
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.base.184575450.1529646193" name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1762902616" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.355842433" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder arguments="" cleanBuildTarget="/opt/openfoam240/bin/foamExec wclean" command="wmake" enableAutoBuild="false" enabledIncrementalBuild="false" id="cdt.managedbuild.target.gnu.builder.base.332771795" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="false" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+							<builder arguments="" buildPath="${workspace_loc:/icoFoamOCL}" cleanBuildTarget="/opt/openfoam240/bin/foamExec wclean" command="wmake" enableAutoBuild="false" enabledIncrementalBuild="false" id="cdt.managedbuild.target.gnu.builder.base.332771795" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="false" superClass="cdt.managedbuild.target.gnu.builder.base">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
+								</outputEntries>
+							</builder>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.2088775273" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1726807120" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.563253002" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/opt/AMDAPPSDK-3.0/include"/>
 									<listOptionValue builtIn="false" value="/home/juan/dev/git/clSPARSE/src/library/include/"/>
 									<listOptionValue builtIn="false" value="/home/juan/dev/git/clSPARSE/src/include/"/>
 									<listOptionValue builtIn="false" value="/home/juan/dev/bin/clSPARSE/clSPARSE-build/include/"/>
 									<listOptionValue builtIn="false" value="/home/juan/dev/bin/clSPARSE/clSPARSE-build/library/"/>
-									<listOptionValue builtIn="false" value="/opt/intel/intel-opencl-1.2-5.0.0.43/opencl-sdk/include"/>
 									<listOptionValue builtIn="false" value="/opt/openfoam231/src/OpenFOAM/lnInclude/"/>
 									<listOptionValue builtIn="false" value="/opt/openfoam231/src/finiteVolume/lnInclude/"/>
-									<listOptionValue builtIn="false" value="/opt/AMDAPPSDK-3.0/include"/>
+									<listOptionValue builtIn="false" value="/opt/intel/intel-opencl-1.2-5.0.0.43/opencl-sdk/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1026897050" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -96,4 +100,5 @@
 			</target>
 		</buildTargets>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

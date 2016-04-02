@@ -68,22 +68,15 @@ Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
 		lduMatrix::solver(fieldName, matrix, interfaceBouCoeffs,
 		interfaceIntCoeffs, interfaces, solverControls)
 {
-#ifdef DD
-	Info<<"[INFO] " << "Construyendo solver clSPARSE_PCG_DP\n";
-	Info<<"[INFO] " << "Construyendo m_platforms";
-	cl_status = CL_SUCCESS;
-#endif
-
 	std::vector<cl::Platform> platforms;
 	cl_status = cl::Platform::get(&platforms);
-
-	verificarError(cl_status);
+//	verificarError(cl_status);
 
     auto platform_id = getPlatformId();
 	//TODO (juan) usar puntero?
 	cl::Platform platform = platforms[platform_id];
 //	cl_status = platform.getDevices(CL_DEVICE_TYPE_CPU, &m_devices);
-	cl_status = platform.getDevices(CL_DEVICE_TYPE_GPU, &m_devices);
+	platform.getDevices(CL_DEVICE_TYPE_GPU, &m_devices);
 	verificarError(cl_status);
 
 	auto device_id = getDeviceId();
@@ -130,8 +123,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 ) const
 {
 //
-	Info << "[INFO] - Llamada a Foam::clSPARSE_PCG_DP::solve() \n";
-
 	word precond_name = lduMatrix::preconditioner::getName(controlDict_);
 	word solverPrintMode = controlDict_.lookupOrDefault<word>("SolverPrintMode", "QUIET");
 	solverPerformance solverPerf(typeName + '(' + precond_name + ')', fieldName_);
@@ -154,8 +145,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 	solverPerf.initialResidual() = gSumMag(rA) / normFactor;
 	solverPerf.finalResidual() = solverPerf.initialResidual();
 
-
-	Info << "[INFO]  - llamada a solverPerf.checkConvergence(tolerance_, relTol_)\n";
 	if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
 		clsparseCsrMatrix cls_matrix;
@@ -163,7 +152,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 		cldenseVector cls_x;
 
 		clsparseStatus status = clsparseSuccess;
-		Info <<"[INFO] "<<"Iniciando Vectores y Matrices\n";
 		status = clsparseInitVector(&cls_b);
 		verificarError(status);
 
@@ -176,12 +164,10 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
         cl_context context = m_context();
         cl_command_queue queue = m_queue();
 
-        Info <<"[INFO] "<<"Llamada a importarMatrizDP\n";
         importarMatrizDP(matrix(), &cls_matrix, context, queue, m_clSparseResult);
-        Info<<"[INFO] " <<"Llamada a importarVectorOpenFoam\n";
         importarVectorOpenFoam(source, &cls_b, context, queue );
-        Info<<"[INFO] " <<"Llamada a importarVectorOpenFoam\n";
         importarVectorOpenFoam(psi, &cls_x, context, queue );
+
 
         clsparseCreateSolverResult solverResult;
 		if (precond_name == "CLSPARSE_DIAGONAL") {
@@ -210,17 +196,15 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 		 * status = clsparse___D___csrcg(&x, &A, &b, solverControl, control);
 		 *
 		 */
-		clsparseDcsrcg(
+		status = clsparseDcsrcg(
 				&cls_x,
 				&cls_matrix,
 				&cls_b,
 				solverResult.control,
 				m_clSparseResult.control
 			);
-
-		//release solver control structure after finishing execution;
+		verificarError(status);
 		clsparseReleaseSolverControl(solverResult.control);
-
 	}
 
 	return solverPerf;

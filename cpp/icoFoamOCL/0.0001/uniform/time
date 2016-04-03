@@ -1,51 +1,29 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.1                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
-    format      ascii;
+    format      binary;
     class       dictionary;
-    location    "system";
-    object      fvSolution;
+    location    "0.0001/uniform";
+    object      time;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-solvers
-{
-    p
-    {
-        solver                  clSPARSE_PCG_DP;
-        preconditioner          CLSPARSE_DIAGONAL;
+value           0.0001;
 
-        tolerance               1e-05;
-        relTol                  0;
-        maxIter                 1000;
+name            "0.0001";
 
-    }
+index           4;
 
-    U
-    {
-        solver          smoothSolver;
-        smoother        symGaussSeidel;
+deltaT          2.5e-05;
 
-        tolerance       1e-05;
-        relTol          0;
-        maxIter         10000;
-    }
-}
-
-PISO
-{
-    nCorrectors     2;
-    nNonOrthogonalCorrectors 0;
-    pRefCell        0;
-    pRefValue       0;
-}
+deltaT0         2.5e-05;
 
 
 // ************************************************************************* //

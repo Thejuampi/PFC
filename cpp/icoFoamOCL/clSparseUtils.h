@@ -5,6 +5,9 @@
 #include "lduMatrix.H"
 #include <CL/cl.hpp>
 #include "clSPARSE.h"
+
+#include <fstream>
+
 //#include <clSPARSE.h">
 
 template< typename pType=double >
@@ -216,6 +219,16 @@ void verificarError(int code) {
 
 }
 
+void exportarVector(cldenseVector *v) {
+	std::ofstream ofstream("vector.csv");
+	if(ofstream.is_open()) {
+		for (int i = 0; i < v->num_values-1; ++i) {
+//			Foam::Info << v->values[i] << ',';
+		}
+//		Foam::Info << v->values[v->num_values-1];
+	}
+}
+
 
 //template<typename ValueType = double>
 void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix, cl_context context, cl_command_queue queue, clsparseControl control) {
@@ -306,13 +319,6 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 		++it_val;
 	}
 
-#ifdef DD_UTIL
-//	if(p_clSparseMatrix == NULL) {
-//		exit(-1);
-//	}
-
-#endif
-
 	p_clSparseMatrix->num_nonzeros = nnz;
 	p_clSparseMatrix->num_cols = nnz;
 	p_clSparseMatrix->num_rows = n;
@@ -395,15 +401,17 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 		iCsrRowOffsets[i] = row_offsets[i];
 	}
 
-	clsparseCsrMetaSize(p_clSparseMatrix, control);
-	p_clSparseMatrix->rowBlocks = ::clCreateBuffer(
-			context,
-			CL_MEM_READ_WRITE,
-			p_clSparseMatrix->rowBlockSize * sizeof(cl_ulong),
-			NULL,
-			&cl_status
-		);
-	verificarError(cl_status);
+//	cl_status = clsparseCsrMetaSize(p_clSparseMatrix, control);
+//	verificarError(cl_status);
+//	p_clSparseMatrix->rowBlockSize = int(p_clSparseMatrix->rowBlockSize);
+//	p_clSparseMatrix->rowBlocks = ::clCreateBuffer(
+//			context,
+//			CL_MEM_READ_WRITE,
+//			p_clSparseMatrix->rowBlockSize * sizeof(cl_ulong),
+//			NULL,
+//			&cl_status
+//		);
+//	verificarError(cl_status);
 //	clsparseCsrMetaCompute(p_clSparseMatrix, control);
 
 }
@@ -415,10 +423,6 @@ void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *
 	clsparseInitVector(vector);
 	vector->num_values=numeroElementos;
 	vector->values = clCreateBuffer(context, CL_MEM_READ_WRITE, numeroElementos*sizeof(double), NULL, &cl_status);
-	/**
-	 * TODO (juan): Ver que es mas eficiente. Usar el mapeo de memoria de OpenCL 2.0 o copiar los datos directamente
-	 *
-	 */
 	clMemRAII<cl_double> rValues(queue, vector->values, vector->num_values);
 	cl_double* fValues = rValues.clMapMem(
 			CL_TRUE,
@@ -433,5 +437,10 @@ void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *
 	}
 }
 
+void exportarVectorOpenFoam(cldenseVector &vec, Foam::scalarField *foam_vec) {
+
+
+
+}
 
 #endif // CLSPARSE_PCG_INIT_H

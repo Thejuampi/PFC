@@ -119,9 +119,6 @@ std::size_t Foam::clSPARSE_PCG_DP::getDeviceId() {
  * @param cmpt
  * @return
  */
-
-//using namespace Foam;
-
 Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 (
     Foam::scalarField& psi,
@@ -129,9 +126,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
     const Foam::direction cmpt
 ) const
 {
-//
-	Info << "[INFO] - Llamada a Foam::clSPARSE_PCG_DP::solve() \n";
-
 	word precond_name = lduMatrix::preconditioner::getName(controlDict_);
 	word solverPrintMode = controlDict_.lookupOrDefault<word>("SolverPrintMode", "QUIET");
 	solverPerformance solverPerf(typeName + '(' + precond_name + ')', fieldName_);
@@ -155,7 +149,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 	solverPerf.finalResidual() = solverPerf.initialResidual();
 
 
-	Info << "[INFO]  - llamada a solverPerf.checkConvergence(tolerance_, relTol_)\n";
 	if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
 		clsparseCsrMatrix cls_matrix;
@@ -163,7 +156,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 		cldenseVector cls_x;
 
 		clsparseStatus status = clsparseSuccess;
-		Info <<"[INFO] "<<"Iniciando Vectores y Matrices\n";
 		status = clsparseInitVector(&cls_b);
 		verificarError(status);
 
@@ -176,11 +168,8 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
         cl_context context = m_context();
         cl_command_queue queue = m_queue();
 
-        Info <<"[INFO] "<<"Llamada a importarMatrizDP\n";
         importarMatrizDP(matrix(), &cls_matrix, context, queue, m_clSparseControl);
-        Info<<"[INFO] " <<"Llamada a importarVectorOpenFoam\n";
         importarVectorOpenFoam(source, &cls_b, context, queue );
-        Info<<"[INFO] " <<"Llamada a importarVectorOpenFoam\n";
         importarVectorOpenFoam(psi, &cls_x, context, queue );
 
 		clSParseSolverControl solverControl = nullptr;
@@ -189,11 +178,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 		} else {
 			solverControl = clsparseCreateSolverControl(NOPRECOND, maxIter_, relTol_, tolerance_);
 		}
-
-		// We can set different print modes of the solver status:
-		// QUIET - print no messages (default)
-		// NORMAL - print summary
-		// VERBOSE - per iteration status;
 
 		if (solverPrintMode == "QUIET") {
 			clsparseSolverPrintMode(solverControl, QUIET);
@@ -204,12 +188,7 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 		} else { // Si se ingresa un valor erroneo, toma QUIET por defecto
 			clsparseSolverPrintMode(solverControl, QUIET);
 		}
-		/*
-		 * FIXME! (juan) : Problema con el tipo de datos (float o double)
-		 * status = clsparse___S___csrcg(&x, &A, &b, solverControl, control);
-		 * status = clsparse___D___csrcg(&x, &A, &b, solverControl, control);
-		 *
-		 */
+
 		clsparseDcsrcg(
 				&cls_x,
 				&cls_matrix,
@@ -217,7 +196,8 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 				m_clSparseControl
 			);
 
-		//release solver control structure after finishing execution;
+		exportarVector(&cls_x);
+
 		clsparseReleaseSolverControl(solverControl);
 
 	}

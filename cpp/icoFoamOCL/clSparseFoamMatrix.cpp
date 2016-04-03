@@ -12,6 +12,11 @@ clSparseFoamMatrix::~clSparseFoamMatrix() {
 	delete valuesMapper;
 	delete columnsMapper;
 	delete rowOffsetsMapper;
+
+	if(this->values)	 clReleaseMemObject(this->values);
+	if(this->colIndices) clReleaseMemObject(this->colIndices);
+	if(this->rowOffsets) clReleaseMemObject(this->rowOffsets);
+	if(this->rowBlocks)  clReleaseMemObject(this->rowBlocks);
 }
 
 clSparseFoamMatrix::clSparseFoamMatrix(const Foam::lduMatrix& ref_foamMatrix, cl_context context, cl_command_queue queue, clsparseControl control) :
@@ -121,9 +126,9 @@ clSparseFoamMatrix::clSparseFoamMatrix(const Foam::lduMatrix& ref_foamMatrix, cl
 	cl_int* iCsrColIndices = columnsMapper->clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0, this->num_nonzeros, &cl_status);
 	cl_int* iCsrRowOffsets = rowOffsetsMapper->clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0, this->num_rows + 1, &cl_status);
 
-	valuesMapper->clWriteMem(CL_TRUE, 0, this->num_nonzeros, (void*)matrix_values);
-	columnsMapper->clWriteMem(CL_TRUE, 0, this->num_nonzeros, (void*)column_indices);
-	rowOffsetsMapper->clWriteMem(CL_TRUE, 0, this->num_rows, (void*)row_offsets);
+	valuesMapper->clWriteMem(CL_TRUE, 0, this->num_nonzeros, (void*) matrix_values);
+	columnsMapper->clWriteMem(CL_TRUE, 0, this->num_nonzeros, (void*) column_indices);
+	rowOffsetsMapper->clWriteMem(CL_TRUE, 0, this->num_rows, (void*) row_offsets);
 
 //	for (size_t i = 0; i < nnz; ++i) {
 //		fCsrValues[i] = matrix_values[i];

@@ -29,7 +29,17 @@ clSparseDenseFoamVector::clSparseDenseFoamVector(const Foam::scalarField& foamVe
 
 }
 
+void clSparseDenseFoamVector::exportar(Foam::scalarField& foamVector) {
+	cl_double* fValues = this->valuesMapper->clMem;
+	double* data = foamVector.begin();
+	for (int i = 0; i < this->num_values; ++i) {
+		*data++ = fValues[i];
+	}
+
+}
+
 clSparseDenseFoamVector::~clSparseDenseFoamVector() {
 	delete this->valuesMapper;
+	clReleaseMemObject(this->values);
 }
 

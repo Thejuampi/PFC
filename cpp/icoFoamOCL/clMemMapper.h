@@ -15,10 +15,11 @@ class clMemMapper {
 
 private:
 	cl_command_queue clQueue;
-	pType* clMem;
 	cl_bool clOwner;
 
 public:
+	pType* clMem;
+
 	clMemMapper(const cl_command_queue cl_queue, void** cl_malloc, const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE);
 	clMemMapper( const cl_command_queue cl_queue, void* cl_malloc, const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE);
 	pType* clMapMem( cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int *clStatus = nullptr);
@@ -70,9 +71,7 @@ clMem( nullptr ), clOwner(false) {
 
 template<typename pType>
 inline pType* clMemMapper<pType>::clMapMem(cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int* clStatus) {
-    // Right now, we don't support returning an event to wait on
     clBlocking = CL_TRUE;
-
     cl_int _clStatus = ::clEnqueueSVMMap( clQueue, clBlocking, clFlags, clMem, clSize * sizeof( pType ), 0, NULL, NULL );
     if (clStatus != nullptr) *clStatus = _clStatus;
     return clMem;

@@ -148,27 +148,8 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 
 	if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
-//		clsparseCsrMatrix cls_matrix;
-//		cldenseVector cls_b;
-//		cldenseVector cls_x;
-//
-//		clsparseStatus status = clsparseSuccess;
-//		status = clsparseInitVector(&cls_b);
-//		verificarError(status);
-//
-//		status = clsparseInitVector(&cls_x);
-//		verificarError(status);
-//
-//		status = clsparseInitCsrMatrix(&cls_matrix);
-//		verificarError(status);
-//
         cl_context context = m_context();
         cl_command_queue queue = m_queue();
-//
-//        importarMatrizDP(matrix(), &cls_matrix, context, queue, m_clSparseControl);
-//        importarVectorOpenFoam(source, &cls_b, context, queue );
-//        importarVectorOpenFoam(psi, &cls_x, context, queue );
-
 		clSparseFoamMatrix cls_matrix(matrix(), context, queue, m_clSparseControl);
 		clSparseDenseFoamVector cls_b(source, context, queue, false);
 		clSparseDenseFoamVector cls_x(psi, context, queue, true);
@@ -190,13 +171,15 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 			clsparseSolverPrintMode(solverControl, QUIET);
 		}
 
-		clsparseDcsrcg(
-				&cls_x,
-				&cls_matrix,
-				&cls_b, solverControl,
-				m_clSparseControl
-			);
+		clsparseDcsrcg( &cls_x,&cls_matrix, &cls_b, solverControl, m_clSparseControl );
 
+		cls_x.exportar(psi);
+
+
+
+//	      solverPerf.finalResidual()   = solverControl->currentResidual  / normFactor;    //ls.GetCurrentResidual() / normFactor; // divide by normFactor, see lduMatrixSolver.C
+//	      solverPerf.nIterations()     = solverControl->nIters;  //ls.GetIterationCount();
+//	      solverPerf.checkConvergence(tolerance_, relTol_);
 
 		clsparseReleaseSolverControl(solverControl);
 

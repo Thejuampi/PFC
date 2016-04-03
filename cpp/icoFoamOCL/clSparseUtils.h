@@ -1,7 +1,7 @@
 #ifndef CLSPARSE_PCG_INIT_H
 #define CLSPARSE_PCG_INIT_H
 
-
+#include <parallel/algorithm>
 #include "lduMatrix.H"
 #include <CL/cl.hpp>
 #include "clSPARSE.h"
@@ -95,17 +95,17 @@ public:
 
     ~clMemRAII( )
     {
-        if( clMem )
-            ::clEnqueueSVMUnmap( clQueue, clMem, 0, NULL, NULL );
-
-        if(clOwner)
-        {
-            cl_context ctx = nullptr;
-            ::clGetCommandQueueInfo( clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
-            ::clSVMFree(ctx, clMem);
-        }
-
-        ::clReleaseCommandQueue( clQueue );
+//        if( clMem )
+//            ::clEnqueueSVMUnmap( clQueue, clMem, 0, NULL, NULL );
+//
+//        if(clOwner)
+//        {
+//            cl_context ctx = nullptr;
+//            ::clGetCommandQueueInfo( clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
+//            ::clSVMFree(ctx, clMem);
+//        }
+//
+//        ::clReleaseCommandQueue( clQueue );
     }
 };
 
@@ -220,62 +220,37 @@ void verificarError(int code) {
 //template<typename ValueType = double>
 void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *p_clSparseMatrix, cl_context context, cl_command_queue queue, clsparseControl control) {
 
-	//TODO (juan) ver si esto es necesario cada ves, o si se puede "reutilizar" el espacio
-
-//	clsparseInitCsrMatrix(p_clSparseMatrix);
+	clsparseInitCsrMatrix(p_clSparseMatrix);
 
 	// Matrix size
-
 	int n = ref_foamMatrix.diag().size();
 	int nnz = ref_foamMatrix.diag().size() + ref_foamMatrix.lower().size()
 			+ ref_foamMatrix.upper().size();
-
-	info("Tamaño diagonal \"n\"");
-	info(n);
-	info("Nro elementos no nulos \"nnz\"");
-	info(nnz);
 
 	// CSR values
 	int *row_offsets = NULL;
 	int *column_indices = NULL;
 	double *matrix_values = NULL;
 
-	// reservar lugar:
-	//TODO (juan) : ver si se puede hacer directamente en la memoria de la GPU
-
-	info("Alocando memoria local");
-	row_offsets = new (std::nothrow) int[n + 1];    // (n+1, &row_offset);
+	row_offsets = new (std::nothrow) int[n + 1];
 	column_indices = new (std::nothrow) int[nnz];
 	matrix_values = new (std::nothrow) double[nnz];
 
-#ifdef DD_UTIL
-	if(row_offsets == NULL || column_indices == NULL || matrix_values == NULL) {
-		info("Error al alocar memoria local");
-	}
-#endif
-
 	//Importar matriz aca
 	row_offsets[0] = 0;
-
-	info("INICIO - row_offsets a 1");
-//	std::memset(row_offsets + 1, 1, n);
-	std::fill_n(row_offsets, n, 1);
-	info("FIN - row_offsets a 1");
+	std::fill_n(row_offsets+1, n, 1);
 
 	Foam::UList<int>::const_iterator it_low =
 			ref_foamMatrix.lduAddr().lowerAddr().begin();
 	Foam::UList<int>::const_iterator it_up =
 			ref_foamMatrix.lduAddr().upperAddr().begin();
 
-
-	info("INICIO - Seteando row offsets");
 	for (int i = 0; i < ref_foamMatrix.lower().size(); ++i) {
 		row_offsets[*(it_low++) + 1]++;
 		row_offsets[*(it_up++) + 1]++;
 	}
 
 	//CSR
-	//TODO (juan) ver como se puede mejorar esto
 	int sum = 0;
 	for (int i = 0; i < n; ++i) {
 		int temp = row_offsets[i];
@@ -283,7 +258,6 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 		sum += temp;
 	}
 	row_offsets[n] = sum;
-	info("FIN - Seteando row offsets");
 
 
 
@@ -292,35 +266,18 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	it_up = ref_foamMatrix.lduAddr().upperAddr().begin();
 
 
-	info("INICIO - Fill col and val arrays for lower part");
 	// fill col and val arrays for lower part
 	for (int i = 0; i < ref_foamMatrix.lower().size(); ++i) {
-		// row index for lower = upper + 1
-//		info("int r_lower = *it_up + 1");
 		int r_lower = *it_up + 1;
-//		info("int dest_lower = row_offsets[r_lower]");
 		int dest_lower = row_offsets[r_lower];
 
-
-//		info("r_lower:");
-//		info(r_lower);
-//		info("dest_lower:");
-//		info(dest_lower);
-
-//		info("column_indices[dest_lower] = *it_low");
 		column_indices[dest_lower] = *it_low;
-//		info("matrix_values[dest_lower] = *it_val");
 		matrix_values[dest_lower] = *it_val;
-//		info("++row_offsets[r_lower]");
 		++row_offsets[r_lower];
 
-		++it_low;
-		++it_up;
-		++it_val;
+		++it_low;++it_up;++it_val;
 	}
-	info("FIN - Fill col and val arrays for lower part");
 
-	info("INICIO - fill diagonal part");
 	// fill diagonal part
 	it_val = ref_foamMatrix.diag().begin();
 	for (int i = 0; i < ref_foamMatrix.diag().size(); ++i) {
@@ -333,10 +290,8 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	it_low = ref_foamMatrix.lduAddr().lowerAddr().begin();
 	it_up = ref_foamMatrix.lduAddr().upperAddr().begin();
 	it_val = ref_foamMatrix.upper().begin();
-	info("FIN - fill diagonal part");
 
 	// fill upper part
-	info("INICIO - fill upper part");
 	for (int i = 0; i < ref_foamMatrix.upper().size(); ++i) {
 		// row index for upper part = lower + 1
 		int r_upper = *it_low + 1;
@@ -350,29 +305,22 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 		++it_up;
 		++it_val;
 	}
-	info("FIN - fill upper part");
 
 #ifdef DD_UTIL
 //	if(p_clSparseMatrix == NULL) {
-		info("p_clSparseMatrix:");
-		info(p_clSparseMatrix);
 //		exit(-1);
 //	}
 
 #endif
 
-	info("p_clSparseMatrix->num_nonzeros = nnz");
 	p_clSparseMatrix->num_nonzeros = nnz;
-	info("p_clSparseMatrix->num_cols = n");
-	p_clSparseMatrix->num_cols = n;
-	info("p_clSparseMatrix->num_rows = n");
+	p_clSparseMatrix->num_cols = nnz;
 	p_clSparseMatrix->num_rows = n;
 
 	cl_int cl_status = CL_SUCCESS;
 
 	// REVISAR: probablemente no funcione bien con el "ValueType"
 
-	info("p_clSparseMatrix->values = ::clCreateBuffer()");
 	p_clSparseMatrix->values = ::clCreateBuffer(
 			context,
 			CL_MEM_READ_ONLY,
@@ -383,7 +331,6 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 	verificarError(cl_status);
 
 
-	info("p_clSparseMatrix->colIndices = ::clCreateBuffer");
 	p_clSparseMatrix->colIndices = ::clCreateBuffer(
 			context,
 			CL_MEM_READ_ONLY,
@@ -393,7 +340,6 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 		);
 	verificarError(cl_status);
 
-	info("p_clSparseMatrix->rowOffsets = ::clCreateBuffer()");
 	p_clSparseMatrix->rowOffsets = ::clCreateBuffer(
 			context,
 			CL_MEM_READ_ONLY,
@@ -403,7 +349,6 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 		);
 	verificarError(cl_status);
 
-//	info("p_clSparseMatrix->rowBlocks = ::clCreateBuffer()");
 //	p_clSparseMatrix->rowBlocks = ::clCreateBuffer(
 //			context,
 //			CL_MEM_READ_ONLY,
@@ -413,19 +358,10 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 //		);
 //	verificarError(cl_status);
 
-	//OpenCL 2.0: usa clSVMAlloc <- para delegar la alocación de memoria en la GPU
-	//FIXME!: ver como modificar cl_float/cl_double segun el TypeName
+	clMemRAII<cl_double> rCsrValues(queue, p_clSparseMatrix->values, p_clSparseMatrix->num_nonzeros);
+	clMemRAII<cl_int> rCsrColIndices(queue, p_clSparseMatrix->colIndices, p_clSparseMatrix->num_nonzeros);
+	clMemRAII<cl_int> rCsrRowOffsets(queue, p_clSparseMatrix->rowOffsets, p_clSparseMatrix->num_rows+1);
 
-	info("INICIO clMemRAII");
-	clMemRAII<cl_double> rCsrValues(queue, p_clSparseMatrix->values);
-	clMemRAII<cl_int> rCsrColIndices(queue, p_clSparseMatrix->colIndices);
-	clMemRAII<cl_int> rCsrRowOffsets(queue, p_clSparseMatrix->rowOffsets);
-	info("FIN clMemRAII");
-
-	//FIXME! (juan) : ver como hacer cuando TypeName es float o es double
-	//FIXME!: ver como modificar cl_float/cl_double segun el TypeName
-
-	info("INICIO - clMapMem");
 	cl_double* fCsrValues = rCsrValues.clMapMem(
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,
@@ -450,31 +386,16 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 			&cl_status
 		);
 	verificarError(cl_status);
-	info("FIN - clMapMem");
 
-	//Esto de puede mejorar al copiar directamente al espacio de memoria de la GPU.
-	// Por ahora lo dejo así porque necesito probar que funcione correctamente.
-	// TODO:(juan) refactorizar esto. Hacer la asignación directamente al copiar los valores desde openFOAM
-
-
-	info("INICIO - memcpy");
 	for(size_t i = 0; i < nnz ; ++i) {
-//		info(i);
 		fCsrValues[i] = matrix_values[i];
 		iCsrColIndices[i] = column_indices[i];
 	}
 	for(size_t i = 0; i < n; ++i) {
 		iCsrRowOffsets[i] = row_offsets[i];
 	}
-	info("FIN - memcpy");
-
-
-	info("clsparseCsrMetaSize(p_clSparseMatrix, control)");
-
-//	std::cin.get();
 
 	clsparseCsrMetaSize(p_clSparseMatrix, control);
-	info("p_clSparseMatrix->rowBlocks = ::clCreateBuffer()");
 	p_clSparseMatrix->rowBlocks = ::clCreateBuffer(
 			context,
 			CL_MEM_READ_WRITE,
@@ -483,8 +404,7 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 			&cl_status
 		);
 	verificarError(cl_status);
-	info("clsparseCsrMetaCompute(p_clSparseMatrix, control)");
-	clsparseCsrMetaCompute(p_clSparseMatrix, control);
+//	clsparseCsrMetaCompute(p_clSparseMatrix, control);
 
 }
 
@@ -492,12 +412,14 @@ void importarMatrizDP(const Foam::lduMatrix &ref_foamMatrix, clsparseCsrMatrix *
 void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *vector, cl_context context, cl_command_queue queue) {
 	auto numeroElementos = foamVector.size();
 	cl_int cl_status = CL_SUCCESS;
-	vector->values = clCreateBuffer(context, CL_MEM_READ_ONLY, numeroElementos, NULL, &cl_status);
+	clsparseInitVector(vector);
+	vector->num_values=numeroElementos;
+	vector->values = clCreateBuffer(context, CL_MEM_READ_WRITE, numeroElementos*sizeof(double), NULL, &cl_status);
 	/**
 	 * TODO (juan): Ver que es mas eficiente. Usar el mapeo de memoria de OpenCL 2.0 o copiar los datos directamente
 	 *
 	 */
-	clMemRAII<cl_double> rValues(queue, vector->values);
+	clMemRAII<cl_double> rValues(queue, vector->values, vector->num_values);
 	cl_double* fValues = rValues.clMapMem(
 			CL_TRUE,
 			CL_MAP_WRITE_INVALIDATE_REGION,
@@ -509,7 +431,6 @@ void importarVectorOpenFoam(const Foam::scalarField &foamVector, cldenseVector *
 	for(auto it = foamVector.begin(); it != foamVector.end(); ++it ) {
 		fValues[idx++] = *it;
 	}
-//	std::copy(foamVector.begin(), foamVector.end(), fValues);
 }
 
 

@@ -3,6 +3,7 @@
 	<name>icoFoamOCL</name>
 	<comment></comment>
 	<projects>
+		<project>SuperBuild.clSPARSE-Release@clsparse-eclipse</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

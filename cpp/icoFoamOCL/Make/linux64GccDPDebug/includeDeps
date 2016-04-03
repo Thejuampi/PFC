@@ -1,2 +1,4 @@
 include icoFoamOCL.dep
 include clsparse_pcg_dp.dep
+include clSparseDenseFoamVector.dep
+include clSparseFoamMatrix.dep

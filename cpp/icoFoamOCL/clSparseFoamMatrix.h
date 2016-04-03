@@ -8,25 +8,26 @@
 #ifndef CLSPARSEFOAMMATRIX_H_
 #define CLSPARSEFOAMMATRIX_H_
 
-#include <CL/cl.h>
+//#include <CL/cl.h>
 #include <clSPARSE.h>
-#include "clSparseUtils.h"
+#include "clMemMapper.h"
+#include "lduMatrix.H"
 
-typedef clMemRAII<cl_double> clMemMapper;
+typedef clMemMapper<cl_double> ValueMapper;
+typedef clMemMapper<cl_int> IndexMapper;
 
-/**
- * author: jpalescano
- */
 class clSparseFoamMatrix: public clsparseCsrMatrix_ {
 private:
 
-	clMemMapper *memoryMapper;
+	ValueMapper *valuesMapper;
+	IndexMapper *columnsMapper;
+	IndexMapper *rowOffsetsMapper;
 
 public:
-	clSparseFoamMatrix();
-	virtual ~clSparseFoamMatrix();
 
-	void setMemoryMapper(clMemMapper* memMapper);
+	clSparseFoamMatrix(const Foam::lduMatrix &ref_foamMatrix, cl_context context, cl_command_queue queue, clsparseControl control);
+
+	virtual ~clSparseFoamMatrix();
 
 };
 

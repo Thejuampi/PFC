@@ -1,5 +1,8 @@
 icoFoamOCL.C
 
-clsparse_pcg_dp.cpp
+clsparse_pcg_dp.C
+
+clSparseDenseFoamVector.cpp
+clSparseFoamMatrix.cpp
 
 EXE = ./icoFoamOCL

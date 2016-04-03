@@ -30,8 +30,10 @@
 
 //#include "clSPARSE.h"
 #include <clSPARSE.h>
-#include "clSparseUtils.h"
+//#include "clSparseUtils.h"
 #include "clsparse_pcg_dp.H"
+#include "clSparseFoamMatrix.h"
+#include "clSparseDenseFoamVector.h"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -68,23 +70,18 @@ Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
 		lduMatrix::solver(fieldName, matrix, interfaceBouCoeffs,
 		interfaceIntCoeffs, interfaces, solverControls)
 {
-#ifdef DD
-	Info<<"[INFO] " << "Construyendo solver clSPARSE_PCG_DP\n";
-	Info<<"[INFO] " << "Construyendo m_platforms";
-	cl_status = CL_SUCCESS;
-#endif
 
 	std::vector<cl::Platform> platforms;
 	cl_status = cl::Platform::get(&platforms);
 
-	verificarError(cl_status);
+//	verificarError(cl_status);
 
     auto platform_id = getPlatformId();
 	//TODO (juan) usar puntero?
 	cl::Platform platform = platforms[platform_id];
 //	cl_status = platform.getDevices(CL_DEVICE_TYPE_CPU, &m_devices);
 	cl_status = platform.getDevices(CL_DEVICE_TYPE_ALL, &m_devices);
-	verificarError(cl_status);
+//	verificarError(cl_status);
 
 	auto device_id = getDeviceId();
     device_id = getDeviceId();
@@ -151,26 +148,30 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 
 	if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
-		clsparseCsrMatrix cls_matrix;
-		cldenseVector cls_b;
-		cldenseVector cls_x;
-
-		clsparseStatus status = clsparseSuccess;
-		status = clsparseInitVector(&cls_b);
-		verificarError(status);
-
-		status = clsparseInitVector(&cls_x);
-		verificarError(status);
-
-		status = clsparseInitCsrMatrix(&cls_matrix);
-		verificarError(status);
-
+//		clsparseCsrMatrix cls_matrix;
+//		cldenseVector cls_b;
+//		cldenseVector cls_x;
+//
+//		clsparseStatus status = clsparseSuccess;
+//		status = clsparseInitVector(&cls_b);
+//		verificarError(status);
+//
+//		status = clsparseInitVector(&cls_x);
+//		verificarError(status);
+//
+//		status = clsparseInitCsrMatrix(&cls_matrix);
+//		verificarError(status);
+//
         cl_context context = m_context();
         cl_command_queue queue = m_queue();
+//
+//        importarMatrizDP(matrix(), &cls_matrix, context, queue, m_clSparseControl);
+//        importarVectorOpenFoam(source, &cls_b, context, queue );
+//        importarVectorOpenFoam(psi, &cls_x, context, queue );
 
-        importarMatrizDP(matrix(), &cls_matrix, context, queue, m_clSparseControl);
-        importarVectorOpenFoam(source, &cls_b, context, queue );
-        importarVectorOpenFoam(psi, &cls_x, context, queue );
+		clSparseFoamMatrix cls_matrix(matrix(), context, queue, m_clSparseControl);
+		clSparseDenseFoamVector cls_b(source, context, queue, false);
+		clSparseDenseFoamVector cls_x(psi, context, queue, true);
 
 		clSParseSolverControl solverControl = nullptr;
 		if (precond_name == "CLSPARSE_DIAGONAL") {
@@ -196,7 +197,6 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 				m_clSparseControl
 			);
 
-		exportarVector(&cls_x);
 
 		clsparseReleaseSolverControl(solverControl);
 

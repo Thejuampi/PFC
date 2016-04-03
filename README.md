@@ -17,3 +17,5 @@ CC = g++ -m64 -std=c++11
 (...)
 
 
+Si al correr el solver tira un error de que requiere OpenCL 2.0, ejecutar lo siguiente:
+sudo apt-get purge ocl-icd-libopencl1:amd64

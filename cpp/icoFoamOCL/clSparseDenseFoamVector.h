@@ -25,7 +25,7 @@ public:
 
 	clSparseDenseFoamVector(const Foam::scalarField &foamVector, cl_context context, cl_command_queue queue, bool permiteLectura);
 
-	void exportar(Foam::scalarField &foamVector);
+	void exportar(Foam::scalarField& foamVector, cl_command_queue queue);
 
 	virtual ~clSparseDenseFoamVector();
 };

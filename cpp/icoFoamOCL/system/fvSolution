@@ -20,7 +20,9 @@ solvers
     p
     {
         solver                  clSPARSE_PCG_DP;
-        preconditioner          CLSPARSE_DIAGONAL;
+        preconditioner          NOPRECOND;
+        //preconditioner          CLSPARSE_DIAGONAL;
+        solverPrintMode			VERBOSE;
 
         tolerance               1e-05;
         relTol                  0;

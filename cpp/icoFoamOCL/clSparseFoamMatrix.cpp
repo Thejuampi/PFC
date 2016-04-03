@@ -13,10 +13,11 @@ clSparseFoamMatrix::~clSparseFoamMatrix() {
 	delete columnsMapper;
 	delete rowOffsetsMapper;
 
-	if(this->values)	 clReleaseMemObject(this->values);
-	if(this->colIndices) clReleaseMemObject(this->colIndices);
-	if(this->rowOffsets) clReleaseMemObject(this->rowOffsets);
-	if(this->rowBlocks)  clReleaseMemObject(this->rowBlocks);
+
+	//if(this->values)	 clSVMFree(this->values);
+	//if(this->colIndices) clSVMFree(this->colIndices);
+	//if(this->rowOffsets) clSVMFree(this->rowOffsets);
+	//if(this->rowBlocks)  clSVMFree(this->rowBlocks);
 }
 
 clSparseFoamMatrix::clSparseFoamMatrix(const Foam::lduMatrix& ref_foamMatrix, cl_context context, cl_command_queue queue, clsparseControl control) :
@@ -113,30 +114,22 @@ clSparseFoamMatrix::clSparseFoamMatrix(const Foam::lduMatrix& ref_foamMatrix, cl
 
 	cl_int cl_status = CL_SUCCESS;
 
-	this->values = ::clCreateBuffer(context, CL_MEM_READ_ONLY, this->num_nonzeros * sizeof(double), NULL, &cl_status);
-	this->colIndices = ::clCreateBuffer(context, CL_MEM_READ_ONLY, this->num_nonzeros * sizeof(cl_int), NULL, &cl_status);
-	this->rowOffsets = ::clCreateBuffer(context, CL_MEM_READ_ONLY, (this->num_rows + 1) * sizeof(cl_int), NULL, &cl_status);
-
 	this->valuesMapper = new ValueMapper(queue, this->values, this->num_nonzeros);
 	this->columnsMapper = new IndexMapper(queue, this->colIndices, this->num_nonzeros);
 	this->rowOffsetsMapper = new IndexMapper(queue, this->rowOffsets, this->num_rows + 1);
 
-	//No es necesario borrarlos explicitamente, de eso se encata la clase
-	cl_double* fCsrValues = valuesMapper->clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0, this->num_nonzeros, &cl_status);
-	cl_int* iCsrColIndices = columnsMapper->clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0, this->num_nonzeros, &cl_status);
-	cl_int* iCsrRowOffsets = rowOffsetsMapper->clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0, this->num_rows + 1, &cl_status);
+	valuesMapper->clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0, this->num_nonzeros, &cl_status);
+	columnsMapper->clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0, this->num_nonzeros, &cl_status);
+	rowOffsetsMapper->clMapMem( CL_TRUE, CL_MAP_WRITE_INVALIDATE_REGION, 0, this->num_rows + 1, &cl_status);
 
 	valuesMapper->clWriteMem(CL_TRUE, 0, this->num_nonzeros, (void*) matrix_values);
 	columnsMapper->clWriteMem(CL_TRUE, 0, this->num_nonzeros, (void*) column_indices);
 	rowOffsetsMapper->clWriteMem(CL_TRUE, 0, this->num_rows, (void*) row_offsets);
 
-//	for (size_t i = 0; i < nnz; ++i) {
-//		fCsrValues[i] = matrix_values[i];
-//		iCsrColIndices[i] = column_indices[i];
-//	}
-//	for (size_t i = 0; i < n; ++i) {
-//		iCsrRowOffsets[i] = row_offsets[i];
-//	}
+	//Es necesario desmapear la memoria para poder utilizarla en la GPU cuando no se utiliza fine grained svm
+	valuesMapper->clUnMapMem();
+	columnsMapper->clUnMapMem();
+	rowOffsetsMapper->clUnMapMem();
 
 	delete matrix_values;
 	delete column_indices;

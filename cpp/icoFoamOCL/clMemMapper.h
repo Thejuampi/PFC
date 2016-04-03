@@ -21,18 +21,18 @@ public:
 	pType* clMem;
 
 	clMemMapper(const cl_command_queue cl_queue, void** cl_malloc, const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE);
-	clMemMapper( const cl_command_queue cl_queue, void* cl_malloc, const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE);
-	pType* clMapMem( cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int *clStatus = nullptr);
-	void clWriteMem( cl_bool clBlocking, const size_t clOff, const size_t clSize, const void* srcPtr );
-	void clFillMem (const pType pattern, const size_t clOff, const size_t clSize);
+	clMemMapper(const cl_command_queue cl_queue, void* cl_malloc, const size_t cl_size = 0, const cl_svm_mem_flags cl_flags = CL_MEM_READ_WRITE);
+	pType* clMapMem(cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int *clStatus = nullptr);
+	void clUnMapMem();
+	void clWriteMem(cl_bool clBlocking, const size_t clOff, const size_t clSize, const void* srcPtr);
+	void clFillMem(const pType pattern, const size_t clOff, const size_t clSize);
 
 	virtual ~clMemMapper();
 };
 
 template<typename pType>
 inline clMemMapper<pType>::clMemMapper(const cl_command_queue cl_queue, void** cl_malloc, const size_t cl_size, const cl_svm_mem_flags cl_flags) :
-clMem( nullptr ), clOwner(false)
-{
+		clMem(nullptr), clOwner(false) {
 	clQueue = cl_queue;
 	clMem = static_cast<pType*>(*cl_malloc);
 
@@ -51,56 +51,70 @@ clMem( nullptr ), clOwner(false)
 
 template<typename pType>
 inline clMemMapper<pType>::clMemMapper(const cl_command_queue cl_queue, void* cl_malloc, const size_t cl_size, const cl_svm_mem_flags cl_flags) :
-clMem( nullptr ), clOwner(false) {
-    clQueue = cl_queue;
-    clMem = static_cast< pType* >( cl_malloc );
+		clMem(nullptr), clOwner(false) {
+	clQueue = cl_queue;
+	clMem = static_cast<pType*>(cl_malloc);
 
-    if(cl_size > 0)
-    {
-        cl_context ctx = NULL;
+	if (cl_size > 0) {
+		cl_context ctx = NULL;
 
-        ::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
-        cl_int status = 0;
+		::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &ctx, NULL);
+		cl_int status = 0;
 
-        clMem = static_cast< pType* > (clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
-        clOwner = true;
-    }
+		clMem = static_cast<pType*>(clSVMAlloc(ctx, cl_flags, cl_size * sizeof(pType), 0));
+		clOwner = true;
+	}
 
-    ::clRetainCommandQueue( clQueue );
+	::clRetainCommandQueue(clQueue);
 }
 
 template<typename pType>
 inline pType* clMemMapper<pType>::clMapMem(cl_bool clBlocking, const cl_map_flags clFlags, const size_t clOff, const size_t clSize, cl_int* clStatus) {
-    clBlocking = CL_TRUE;
-    cl_int _clStatus = ::clEnqueueSVMMap( clQueue, clBlocking, clFlags, clMem, clSize * sizeof( pType ), 0, NULL, NULL );
-    if (clStatus != nullptr) *clStatus = _clStatus;
-    return clMem;
+	clBlocking = CL_TRUE;
+	cl_int _clStatus = ::clEnqueueSVMMap(clQueue, clBlocking, clFlags, clMem, clSize * sizeof(pType), 0, NULL, NULL);
+	if (_clStatus != CL_BUILD_SUCCESS) {
+		exit(_clStatus);
+	}
+	if (clStatus != nullptr) *clStatus = _clStatus;
+	return clMem;
 }
 
 template<typename pType>
 inline void clMemMapper<pType>::clWriteMem(cl_bool clBlocking, const size_t clOff, const size_t clSize, const void* srcPtr) {
-    clBlocking = CL_TRUE;
-    cl_int clStatus = ::clEnqueueSVMMemcpy( clQueue, clBlocking, clMem, srcPtr, clSize * sizeof( pType ), 0, NULL, NULL );
+	//https://community.amd.com/thread/190585 -> clEnqueueSVMMemcpy no funciona, ya esta reportado, pero no hay noticias de que este funcionando
+//    clBlocking = CL_TRUE;
+	//cl_int clStatus = ::clEnqueueSVMMemcpy( clQueue, clBlocking, clMem, srcPtr, clSize * sizeof( pType ), 0, NULL, NULL );
+//    if(clStatus != CL_SUCCESS) {
+//    	exit(clStatus);
+//    }
+	//Se procede a la copia manual
+	for (int i = 0; i < clSize; ++i) {
+		clMem[i] = ((pType*) srcPtr)[i];
+	}
+
 }
 
 template<typename pType>
 inline void clMemMapper<pType>::clFillMem(const pType pattern, const size_t clOff, const size_t clSize) {
-    cl_int clStatus = ::clEnqueueSVMMemFill(clQueue, clMem, &pattern, sizeof(pType), clSize * sizeof(pType), 0, NULL, NULL);
+	cl_int clStatus = ::clEnqueueSVMMemFill(clQueue, clMem, &pattern, sizeof(pType), clSize * sizeof(pType), 0, NULL, NULL);
+}
+
+template<typename pType>
+inline void clMemMapper<pType>::clUnMapMem() {
+	if (clMem) ::clEnqueueSVMUnmap(clQueue, clMem, 0, NULL, NULL);
 }
 
 template<typename pType>
 inline clMemMapper<pType>::~clMemMapper() {
-    if( clMem )
-        ::clEnqueueSVMUnmap( clQueue, clMem, 0, NULL, NULL );
+	if (clMem) ::clEnqueueSVMUnmap(clQueue, clMem, 0, NULL, NULL);
 
-    if(clOwner)
-    {
-        cl_context ctx = nullptr;
-        ::clGetCommandQueueInfo( clQueue, CL_QUEUE_CONTEXT, sizeof( cl_context ), &ctx, NULL);
-        ::clSVMFree(ctx, clMem);
-    }
+	if (clOwner) {
+		cl_context ctx = nullptr;
+		::clGetCommandQueueInfo(clQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &ctx, NULL);
+		::clSVMFree(ctx, clMem);
+	}
 
-    ::clReleaseCommandQueue( clQueue );
+	::clReleaseCommandQueue(clQueue);
 }
 
 #endif /* CLMEMMAPPER_H_ */

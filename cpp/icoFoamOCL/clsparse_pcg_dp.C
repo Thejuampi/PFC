@@ -39,12 +39,10 @@
 
 #define DD
 
-namespace Foam
-{
-	defineTypeNameAndDebug(clSPARSE_PCG_DP, 0);
+namespace Foam {
+defineTypeNameAndDebug(clSPARSE_PCG_DP, 0);
 
-	lduMatrix::solver::addsymMatrixConstructorToTable<clSPARSE_PCG_DP>
-		addclSPARSE_PCG_DPSymMatrixConstructorToTable_;
+lduMatrix::solver::addsymMatrixConstructorToTable<clSPARSE_PCG_DP> addclSPARSE_PCG_DPSymMatrixConstructorToTable_;
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -58,45 +56,59 @@ namespace Foam
  * @param interfaces
  * @param solverControls
  */
-Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP
-(
-		const word& fieldName,
-		const lduMatrix& matrix,
-		const FieldField<Field, scalar>& interfaceBouCoeffs,
-		const FieldField<Field, scalar>& interfaceIntCoeffs,
-		const lduInterfaceFieldPtrsList& interfaces,
-		const dictionary& solverControls)
-:
-		lduMatrix::solver(fieldName, matrix, interfaceBouCoeffs,
-		interfaceIntCoeffs, interfaces, solverControls)
-{
+Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP(const word& fieldName, const lduMatrix& matrix, const FieldField<Field, scalar>& interfaceBouCoeffs, const FieldField<Field, scalar>& interfaceIntCoeffs,
+		const lduInterfaceFieldPtrsList& interfaces, const dictionary& solverControls) :
+		lduMatrix::solver(fieldName, matrix, interfaceBouCoeffs, interfaceIntCoeffs, interfaces, solverControls) {
 
 	std::vector<cl::Platform> platforms;
 	cl_status = cl::Platform::get(&platforms);
 
 //	verificarError(cl_status);
 
-    auto platform_id = getPlatformId();
+	auto platform_id = getPlatformId();
 	//TODO (juan) usar puntero?
 	cl::Platform platform = platforms[platform_id];
 //	cl_status = platform.getDevices(CL_DEVICE_TYPE_CPU, &m_devices);
-	cl_status = platform.getDevices(CL_DEVICE_TYPE_ALL, &m_devices);
+	cl_status = platform.getDevices(CL_DEVICE_TYPE_GPU, &m_devices);
 //	verificarError(cl_status);
 
 	auto device_id = getDeviceId();
-    device_id = getDeviceId();
-    m_device = m_devices[device_id];
-    m_context = cl::Context(m_device);
-    m_queue = cl::CommandQueue(m_context, m_device);
+	device_id = getDeviceId();
+	m_device = m_devices[device_id];
+	m_context = cl::Context(m_device);
+	m_queue = cl::CommandQueue(m_context, m_device);
 
-    clsparseStatus p_clSparseStatus = clsparseSuccess;
-    p_clSparseStatus  = clsparseSetup();
-    cl_command_queue &clCommandQueue = m_queue();
-    m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparseStatus);
+	clsparseStatus p_clSparseStatus = clsparseSuccess;
+	p_clSparseStatus = clsparseSetup();
+	cl_command_queue &clCommandQueue = m_queue();
+	m_clSparseControl = clsparseCreateControl(clCommandQueue, &p_clSparseStatus);
 
-    //Ver cuantas veces es necesario hacer el init() de los vectores y/o matrices
+	//Ver cuantas veces es necesario hacer el init() de los vectores y/o matrices
 
 }
+
+typedef struct solverStruct {
+	// current solver iteration;
+	cl_int nIters;
+
+	// maximum solver iterations;
+	cl_int maxIters;
+
+	// preconditioner type
+	PRECONDITIONER preconditioner;
+
+	// required relative tolerance
+	cl_double relativeTolerance;
+
+	// required absolute tolerance
+	cl_double absoluteTolerance;
+
+	cl_double initialResidual;
+
+	cl_double currentResidual;
+
+	PRINT_MODE printMode;
+};
 
 std::size_t Foam::clSPARSE_PCG_DP::getPlatformId() {
 	return 0;
@@ -116,13 +128,7 @@ std::size_t Foam::clSPARSE_PCG_DP::getDeviceId() {
  * @param cmpt
  * @return
  */
-Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
-(
-    Foam::scalarField& psi,
-    const Foam::scalarField& source,
-    const Foam::direction cmpt
-) const
-{
+Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField& psi, const Foam::scalarField& source, const Foam::direction cmpt) const {
 	word precond_name = lduMatrix::preconditioner::getName(controlDict_);
 	word solverPrintMode = controlDict_.lookupOrDefault<word>("SolverPrintMode", "QUIET");
 	solverPerformance solverPerf(typeName + '(' + precond_name + ')', fieldName_);
@@ -145,11 +151,10 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 	solverPerf.initialResidual() = gSumMag(rA) / normFactor;
 	solverPerf.finalResidual() = solverPerf.initialResidual();
 
-
 	if (!solverPerf.checkConvergence(tolerance_, relTol_)) {
 
-        cl_context context = m_context();
-        cl_command_queue queue = m_queue();
+		cl_context context = m_context();
+		cl_command_queue queue = m_queue();
 		clSparseFoamMatrix cls_matrix(matrix(), context, queue, m_clSparseControl);
 		clSparseDenseFoamVector cls_b(source, context, queue, false);
 		clSparseDenseFoamVector cls_x(psi, context, queue, true);
@@ -171,15 +176,15 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve
 			clsparseSolverPrintMode(solverControl, QUIET);
 		}
 
-		clsparseDcsrcg( &cls_x,&cls_matrix, &cls_b, solverControl, m_clSparseControl );
+		clsparseDcsrcg(&cls_x, &cls_matrix, &cls_b, solverControl, m_clSparseControl);
 
-		cls_x.exportar(psi);
+		cls_x.exportar(psi, queue);
 
+		solverStruct* str = (solverStruct*) solverControl;
 
-
-//	      solverPerf.finalResidual()   = solverControl->currentResidual  / normFactor;    //ls.GetCurrentResidual() / normFactor; // divide by normFactor, see lduMatrixSolver.C
-//	      solverPerf.nIterations()     = solverControl->nIters;  //ls.GetIterationCount();
-//	      solverPerf.checkConvergence(tolerance_, relTol_);
+		solverPerf.finalResidual() = str->currentResidual / normFactor;    //ls.GetCurrentResidual() / normFactor; // divide by normFactor, see lduMatrixSolver.C
+		solverPerf.nIterations() = str->nIters;  //ls.GetIterationCount();
+		solverPerf.checkConvergence(tolerance_, relTol_);
 
 		clsparseReleaseSolverControl(solverControl);
 

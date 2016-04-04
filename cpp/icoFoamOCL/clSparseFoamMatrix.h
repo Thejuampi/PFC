@@ -22,11 +22,11 @@ private:
 	ValueMapper *valuesMapper;
 	IndexMapper *columnsMapper;
 	IndexMapper *rowOffsetsMapper;
+	void ldu2csr(const Foam::lduMatrix & matrix, cl_int* c_idx, cl_int *r_idx, cl_double *vals);
 
 public:
 
 	clSparseFoamMatrix(const Foam::lduMatrix &ref_foamMatrix, cl_context context, cl_command_queue queue, clsparseControl control);
-
 	virtual ~clSparseFoamMatrix();
 
 };

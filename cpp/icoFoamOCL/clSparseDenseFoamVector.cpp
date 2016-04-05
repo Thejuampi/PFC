@@ -41,6 +41,15 @@ void clSparseDenseFoamVector::exportar(Foam::scalarField& foamVector, cl_command
 
 }
 
+void clSparseDenseFoamVector::clear() {
+    num_values = 0;
+    values = nullptr;
+    // ???
+    valuesMapper = nullptr;
+}
+
+cl_ulong clSparseDenseFoamVector::offset() const {return 0;}
+
 clSparseDenseFoamVector::~clSparseDenseFoamVector() {
 	delete this->valuesMapper;
 //	clReleaseMemObject(this->values);

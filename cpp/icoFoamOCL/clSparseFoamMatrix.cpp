@@ -8,6 +8,21 @@
 #include "clSparseFoamMatrix.h"
 #include <parallel/algorithm>
 
+void clSparseFoamMatrix::clear() {
+	num_rows = num_cols = num_nonzeros = 0;
+	values = colIndices = rowOffsets = nullptr;
+}
+
+cl_uint clSparseFoamMatrix::nnz_per_row() const {return 0;}
+
+cl_ulong clSparseFoamMatrix::valOffset() const {return 0;}
+
+cl_ulong clSparseFoamMatrix::colIndOffset() const {return 0;}
+
+cl_ulong clSparseFoamMatrix::rowOffOffset() const {return 0;}
+
+cl_ulong clSparseFoamMatrix::rowBlocksOffset() const {return 0;}
+
 clSparseFoamMatrix::~clSparseFoamMatrix() {
 	delete valuesMapper;
 	delete columnsMapper;

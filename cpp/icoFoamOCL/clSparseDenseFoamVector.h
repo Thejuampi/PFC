@@ -27,6 +27,9 @@ public:
 
 	void exportar(Foam::scalarField& foamVector, cl_command_queue queue);
 
+	void clear( );
+	cl_ulong offset () const;
+
 	virtual ~clSparseDenseFoamVector();
 };
 

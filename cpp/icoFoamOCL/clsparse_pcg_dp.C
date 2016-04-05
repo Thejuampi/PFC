@@ -87,6 +87,10 @@ Foam::clSPARSE_PCG_DP::clSPARSE_PCG_DP(const word& fieldName, const lduMatrix& m
 
 }
 
+/**
+ * Se utiliza porque en el header no estan especificados los campos que son requeridos para informar
+ * el numero de iteraciones y el residuo.
+ */
 typedef struct solverStruct {
 	// current solver iteration;
 	cl_int nIters;
@@ -116,7 +120,10 @@ std::size_t Foam::clSPARSE_PCG_DP::getPlatformId() {
 
 std::size_t Foam::clSPARSE_PCG_DP::getDeviceId() {
 	//TODO (juan) Modificar esto para que obtenga el id de MPI?
+
 	return 0;
+
+	//return 0;
 }
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -176,7 +183,8 @@ Foam::solverPerformance Foam::clSPARSE_PCG_DP::solve(Foam::scalarField& psi, con
 			clsparseSolverPrintMode(solverControl, QUIET);
 		}
 
-		clsparseDcsrcg(&cls_x, &cls_matrix, &cls_b, solverControl, m_clSparseControl);
+		clsparseStatus status;
+		status = clsparseDcsrcg(&cls_x, &cls_matrix, &cls_b, solverControl, m_clSparseControl);
 
 		cls_x.exportar(psi, queue);
 

@@ -27,6 +27,14 @@ private:
 public:
 
 	clSparseFoamMatrix(const Foam::lduMatrix &ref_foamMatrix, cl_context context, cl_command_queue queue, clsparseControl control);
+
+    void clear( );
+    cl_uint nnz_per_row() const;
+    cl_ulong valOffset () const;
+    cl_ulong colIndOffset () const;
+    cl_ulong rowOffOffset () const;
+    cl_ulong rowBlocksOffset( ) const;
+
 	virtual ~clSparseFoamMatrix();
 
 };

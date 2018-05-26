@@ -1,4 +1,4 @@
-\documentclass[a4paper, 10pt, oneside]{article}
+\documentclass[a4paper, 10pt, oneside]{book}
 
 \usepackage[spanish]{babel}        % Normas tipográficas y opciones del español e ingles
 \usepackage[utf8]{inputenc}        % Codificación de entrada
@@ -9,11 +9,21 @@
 \usepackage{apalike}
 \usepackage[T1]{fontenc} %bibliography
 \usepackage{lmodern}
+\usepackage{enumitem}
 
 \usepackage{geometry}
-\geometry{a4paper, left=2cm, right=2cm, top=2cm, bottom=2cm}
+\geometry{a4paper, left=2.5cm, right=2cm, top=2.5cm, bottom=1.5cm}
+
+\usepackage{pgfgantt}
+
 
 \def \THETITLE{Diseño e Implementación de un Sistema de Historia Clínica basada en tecnologías web}
+\def \startDate{Lunes 4 de Junio de 2018}
+\def \endDate{Jueves 20 de Septiembre de 2018}
+\def \totalDuration{16}
+\def \durationUnit{Semana}
+\def \durationUnitPlural{Semanas}
+\def \totalDurationUnit{\durationUnitPlural}
 \title{\THETITLE}
 \author{Lescano, Juan Pablo A.}
 \date{2018}
@@ -56,7 +66,7 @@
     \input{caratula.tex}
 
     \begin{abstract}
-        this is the abstract % TODO
+        Se presenta un
         \begin{keywords}
             key1, key2
             % TODO
@@ -80,14 +90,15 @@
 
     \section{Objetivos}\label{sec:objetivos}
 
-    A continuación se listan los objetivos generales en conjunto con sus objetivos específicos:
-    %    Turnos:
-    %    Consultar su historia clinica: permite al paciente acceder a su historia clínica. (Falta determinar los datos que se mostrarán al mismo)
-    %    Turnos online: Solicitud de turnos para determinado especialista, fecha y horario.
-    \begin{itemize}
-        \item %TODO
+    A continuación se listan los objetivos:
+
+    \item \begin{itemize}
+        \item Implementar un sistema informático de historia clínica para un centro de atención privado.
         \begin{itemize}
-            \item
+            \item Tener un registro digital de cada paciente.
+            \item Permitir al profesional diagnosticar a un paciente teniendo en cuenta sus diagnósticos previos.
+            \item Minimizar el uso de papel o cualquier otro tipo de documentación que requiera de escritura manual al mínimo.
+            i.e.: Sólo firmar y/o sellar recetas médicas.
         \end{itemize}
     \end{itemize}
 
@@ -133,8 +144,7 @@
 
     \subsection{Limitaciones y Restricciones}\label{subsec:limitacionesYRestricciones}
     \begin{itemize}
-        \item
-        %TODO
+        \item El hard deadline para el proyecto está indicado en Septiembre debido a las condiciones especiales brindadas para la realización del mismo.
     \end{itemize}
 
     \subsection{Supuestos}\label{subsec:supuestos}
@@ -143,39 +153,50 @@
         \item Se utilizará Spring Boot para el desarrollo del sistema
     \end{itemize}
 
-
     \subsection{Criterios de aceptación del producto}\label{subsec:criterioAceptacion}
     Se requiere que, mínimamente, el sistema permita a los profesionales de los centros de atención puedan acceder a la historia clínica de cada paciente y poder cargar en ella el diagnóstico.
     El sistema deberá ser accesible desde cualquier computadora con acceso a internet utilizando credenciales únicas para cada usuario.
 
     \section{Metodología} \label{sec:metodologia}
-    Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) a través de una metodología propia definida para el proyecto.
+    Dada la limitación del personal disponible asignado al proyecto, %TODO terminar la explicación de la metodología.
     El proyecto se dividirá en tres etapas:
 
     \section{Plan de Tareas} \label{sec:plan_de_tareas}
     \label{sec:planTareas}
     El plan de tareas se define en base a las etapas expuestas en la sección Metodología, P.~\pageref{sec:metodologia}.
-    Las duraciones de las tareas se estimaron en base a criterios de experto por parte del director y los ayudantes.
-
-    A continuación se detallan los niveles del plan de tareas.
+    El cronograma se estimó en base a la opinión experta del analista desarrollador, considerando las limitaciones de cada tarea, los elementos opcionales y los requeridos.
 
     \subsection{Consideraciones}\label{subsec:consideraciones}
     Se dedicará un esfuerzo temporal de 20 Horas semanales, divididas a lo largo de la semana, donde se espera trabajar de Lunes a Viernes.
     Por otra parte, cabe destacar que las pruebas unitarias se encuentran implícitas en la labor del desarrollo.
 
     \section{Cronograma} \label{sec:cronograma}
-
     Para su elaboración se tuvieron en cuenta las limitaciones de los recursos humanos asignados al proyecto, requiriendo que las tareas se ejecuten de forma secuencial, y que por lo tanto, solo exista un único camino, coincidente con el camino crítico.
-    Se propone el 3 de Agosto de 2015 como fecha de inicio del proyecto, con una carga de 4 horas diarias, de lunes a viernes.
-    Solamente se considera el 25 de Diciembre como feriado no laborable.
-    Se estima el siete de Enero de 2016 como fecha de finalización del mismo, con una duración total de 450 horas.
-    En la figura~\ref{fig:gantt} se presenta el diagrama de Gantt, donde se expresan las relaciones entre tareas y su duración estimada.
+    Se propone el \startDate como fecha de inicio del proyecto, con una carga semanal de 20 horas en promedio.
+    No se consideran feriados ni días tradicionalmente no laborables en la estimación
+    Se estima finalizar el \endDate, con una duración total de \totalDuration \totalDurationUnit.
 
-    \begin{figure}[H]
-        \includegraphics[width=\textwidth]{gantt.png}
-        \caption{Diagrama de Gantt}
-        \label{fig:gantt}
-    \end{figure}
+    A continuación, se desglosa el trabajo a realizar por semana
+
+    \newlist{cronograma}{enumerate}{1}
+    \setlist[cronograma]{
+        label=\durationUnit \arabic*:,
+        itemindent=0pt,
+        leftmargin=*,
+        before=\setlength{\listparindent}{-\leftmargin},
+    }
+
+    \begin{cronograma}
+        \item Configuración inicial del sistema.
+        \item CRUD Pacientes
+        \item CRUD Especialistas
+        \item Turnos
+        \item Historia Clínica de pacientes
+        \item Medicamentos
+        \item Recetas
+        \item Estudios Complementarios
+        \item <<TODO....>>
+    \end{cronograma}
 
     \section{Entregables}
     \label{sec:entregables}

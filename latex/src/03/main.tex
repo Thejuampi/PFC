@@ -10,7 +10,10 @@
 \usepackage[T1]{fontenc} %bibliography
 \usepackage{lmodern}
 
-\def \THETITLE{Diseño e implementación de un sistema de historia clínica electrónica basada en tecnologías web}
+\usepackage{geometry}
+\geometry{a4paper, left=2cm, right=2cm, top=2cm, bottom=2cm}
+
+\def \THETITLE{Diseño e Implementación de un Sistema de Historia Clínica basada en tecnologías web}
 \title{\THETITLE}
 \author{Lescano, Juan Pablo A.}
 \date{2018}
@@ -55,25 +58,19 @@
     \begin{abstract}
         this is the abstract % TODO
         \begin{keywords}
-            key1, key2 % TODO
+            key1, key2
+            % TODO
         \end{keywords}
     \end{abstract}
     \pagebreak
 
     \small{\tableofcontents}
-    %\newpage
+    \pagebreak
 
-    %3. Con respecto a la Justificación: carece de una descripción de contexto. Se arranca bruscamente con la descripción del problema (ni siquiera se explica qué es el CIMEC, a qué se dedican, cuál es su problemática). Además, se debe revisar la redacción completa, hay oraciones sumamente largas y numerosos problemas de puntuación (comas mal colocadas, ausencia de punto y aparte, etc.). Todo esto dificulta la lectura y comprensión. Reitero mi recomendación de hacer revisar el texto por la Prof. Mattioli.
-    %
-    %Debe hacer énfasis en el problema que se quiere resolver.
-    %
-    %El párrafo donde se describen las implementaciones actuales de solvers está confuso. No se comprende la relación entre lo que se describe de estos solvers y el problema que se intenta resolver.
-    %
-    %No está claro (en el texto) por qué se hace referencia a “una mejora de rendimiento esperable” (esto ya se había señalado anteriormente) y los subsiguientes párrafos donde se dan mediciones. Aclarar todas siglas que se utilicen.
-    %
-    %Poner la cita faltante de Raghavendra.
-    %
-    %Eliminar los subtítulos de la fundamentación. Lo que se denomina “diagnóstico” debería ser la descripción del “problema” que debe seguir al contexto.
+    %    3. Con respecto a la Justificación: carece de una descripción de contexto. Se arranca bruscamente con la descripción del problema (ni siquiera se explica qué es el CIMEC, a qué se dedican, cuál es su problemática). Además, se debe revisar la redacción completa, hay oraciones sumamente largas y numerosos problemas de puntuación (comas mal colocadas, ausencia de punto y aparte, etc.).
+    %    Debe hacer énfasis en el problema que se quiere resolver.
+    %    No está claro (en el texto) por qué se hace referencia a “una mejora de rendimiento esperable” (esto ya se había señalado anteriormente) y los subsiguientes párrafos donde se dan mediciones. Aclarar todas siglas que se utilicen.
+    %    Eliminar los subtítulos de la fundamentación. Lo que se denomina “diagnóstico” debería ser la descripción del “problema” que debe seguir al contexto.
 
     \section{Justificación}\label{sec:justificación}
     La documentación de la atención de pacientes a través de su historia clínica (HC), siempre es enfatizada.
@@ -84,34 +81,47 @@
     \section{Objetivos}\label{sec:objetivos}
 
     A continuación se listan los objetivos generales en conjunto con sus objetivos específicos:
-
+    %    Turnos:
+    %    Consultar su historia clinica: permite al paciente acceder a su historia clínica. (Falta determinar los datos que se mostrarán al mismo)
+    %    Turnos online: Solicitud de turnos para determinado especialista, fecha y horario.
     \begin{itemize}
         \item %TODO
         \begin{itemize}
             \item
-            %TODO
         \end{itemize}
     \end{itemize}
 
     \section{Alcance}\label{sec:alcance}
-
-    El alcance del proyecto se encuentra especificado según los requerimientos funcionales y los no funcionales, al mismo tiempo que se establecen los límites y exclusiones, como se detalla a continuación.
-
     \subsection{Funcionales}\label{subsec:funcionales}
     \begin{itemize}
-        \item
-        %TODO
+        \item \textbf{Diagnósticos:} Cargar diagnósticos, comentarios, adjuntar archivos, correcciones sobre el diagnóstico, comentarios, revisiones.
+        \item \textbf{Inter consultas:} Acceso a la historia clínica del paciente que atenderá.
+        Poder ver los diagnósticos o comentarios que el paciente ha recibido de otros colegas en atenciones
+        \item \textbf{Generación de recetas:} generar recetas con todos los detalles necesarios para consumir la medicación.
+        Prescripción por nombre comercial o por droga. Los datos serán obtenidos desde el organismo nacional de medicamentos (ANMAT)
+        \item \textbf{Estudios complementarios:} carga y visualización de estudios realizados por terceros.
+        Subir documentos, adjuntos, fotos, escaneo, etc.
+        \item \textbf{Turnos:}
+        \subitem Carga de turnos al sistema.
+        Corregir o modificar dia/horario/especialista.
+        Consulta de turnos vigentes.
+        \subitem Permitir al médico visualizar los turnos que tiene por atender, junto con los detalles del mismo. (Paciente, hora, tiempo estimado, problema reportado por el paciente, etc)
+        \subitem Solicitar turno online para pacientes.
+        Visualizar días, horarios, especialistas.
+        \item \textbf{Pacientes}: CRUD de pacientes
+        \item \textbf{Especialistas}: CRUD de especialistas (Médicos, masajistas, reikistas, etc)
     \end{itemize}
 
     \subsection{No funcionales}\label{subsec:noFuncionales}
     \begin{itemize}
-        \item
-        %TODO
+        \item Sistema web, alojado en servicios basados en la nube.
+        \item Seguridad: se deberá contar con un sistema de autenticación y autorización de usuarios.
+        \item Escalabilidad: podrá correr mas de una instancia del sistema al mismo tiempo.
     \end{itemize}
 
     \subsubsection{Uso de buenas prácticas de programación:}\label{subsec:usoBuenasPracticasProgramacion}
     \begin{itemize}
-        \item Código legible y mantenible según especificaciones de Clean Coder %TODO insert ref here
+        \item Código legible y mantenible según especificaciones de~\cite{martin2009clean}
         \item Uso de un repositorio de git para versionado de código.
         \item Tests unitarios sobre cada capa de abstracción.
     \end{itemize}
@@ -130,12 +140,13 @@
     \subsection{Supuestos}\label{subsec:supuestos}
     \begin{itemize}
         \item Se dispone de todos los recursos de hardware y software necesario
+        \item Se utilizará Spring Boot para el desarrollo del sistema
     \end{itemize}
 
 
-    \subsection{Criterios de aceptación del producto}\label{subsec:criteriosDeAceptaciónDelProducto}
-    Mínimo: %TODO
-    Esperado: %TODO
+    \subsection{Criterios de aceptación del producto}\label{subsec:criterioAceptacion}
+    Se requiere que, mínimamente, el sistema permita a los profesionales de los centros de atención puedan acceder a la historia clínica de cada paciente y poder cargar en ella el diagnóstico.
+    El sistema deberá ser accesible desde cualquier computadora con acceso a internet utilizando credenciales únicas para cada usuario.
 
     \section{Metodología} \label{sec:metodologia}
     Dada la limitación del personal disponible encargada de las tareas del proyecto, se planifica su realización de forma secuencial con relación terminar para empezar (TE) a través de una metodología propia definida para el proyecto.
@@ -143,7 +154,7 @@
 
     \section{Plan de Tareas} \label{sec:plan_de_tareas}
     \label{sec:planTareas}
-    El plan de tareas se define en base a las etapas expuestas en la sección Metodología, P. \pageref{sec:metodologia}.
+    El plan de tareas se define en base a las etapas expuestas en la sección Metodología, P.~\pageref{sec:metodologia}.
     Las duraciones de las tareas se estimaron en base a criterios de experto por parte del director y los ayudantes.
 
     A continuación se detallan los niveles del plan de tareas.

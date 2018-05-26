@@ -42,3 +42,8 @@ Makefile*
 *.out
 *.gz
 *.toc
+
+# intellij
+.idea
+latex/src/03/auxil/
+

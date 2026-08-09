@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Step 0: traditional OpenFOAM run — stock laplacianFoam, CPU solvers only.
+set -euo pipefail
+cd "${0%/*}" || exit 1
+
+# shellcheck disable=SC1091
+if [[ -z "${WM_PROJECT_DIR:-}" ]]; then
+    echo "ERROR: OpenFOAM environment not loaded."
+    echo "  source /usr/lib/openfoam/openfoam*/etc/bashrc   # package install"
+    echo "  # or: source \$HOME/OpenFOAM/OpenFOAM-*/etc/bashrc"
+    exit 1
+fi
+
+echo "OpenFOAM: ${WM_PROJECT_VERSION:-unknown}  (${WM_PROJECT_DIR})"
+echo "Solver:   laplacianFoam (stock, CPU)"
+echo "Case:     $(pwd)"
+
+./Allclean >/dev/null 2>&1 || true
+
+echo "==> blockMesh"
+blockMesh > log.blockMesh 2>&1
+
+echo "==> checkMesh"
+checkMesh > log.checkMesh 2>&1 || true
+
+echo "==> laplacianFoam"
+laplacianFoam > log.laplacianFoam 2>&1
+
+echo "Done. See log.laplacianFoam"
+tail -n 30 log.laplacianFoam

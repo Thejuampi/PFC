@@ -42,3 +42,26 @@ Makefile*
 *.out
 *.gz
 *.toc
+
+# OpenFOAM case runtime (keep dictionaries; ignore mesh & time dirs)
+cases/**/constant/polyMesh/points
+cases/**/constant/polyMesh/faces
+cases/**/constant/polyMesh/owner
+cases/**/constant/polyMesh/neighbour
+cases/**/constant/polyMesh/boundary
+cases/**/[1-9]*
+cases/**/0.*
+cases/**/processor*
+cases/**/postProcessing
+apps/**/Make/linux*
+apps/**/Make/linux64*
+apps/laplaceOcl/build/
+
+# OpenFOAM case logs / time outputs
+cases/**/log.*
+cases/**/0.0*
+cases/**/0.[1-9]*
+cases/**/[1-9]*
+
+# Local disk snapshot duplicates (keep dated dirs; ignore LATEST copies if desired)
+docs/snapshots/*-LATEST/

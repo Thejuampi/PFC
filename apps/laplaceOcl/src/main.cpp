@@ -750,6 +750,19 @@ int main(int argc, char** argv)
         }
     }
 
+    // True residual of last linear solve: r = b - A x  (dB = last RHS, dT = last x)
+    spmv(dT, dAp);
+    set(ocl.k_resid, 0, dR);
+    set(ocl.k_resid, 1, dB);
+    set(ocl.k_resid, 2, dAp);
+    set(ocl.k_resid, 3, n);
+    enqueue1D(ocl.queue, ocl.k_resid, n, lws);
+    const double finalRnorm = std::sqrt(sumsq2(dR));
+    const double finalBnorm = std::sqrt(sumsq2(dB)) + 1e-30;
+    const double relResidual = finalRnorm / finalBnorm;
+    std::cout << "REL_RESIDUAL " << relResidual
+              << "  (||b-Ax||/||b||, last step)\n";
+
     checkCl(clFinish(ocl.queue), "clFinish solve");
     auto tSolve = std::chrono::steady_clock::now();
 
@@ -804,6 +817,15 @@ int main(int argc, char** argv)
     }
 
     int exitCode = 0;
+
+    // Residual gate: when not using fixed-iters, the last solve must meet tol.
+    if (args.fixedIters <= 0 && relResidual > args.tol * 10.0) {
+        std::cerr << "FAIL: REL_RESIDUAL " << relResidual << " > 10*tol (" << (args.tol * 10.0) << ")\n";
+        exitCode = 3;
+    } else if (args.fixedIters <= 0) {
+        std::cout << "RESIDUAL check   : OK\n";
+    }
+
     if (args.cpuCheck) {
         std::cout << "CPU reference (same scheme)...\n";
         auto c0 = std::chrono::steady_clock::now();

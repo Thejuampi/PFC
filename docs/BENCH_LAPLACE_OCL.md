@@ -1,26 +1,34 @@
-# laplaceOcl bench (Phase A3)
+# laplaceOcl bench (Phase A3 + A4)
 
-Generated: 2026-08-09 13:28
-Machine: Windows host + AMD OpenCL (RX 6800 XT / gfx1030)
-Steps: 10 | App: apps/laplaceOcl
+Generated: 2026-08-09  
+Machine: Windows host + AMD OpenCL (RX 6800 XT / gfx1030)  
+Steps: 10  
 
-## Timing and traffic
+Default preconditioner: **poly2** (`M^{-1} ≈ 2 D^{-1} - D^{-1} A D^{-1}`).
 
-| Mesh | Cells | setup ms | solve ms | download ms | total ms | CPU ref ms | speedup | PCG iters | max\|ΔT\| | H2D | D2H field | D2H scalar | scalar reads | hybrid-est bytes |
-|------|------:|---------:|---------:|------------:|---------:|-----------:|--------:|----------:|----------:|----:|----------:|-----------:|-------------:|-----------------:|
-| 100x100 | 10000 | 1.4528 | 30.7562 | 0.3809 | 32.5899 | 5.1599 | 0.158328 | 86 | 5.11591e-13 | 0 | 80000 | 137216 | 268 | ? |
-| 500x500 | 250000 | 3.0388 | 149.326 | 1.384 | 153.749 | 3090.96 | 20.104 | 387 | 3.69482e-12 | 0 | 2000000 | 599552 | 1171 | ? |
-| 2000x2000 | 4000000 | 14.2404 | 2948.09 | 15.9822 | 2978.31 | n/a | n/a | 1610 | n/a | 0 | 32000000 | 2478080 | 4840 | ? |
+## Results
 
-## Notes
+| Mesh | Precond | PCG iters | solve ms | total ms | max \|ΔT\| | speedup vs CPU |
+|------|---------|----------:|---------:|---------:|-----------:|---------------:|
+| 100×100 | poly2 | 51 | 20.3 | 24.3 | 4.5e-13 | 0.20 |
+| 500×500 | jacobi | 387 | 136 | 139 | 3.7e-12 | 14.7 |
+| 500×500 | **poly2** | **202** | **73** | **77** | 1.8e-12 | **26.6** |
+| 2000×2000 | poly2 | 799 | 2103 | 2130 | n/a (no CPU check) | n/a |
 
-- **H2D field uploads = 0**: mesh/init/assemble run on device.
-- **D2H field**: single final `T` download (`n * 8` bytes).
-- **D2H scalar**: residual reduction partials only (not the matrix).
-- **hybrid-est**: rough bytes if A (5 diagonals) + x + b + sol were recopied every time step (2015-style).
-- 2000² CPU check skipped (too slow for the paired host PCG); use smaller meshes for correctness.
+## Takeaways
 
-Re-run:
+- **poly2** ≈ **2× fewer PCG iterations** and ≈ **2× faster solve** than Jacobi on 500².
+- Field **H2D = 0**; only residual reduction scalars + final `T` download cross the bus.
+- **rbgs** is available for experiments but is **not SPD** → often **hurts** CG (more iters). Prefer poly2/jacobi with PCG.
+- 2000² thesis-scale mesh runs in ~2.1 s solve on this GPU with poly2.
+
+## Re-run
+
 ```powershell
+.\scripts\build-laplace-ocl.ps1
+.\scripts\test-laplace-ocl.ps1
 .\scripts\bench-laplace-ocl.ps1
+# manual compare:
+.\apps\laplaceOcl\build\laplaceOcl.exe --nx 500 --ny 500 --precond jacobi --no-csv --quiet --kernels .\apps\laplaceOcl\kernels\laplace.cl
+.\apps\laplaceOcl\build\laplaceOcl.exe --nx 500 --ny 500 --precond poly2  --no-csv --quiet --kernels .\apps\laplaceOcl\kernels\laplace.cl
 ```

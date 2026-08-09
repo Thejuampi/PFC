@@ -28,6 +28,8 @@
 
 namespace {
 
+enum class Precond { Jacobi, Rbgs, Poly2 };
+
 struct Args {
     int nx = 100;
     int ny = 100;
@@ -39,6 +41,9 @@ struct Args {
     double tol = 1e-8;
     int maxIters = 500;
     int fixedIters = 0; // if >0, skip residual host checks in PCG
+    // poly2: Neumann / SPAI-ish M^{-1}≈ 2 D^{-1} - D^{-1} A D^{-1} (SPD-friendly for CG)
+    Precond precond = Precond::Poly2;
+    int precondSweeps = 2; // only for rbgs (not recommended with CG; kept for experiments)
     bool cpuCheck = true;
     bool writeCsv = true;
     bool quietSteps = false;
@@ -95,6 +100,13 @@ Args parseArgs(int argc, char** argv)
         else if (s == "--tol") a.tol = std::stod(need("--tol"));
         else if (s == "--max-iters") a.maxIters = std::stoi(need("--max-iters"));
         else if (s == "--fixed-iters") a.fixedIters = std::stoi(need("--fixed-iters"));
+        else if (s == "--precond") {
+            std::string p = need("--precond");
+            if (p == "jacobi") a.precond = Precond::Jacobi;
+            else if (p == "rbgs") a.precond = Precond::Rbgs;
+            else if (p == "poly2") a.precond = Precond::Poly2;
+            else die("--precond must be jacobi|poly2|rbgs");
+        } else if (s == "--precond-sweeps") a.precondSweeps = std::stoi(need("--precond-sweeps"));
         else if (s == "--kernels") a.kernelPath = need("--kernels");
         else if (s == "--out") a.outCsv = need("--out");
         else if (s == "--no-csv") a.writeCsv = false;
@@ -106,6 +118,8 @@ Args parseArgs(int argc, char** argv)
                 << "  --nx N --ny N --steps N --dt D --DT D\n"
                 << "  --tol T --max-iters N --fixed-iters N\n"
                 << "      (fixed-iters>0: no residual host check each PCG iter)\n"
+                << "  --precond jacobi|poly2|rbgs   (default poly2; rbgs not SPD — weak with CG)\n"
+                << "  --precond-sweeps N      (only rbgs; default 2)\n"
                 << "  --kernels path/to/laplace.cl --out T_gpu.csv --no-csv\n"
                 << "  --no-cpu-check --quiet\n"
                 << "\nLifecycle: assemble+solve on GPU; one field download at end.\n"
@@ -115,6 +129,7 @@ Args parseArgs(int argc, char** argv)
             die("unknown arg: " + s);
         }
     }
+    if (a.precondSweeps < 1) die("--precond-sweeps must be >= 1");
     if (a.nx < 3 || a.ny < 3) die("nx,ny must be >= 3");
     return a;
 }
@@ -158,6 +173,8 @@ struct Ocl {
     cl_kernel k_scal{};
     cl_kernel k_set{};
     cl_kernel k_jacobi{};
+    cl_kernel k_poly2{};
+    cl_kernel k_rbgs{};
     cl_kernel k_resid{};
     cl_kernel k_sumsq{};
     cl_kernel k_dot{};
@@ -235,6 +252,8 @@ struct Ocl {
         k_scal = mk("vec_scal");
         k_set = mk("vec_set");
         k_jacobi = mk("apply_jacobi");
+        k_poly2 = mk("poly2_combine");
+        k_rbgs = mk("rbgs_sweep");
         k_resid = mk("vec_residual");
         k_sumsq = mk("reduce_sum_sq");
         k_dot = mk("reduce_dot");
@@ -245,7 +264,7 @@ struct Ocl {
         auto relK = [](cl_kernel k) { if (k) clReleaseKernel(k); };
         relK(k_mark); relK(k_init); relK(k_assemble); relK(k_rhs); relK(k_spmv);
         relK(k_axpy); relK(k_xpay); relK(k_copy); relK(k_scal); relK(k_set);
-        relK(k_jacobi); relK(k_resid); relK(k_sumsq); relK(k_dot);
+        relK(k_jacobi); relK(k_poly2); relK(k_rbgs); relK(k_resid); relK(k_sumsq); relK(k_dot);
         if (program) clReleaseProgram(program);
         if (queue) clReleaseCommandQueue(queue);
         if (ctx) clReleaseContext(ctx);
@@ -327,6 +346,44 @@ void cpuReference(const Args& a, std::vector<double>& T)
         }
     };
 
+    auto applyPrecond = [&](std::vector<double>& z, const std::vector<double>& r) {
+        if (a.precond == Precond::Jacobi) {
+            for (int c = 0; c < n; ++c) z[c] = invD[c] * r[c];
+            return;
+        }
+        if (a.precond == Precond::Poly2) {
+            // z = 2 D^{-1} r - D^{-1} A D^{-1} r
+            std::vector<double> t(n), w(n);
+            for (int c = 0; c < n; ++c) t[c] = invD[c] * r[c];
+            spmv(t, w);
+            for (int c = 0; c < n; ++c) z[c] = 2.0 * t[c] - invD[c] * w[c];
+            return;
+        }
+        // RBGS (experimental; not SPD — may hurt CG)
+        std::fill(z.begin(), z.end(), 0.0);
+        auto oneColor = [&](int color) {
+            for (int c = 0; c < n; ++c) {
+                const int i = c % nx;
+                const int j = c / nx;
+                if (((i + j) & 1) != color) continue;
+                if (!isInterior(c)) {
+                    z[c] = r[c];
+                    continue;
+                }
+                double sigma = 0.0;
+                if (c >= nx) sigma += dia0[c] * z[c - nx];
+                if (i > 0) sigma += dia1[c] * z[c - 1];
+                if (i < nx - 1) sigma += dia3[c] * z[c + 1];
+                if (c + nx < n) sigma += dia4[c] * z[c + nx];
+                z[c] = (r[c] - sigma) / dia2[c];
+            }
+        };
+        for (int s = 0; s < a.precondSweeps; ++s) {
+            oneColor(0);
+            oneColor(1);
+        }
+    };
+
     std::vector<double> b(n), x(n), r(n), z(n), p(n), Ap(n);
     for (int step = 0; step < a.steps; ++step) {
         for (int c = 0; c < n; ++c) {
@@ -335,7 +392,7 @@ void cpuReference(const Args& a, std::vector<double>& T)
         }
         spmv(x, Ap);
         for (int c = 0; c < n; ++c) r[c] = b[c] - Ap[c];
-        for (int c = 0; c < n; ++c) z[c] = invD[c] * r[c];
+        applyPrecond(z, r);
         p = z;
         double rzOld = 0.0;
         for (int c = 0; c < n; ++c) rzOld += r[c] * z[c];
@@ -351,7 +408,7 @@ void cpuReference(const Args& a, std::vector<double>& T)
             double r2 = 0.0;
             for (int c = 0; c < n; ++c) r2 += r[c] * r[c];
             if (std::sqrt(r2) / bnorm < a.tol) break;
-            for (int c = 0; c < n; ++c) z[c] = invD[c] * r[c];
+            applyPrecond(z, r);
             double rzNew = 0.0;
             for (int c = 0; c < n; ++c) rzNew += r[c] * z[c];
             const double beta = rzNew / (rzOld + 1e-300);
@@ -373,10 +430,14 @@ int main(int argc, char** argv)
     const double dx = args.Lx / (nx - 1);
     const double dy = args.Ly / (ny - 1);
 
+    const char* precondName =
+        (args.precond == Precond::Jacobi) ? "jacobi" :
+        (args.precond == Precond::Poly2) ? "poly2" : "rbgs";
     std::cout << "laplaceOcl full-device lifecycle\n"
               << "  mesh     : " << nx << " x " << ny << " (" << n << " cells)\n"
               << "  steps    : " << args.steps << "  dt=" << args.dt << "  DT=" << args.DT << "\n"
-              << "  domain   : " << args.Lx << " x " << args.Ly << "  dx=" << dx << " dy=" << dy << "\n";
+              << "  domain   : " << args.Lx << " x " << args.Ly << "  dx=" << dx << " dy=" << dy << "\n"
+              << "  precond  : " << precondName << "  sweeps=" << args.precondSweeps << "\n";
 
     const std::string kpath = findKernels(args);
     std::cout << "  kernels  : " << kpath << "\n";
@@ -491,6 +552,50 @@ int main(int argc, char** argv)
         enqueue1D(ocl.queue, ocl.k_jacobi, n, lws);
     };
 
+    auto rbgsSweep = [&](cl_mem z, cl_mem rhs, int color) {
+        set(ocl.k_rbgs, 0, z);
+        set(ocl.k_rbgs, 1, d0);
+        set(ocl.k_rbgs, 2, d1);
+        set(ocl.k_rbgs, 3, d2);
+        set(ocl.k_rbgs, 4, d3);
+        set(ocl.k_rbgs, 5, d4);
+        set(ocl.k_rbgs, 6, rhs);
+        set(ocl.k_rbgs, 7, dMark);
+        set(ocl.k_rbgs, 8, nx);
+        set(ocl.k_rbgs, 9, n);
+        set(ocl.k_rbgs, 10, color);
+        enqueue1D(ocl.queue, ocl.k_rbgs, n, lws);
+    };
+
+    cl_mem dTmp = mkBuf(ocl.ctx, CL_MEM_READ_WRITE, bytes);
+
+    auto applyPrecond = [&](cl_mem z, cl_mem r) {
+        if (args.precond == Precond::Jacobi) {
+            jacobi(z, r);
+            return;
+        }
+        if (args.precond == Precond::Poly2) {
+            // t = D^{-1} r ; z = A t ; z = 2 t - D^{-1} (A t)
+            jacobi(dTmp, r);
+            spmv(dTmp, z);
+            set(ocl.k_poly2, 0, z);
+            set(ocl.k_poly2, 1, dTmp);
+            set(ocl.k_poly2, 2, dInv);
+            set(ocl.k_poly2, 3, n);
+            enqueue1D(ocl.queue, ocl.k_poly2, n, lws);
+            return;
+        }
+        // RBGS experimental (not SPD — may hurt CG)
+        set(ocl.k_set, 0, z);
+        set(ocl.k_set, 1, 0.0);
+        set(ocl.k_set, 2, n);
+        enqueue1D(ocl.queue, ocl.k_set, n, lws);
+        for (int s = 0; s < args.precondSweeps; ++s) {
+            rbgsSweep(z, r, 0);
+            rbgsSweep(z, r, 1);
+        }
+    };
+
     auto noteScalarRead = [&]() {
         traffic.d2hScalarBytes += static_cast<std::uint64_t>(nPart) * sizeof(double);
         traffic.scalarReads += 1;
@@ -545,7 +650,7 @@ int main(int argc, char** argv)
         set(ocl.k_resid, 3, n);
         enqueue1D(ocl.queue, ocl.k_resid, n, lws);
 
-        jacobi(dZ, dR);
+        applyPrecond(dZ, dR);
         copy(dP, dZ);
 
         double rzOld = dot(dR, dZ);
@@ -566,7 +671,7 @@ int main(int argc, char** argv)
                 if (rnorm / bnorm < args.tol) break;
             }
 
-            jacobi(dZ, dR);
+            applyPrecond(dZ, dR);
             const double rzNew = dot(dR, dZ);
             const double beta = rzNew / (rzOld + 1e-300);
             xpay(dP, dZ, beta); // p = z + beta p
@@ -612,6 +717,7 @@ int main(int argc, char** argv)
               << " d2h_field=" << traffic.d2hFieldBytes
               << " d2h_scalar=" << traffic.d2hScalarBytes
               << " scalar_reads=" << traffic.scalarReads << "\n"
+              << "PRECOND " << precondName << " sweeps=" << args.precondSweeps << "\n"
               << "PCG_ITERS total=" << totalPcgIters << "\n"
               << "T range         : [" << tmin << ", " << tmax << "]  mean=" << (tsum / n) << "\n";
 
@@ -661,7 +767,7 @@ int main(int argc, char** argv)
     }
 
     // release buffers
-    cl_mem all[] = {dT, dB, dX, dR, dZ, dP, dAp, dMark, dInv, d0, d1, d2, d3, d4, dPartial};
+    cl_mem all[] = {dT, dB, dX, dR, dZ, dP, dAp, dMark, dInv, d0, d1, d2, d3, d4, dPartial, dTmp};
     for (cl_mem m : all) clReleaseMemObject(m);
 
     std::cout << "Done (full-device assemble+solve; single final unload).\n";

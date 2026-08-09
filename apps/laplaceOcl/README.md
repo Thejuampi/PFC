@@ -54,6 +54,16 @@ MAX_ABS_ERR ...          # if CPU check on
 HYBRID_EST_BYTES_per_run≈...
 ```
 
+### `--precond jacobi|poly2|rbgs`
+
+| Precond | Notes |
+|---------|--------|
+| **poly2** (default) | `M^{-1} ≈ 2 D^{-1} - D^{-1} A D^{-1}` — SPD-friendly, fewer CG iters than Jacobi |
+| **jacobi** | `M^{-1} = D^{-1}` — baseline |
+| **rbgs** | Red-black GS (experimental). Not SPD → often **hurts** CG; kept for research |
+
+On 500² / 10 steps (this machine): poly2 ~202 PCG iters / ~77 ms solve vs jacobi ~387 iters / ~147 ms.
+
 ### `--fixed-iters N`
 
 Runs exactly N PCG iterations per step **without** residual norm host checks (only the dots needed for PCG itself still read small reduction buffers). Use when measuring pure device throughput; correctness mode keeps default residual-based exit.

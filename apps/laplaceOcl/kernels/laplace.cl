@@ -209,6 +209,57 @@ __kernel void apply_jacobi(
     z[c] = invDiag[c] * r[c];
 }
 
+// z := 2*t - invDiag * z   (z enters as A*t) for poly2 preconditioner
+__kernel void poly2_combine(
+    __global double* z,
+    __global const double* t,
+    __global const double* invDiag,
+    const int n)
+{
+    const int c = get_global_id(0);
+    if (c >= n) return;
+    z[c] = 2.0 * t[c] - invDiag[c] * z[c];
+}
+
+// One red-black Gauss-Seidel sweep color for approximate solve A z ≈ rhs.
+// color: 0 = (i+j) even, 1 = (i+j) odd. Uses latest neighbor values of the other color.
+// DIA offsets: 0:-nx  1:-1  2:0  3:+1  4:+nx
+__kernel void rbgs_sweep(
+    __global double* z,
+    __global const double* dia0,
+    __global const double* dia1,
+    __global const double* dia2,
+    __global const double* dia3,
+    __global const double* dia4,
+    __global const double* rhs,
+    __global const uchar* mark,
+    const int nx,
+    const int n,
+    const int color)
+{
+    const int c = get_global_id(0);
+    if (c >= n) return;
+
+    const int i = c % nx;
+    const int j = c / nx;
+    if (((i + j) & 1) != color) return;
+
+    // Dirichlet / identity rows: z = rhs
+    if (!mark[c]) {
+        z[c] = rhs[c];
+        return;
+    }
+
+    double sigma = 0.0;
+    if (c >= nx)           sigma += dia0[c] * z[c - nx];
+    if (i > 0)             sigma += dia1[c] * z[c - 1];
+    if (i < nx - 1)        sigma += dia3[c] * z[c + 1];
+    if (c + nx < n)        sigma += dia4[c] * z[c + nx];
+
+    // A_ii * z_i + sigma = rhs_i  =>  z_i = (rhs - sigma) / A_ii
+    z[c] = (rhs[c] - sigma) / dia2[c];
+}
+
 // r = b - y  (y holds A*x)
 __kernel void vec_residual(
     __global double* r,

@@ -50,8 +50,8 @@ We do **not** block on “OpenCL is legacy, use HIP”.
 2. **GPU-resident skeleton (OpenCL)** — `apps/laplaceOcl` (**done**): DIA assemble + PCG on device, RX 6800 XT.  
 3. **Single load / single unload** — matrix stays on device; one `T` download at end (**done**). Residual scalars only for PCG control.  
 4. **Match CPU** — same scheme on host; smoke 100² max|Δ| ~ 1e-13; 500² ~ 1e-12 (**done**).  
-5. **Phase A (hardening)** — timing/traffic metrics, bench 100/500/2000, smoke test script (**done** for A1/A3/A5; A2 flags documented; **A4 preconditioner pending**).  
-6. **Next** — A4 better preconditioner → Phase B OF parity → C modules → D unstructured → E flow.  
+5. **Phase A (hardening)** — metrics, bench, smoke test, **poly2 preconditioner** (**done**).  
+6. **Next** — Phase B OF parity → C modules → D unstructured → E flow.  
    See full plan tracked on PR #1 / session plan.
 
 ## Explicit non-goals for the first GPU cut

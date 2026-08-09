@@ -1,5 +1,8 @@
 # S5 / Primary v2 — device-resident OpenFOAM outer loop
 
+**How to plug this into an external OpenFOAM case today:**  
+→ **[`docs/INTEGRATE_OPENFOAM.md`](INTEGRATE_OPENFOAM.md)** (Mode A export is the supported path; Mode B/C are this ladder).
+
 **Primary v1** (`cases/windTunnel3D` on CPU) is **done**.  
 **Primary v2** (see `docs/GOALS.md`): the **SIMPLE outer solve loop** for that class of case runs as a **full-device lifecycle** — because that is where the bottleneck hypothesis lives (assemble + sparse solve + field update every iteration), not mesh gen or ParaView.
 

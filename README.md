@@ -91,16 +91,36 @@ make            # build + test (OpenCL headers auto-downloaded on first run)
 make run        # quick demo of both apps
 ```
 
-Needs: `g++`, `curl`, GPU OpenCL driver. On Windows also MinGW `gendef`/`dlltool` (auto-used). No manual third-party install.
+Needs: `g++`, `curl`, GPU OpenCL driver. No manual third-party install.
+
+### Integrate with *your* OpenFOAM (people + agents)
+
+**→ Full guide: [`docs/INTEGRATE_OPENFOAM.md`](docs/INTEGRATE_OPENFOAM.md)**  
+**→ Agent checklist: [`AGENTS.md`](AGENTS.md)**
+
+Supported **today** = **Mode A (export)**: dump the pressure system from any case, solve on the GPU. Not a silent drop-in `lduMatrix` replacement yet (that is primary v2 / Mode B–C).
+
+```text
+your case  →  ofDumpCsr  →  matrix/of_p.{mtx,rhs}  →  csrOcl  →  residual OK
+```
 
 ```powershell
-# Optional: real wind-tunnel pressure matrix on GPU
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/apps/ofDumpCsr && wmake && cd /mnt/g/dev/repos/PFC/cases/windTunnel3D && ofDumpCsr"
+# 1) Device solver (once)
+make
+
+# 2) OF bridge + dump (OpenFOAM env / WSL)
+wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/apps/ofDumpCsr && wmake"
+wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnel3D && ofDumpCsr"
+
+# 3) GPU solve
 .\build\csrOcl\csrOcl.exe --mtx cases\windTunnel3D\matrix\of_p.mtx --rhs cases\windTunnel3D\matrix\of_p.rhs --kernels build\csrOcl\kernels\csr.cl
 ```
+
 Demonstrated: **n ≈ 77k, nnz ≈ 536k**, residual OK, solve **~70 ms** on GPU.
 
-Roadmap: [`docs/AMD_GPU_ROADMAP.md`](docs/AMD_GPU_ROADMAP.md) · device segment: [`docs/S5_DEVICE_SEGMENT.md`](docs/S5_DEVICE_SEGMENT.md)
+Same three steps work for **any** case with mesh + `p`/`U` fields — see the integration doc.
+
+Roadmap: [`docs/AMD_GPU_ROADMAP.md`](docs/AMD_GPU_ROADMAP.md) · device segment: [`docs/S5_DEVICE_SEGMENT.md`](docs/S5_DEVICE_SEGMENT.md) · goals: [`docs/GOALS.md`](docs/GOALS.md)
 
 ---
 

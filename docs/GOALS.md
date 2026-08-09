@@ -95,7 +95,8 @@ So: **yes — the new primary is “the loop on GPU”**, meaning the **CFD time
 | S6–S7 | Lab constraints / PR tracking — still apply |
 
 Ladder detail: `docs/S5_DEVICE_SEGMENT.md`.  
-Architecture: `docs/AMD_GPU_ROADMAP.md`.
+Architecture: `docs/AMD_GPU_ROADMAP.md`.  
+**Integration (your OpenFOAM / agents):** `docs/INTEGRATE_OPENFOAM.md` · `AGENTS.md`.
 
 ---
 

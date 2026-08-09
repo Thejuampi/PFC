@@ -1,5 +1,8 @@
 # csrOcl — full-device CSR PCG
 
+**OpenFOAM integration:** use with `ofDumpCsr` dumps —  
+→ **[`docs/INTEGRATE_OPENFOAM.md`](../../docs/INTEGRATE_OPENFOAM.md)**
+
 OpenCL **CSR** SpMV + poly2-PCG. Same residency rule as `laplaceOcl`:
 
 1. Host builds (or imports) CSR **once**

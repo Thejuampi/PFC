@@ -21,8 +21,8 @@ Not: assemble on CPU → copy A → solve → copy x every iteration.
 | 2 | 3D structured DIA Poisson (7-point), same lifecycle | **done** (`--nz N`, MAX_ABS_ERR ~ 1e-13 on 32³) |
 | 3 | CSR SpMV + PCG full-device (unstructured-ready format) | **done** (`apps/csrOcl`, host CSR assemble + one upload) |
 | 3b | Import mesh topology CSR from polyMesh (graph Laplace) | **done** (`polyMesh_to_mtx.py` + `csrOcl --mtx`) — windTunnel 76k cells |
-| 3c | Import **coefficient** matrix from OF pressure system | next |
-| 4 | Replace *one* simpleFoam linear solve (e.g. pressure) with device segment | S5 mvp |
+| 3c | Import **coefficient** matrix from OF pressure Laplacian | **done** (`apps/ofDumpCsr` → `csrOcl --mtx`) — windTunnel n=76k, residual OK ~70 ms |
+| 4 | Replace *one* simpleFoam linear solve (e.g. pressure) with device segment | S5 mvp (next) |
 | 5 | Keep residual parity vs stock OF on windTunnel3D | gate |
 
 ## Wind-tunnel coupling sketch (mvp)

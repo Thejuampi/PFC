@@ -18,6 +18,19 @@ Two tracks, one repo:
 
 Not a hybrid “offload one kernel per iteration” design — the 2015 lesson was that **CPU↔GPU thrash** kills you. See [`docs/GOALS.md`](docs/GOALS.md) and [`docs/S5_DEVICE_SEGMENT.md`](docs/S5_DEVICE_SEGMENT.md).
 
+### Headline result — GPU vs strong multi-thread CPU
+
+On the **real car wind-tunnel pressure system** (same \(A,b\), same poly2-PCG algorithm):
+
+| Arm | Time |
+|-----|------|
+| CPU OpenMP (20 threads) | **23.7 s** |
+| GPU `csrOcl` (gfx1030) | **1.34 s** |
+| **SPEEDUP** | **~17.7×** → **WIN** |
+
+Same 1006 PCG iters · residual ~1e‑8 · max \|Δx\| ~1e‑12.  
+Protocol + full table: [`docs/CPU_GPU_SPEEDUP.md`](docs/CPU_GPU_SPEEDUP.md) · re-run: `make bench-speedup`
+
 ---
 
 ## Showcase — concept car in a wind tunnel
@@ -148,23 +161,24 @@ make                                          # 1) device solver
 # Windows: build\csrOcl\csrOcl.exe  (same relative args)
 ```
 
-Demonstrated (box tunnel matrix class): residual OK; car tunnel pressure on GPU is ~**1–2 s**/solve class (re-bench when idle).
+Demonstrated: box tunnel residual OK; **car** pressure solve on GPU **~1.34 s** (vs OpenMP CPU **~23.7 s** → **~17.7×** — see [headline](#headline-result--gpu-vs-strong-multi-thread-cpu)).
 
 Same three steps work for **any** case with mesh + `p`/`U` fields — see the integration doc.
 
-### GPU vs CPU speedup (the scientific question)
+### GPU vs CPU (what we claim)
 
-**Question:** on the **car wind-tunnel pressure system** (same \(A,b\)), how much faster is device CSR poly2-PCG than a **strong multi-thread CPU** of the *same* algorithm?
+**Primary claim:** device CSR poly2-PCG beats a **strong multi-thread CPU** of the *same* algorithm on the *same* car-tunnel pressure \(A,b\).
 
-| Arm | Time (pressure solve, n≈1.24e6) |
-|-----|----------------------------------|
+| Arm | Time (n≈1.24e6, nnz≈8.6e6) |
+|-----|----------------------------|
 | CPU OpenMP poly2-PCG (20 threads) | **23.7 s** |
 | GPU `csrOcl` poly2-PCG (gfx1030) | **1.34 s** |
 | **SPEEDUP** | **~17.7×** → **WIN** |
 
-- Same 1006 PCG iters, residual ~1e‑8, max |Δx| ~1e‑12.  
-- **Not** the metric: full `simpleFoam` wall (~42 min) vs one GPU solve — simpleFoam is **context only**.  
-- Protocol: [`docs/CPU_GPU_SPEEDUP.md`](docs/CPU_GPU_SPEEDUP.md) · re-run: `make bench-speedup`
+- Same 1006 PCG iters · residual ~1e‑8 · max \|Δx\| ~1e‑12.  
+- **Not** the metric: full `simpleFoam` wall (~42 min / ~2540 s) vs one GPU solve — that is **context only**.  
+- Full protocol: [`docs/CPU_GPU_SPEEDUP.md`](docs/CPU_GPU_SPEEDUP.md) · re-run: `make bench-speedup`
+
 Roadmap: [`docs/AMD_GPU_ROADMAP.md`](docs/AMD_GPU_ROADMAP.md) · device segment: [`docs/S5_DEVICE_SEGMENT.md`](docs/S5_DEVICE_SEGMENT.md) · goals: [`docs/GOALS.md`](docs/GOALS.md)
 
 ---

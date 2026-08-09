@@ -124,9 +124,9 @@ Control threads: `OMP_NUM_THREADS=8 make bench-speedup` (use physical cores; try
         ▼                  ▼                    │
   host OpenMP        GPU csrOcl                 │
   poly2-PCG          poly2-PCG                  │
-  CPU_MS             GPU_SOLVE_MS (~1.8 s class)│
+  CPU_MS ~23.7 s     GPU_SOLVE_MS ~1.34 s       │
         │                  │                    │
-        └──────── SPEEDUP ─┘                    │
+        └──── SPEEDUP ~17.7× (WIN) ─────────────┘
                                                 │
   post (ParaView / video) ──────────────────────┘  (never in SPEEDUP)
 ```

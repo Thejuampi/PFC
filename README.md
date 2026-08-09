@@ -58,7 +58,8 @@ G:\dev\repos\PFC\scripts\compare-c-snapshots.ps1 -BeforeDir G:\dev\repos\PFC\doc
 
 ```
 cases/laplaceCpu/     # modern CPU case (stock laplacianFoam) — reference
-apps/laplaceOcl/      # full-device OpenCL Laplace (assemble+PCG on GPU)
+apps/laplaceOcl/      # full-device OpenCL Laplace 2D/3D DIA (assemble+PCG on GPU)
+apps/csrOcl/          # full-device CSR SpMV+PCG (S5 ladder; OF import next)
 apps/laplaceTimed/    # optional timed pure-Laplace OF app (wmake)
 scripts/              # WSL-on-G, OpenFOAM, laplaceOcl build/run, C: snapshots
 docs/                 # STEP0, WSL_ON_G, AMD_GPU_ROADMAP, snapshots

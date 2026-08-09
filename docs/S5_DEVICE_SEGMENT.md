@@ -19,7 +19,8 @@ Not: assemble on CPU → copy A → solve → copy x every iteration.
 |------|-------------|--------|
 | 1 | 2D structured DIA Laplace, full-device PCG + poly2 | **done** (`laplaceOcl`) |
 | 2 | 3D structured DIA Poisson (7-point), same lifecycle | **done** (`--nz N`, MAX_ABS_ERR ~ 1e-13 on 32³) |
-| 3 | Unstructured CSR/LDU from OpenFOAM mesh (one upload) | later |
+| 3 | CSR SpMV + PCG full-device (unstructured-ready format) | **done** (`apps/csrOcl`, host CSR assemble + one upload) |
+| 3b | Import CSR/LDU from OpenFOAM mesh (one upload) | next |
 | 4 | Replace *one* simpleFoam linear solve (e.g. pressure) with device segment | S5 mvp |
 | 5 | Keep residual parity vs stock OF on windTunnel3D | gate |
 

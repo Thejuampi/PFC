@@ -1,8 +1,0 @@
-Microsoft-Windows-Subsystem-Linux = ERROR: The requested operation requires elevation.
-
-VirtualMachinePlatform = ERROR: The requested operation requires elevation.
-
-Microsoft-Hyper-V-All = ERROR: The requested operation requires elevation.
-
-HypervisorPlatform = ERROR: The requested operation requires elevation.
-

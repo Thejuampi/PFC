@@ -129,12 +129,12 @@ cases/laplaceCpu/      # stock laplacianFoam reference
 apps/laplaceOcl/       # full-device OpenCL DIA Laplace
 apps/csrOcl/           # full-device CSR SpMV+PCG
 apps/ofDumpCsr/        # OF → Matrix Market for GPU
-docs/                  # goals, S5 segment, WSL-on-G, image gallery
-docs/images/           # README stills
+docs/                  # goals, S5 segment, WSL-on-G
+docs/images/           # README gallery stills
 scripts/               # build/run/bench helpers
 cpp/                   # LEGACY 2015 (archive — do not expect to build)
 latex/                 # original thesis sources
-third_party/           # OpenCL headers + import lib
+third_party/           # minimal OpenCL headers + MinGW import lib
 ```
 
 ---

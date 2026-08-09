@@ -9,6 +9,7 @@ Domain: X[0,18] Y[0,4] Z[0,4]
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.request import urlretrieve
 
 import numpy as np
 import trimesh
@@ -16,6 +17,19 @@ import trimesh
 SRC = Path(__file__).resolve().parent / "constant" / "triSurface" / "CarConcept.glb"
 OUT = Path(__file__).resolve().parent / "constant" / "triSurface" / "car.stl"
 BACKUP = Path(__file__).resolve().parent / "constant" / "triSurface" / "car_ahmed_backup.stl"
+GLB_URL = (
+    "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/"
+    "main/Models/CarConcept/glTF-Binary/CarConcept.glb"
+)
+
+
+def ensure_source() -> None:
+    if SRC.is_file():
+        return
+    SRC.parent.mkdir(parents=True, exist_ok=True)
+    print(f"downloading {GLB_URL} ...")
+    urlretrieve(GLB_URL, str(SRC))
+    print(f"  saved {SRC} ({SRC.stat().st_size} bytes)")
 
 
 def load_with_transforms(path: Path) -> trimesh.Trimesh:
@@ -37,8 +51,7 @@ def load_with_transforms(path: Path) -> trimesh.Trimesh:
 
 
 def main() -> int:
-    if not SRC.is_file():
-        raise SystemExit(f"missing {SRC}")
+    ensure_source()
 
     if OUT.is_file() and not BACKUP.is_file():
         try:

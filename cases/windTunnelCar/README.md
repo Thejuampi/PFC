@@ -15,19 +15,11 @@ Steady external aerodynamics around a **real concept-car body** (Khronos *CarCon
 
 ## Gallery
 
-Side ¾ + pressure + midplane speed:
+Stills live in [`docs/images/`](../../docs/images/) (shared with the root README).
 
-![CarConcept side flow](../../docs/images/carconcept_side_flow.png)
-
-Front stagnation (pressure on surface):
-
-![CarConcept front pressure](../../docs/images/carconcept_front_pressure.png)
-
-Geometry only:
-
-| Side | Front |
-|------|-------|
-| ![body side](../../docs/images/carconcept_body.png) | ![body front](../../docs/images/carconcept_front_body.png) |
+| Side flow | Front pressure |
+|:--:|:--:|
+| ![side](../../docs/images/carconcept_side_flow.png) | ![front](../../docs/images/carconcept_front_pressure.png) |
 
 **Airflow animation (30 s @ 30 fps, fixed camera, inlet → outlet):**  
 [`images/windTunnelCar_airflow_30s_30fps.mp4`](images/windTunnelCar_airflow_30s_30fps.mp4)
@@ -38,14 +30,13 @@ Geometry only:
 0/                  # U, p, k, epsilon, nut
 constant/
   triSurface/
-    CarConcept.glb  # source mesh (Khronos sample asset)
-    car.stl         # placed & scaled for the tunnel
+    car.stl         # placed & scaled for the tunnel (checked in)
   transportProperties
   turbulenceProperties
 system/             # blockMesh, snappy, fv*, controlDict + forceCoeffs
 scripts/
   render_animation.py   # pyvista offscreen → frames → ffmpeg
-_prep_car.py            # glb → oriented car.stl
+_prep_car.py            # optional: download glb → regenerate car.stl
 Allrun / Allclean
 ```
 
@@ -75,15 +66,16 @@ python cases\windTunnelCar\scripts\render_animation.py
 
 Tune perceived air speed with `N_CYCLES` in `scripts/render_animation.py` (default **8**).
 
-## Regenerating `car.stl`
+## Regenerating `car.stl` (optional)
+
+`car.stl` is already committed. To rebuild from the Khronos GLB:
 
 ```powershell
 python cases\windTunnelCar\_prep_car.py
 ```
 
-Requires `trimesh`. Source: `constant/triSurface/CarConcept.glb`  
+Requires `trimesh`. Downloads CarConcept.glb if missing  
 ([Khronos glTF Sample Assets — CarConcept](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept)).
-
 ## Credits
 
 - Car mesh: © 2024 Darmstadt Graphics Group GmbH / Eric Chadwick — **CC BY 4.0** (Khronos CarConcept sample).

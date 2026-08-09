@@ -21,6 +21,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <sstream>
 #include <string>
@@ -29,6 +30,15 @@
 namespace {
 
 enum class Precond { Jacobi, Rbgs, Poly2 };
+
+// Device-side working set estimate (must match buffers allocated in main):
+// 14 double fields (T,b,x,r,z,p,Ap,invDiag,dia0..4,tmp) + mark uchar + partials.
+inline std::uint64_t estimateDeviceBytes(std::uint64_t nCells)
+{
+    constexpr std::uint64_t kDoubles = 14;
+    constexpr std::uint64_t kPartials = 64; // reduction workspace
+    return nCells * (kDoubles * sizeof(double) + 1) + kPartials * sizeof(double);
+}
 
 struct Args {
     int nx = 100;
@@ -44,6 +54,7 @@ struct Args {
     // poly2: Neumann / SPAI-ish M^{-1}≈ 2 D^{-1} - D^{-1} A D^{-1} (SPD-friendly for CG)
     Precond precond = Precond::Poly2;
     int precondSweeps = 2; // only for rbgs (not recommended with CG; kept for experiments)
+    double memFrac = 0.0; // if >0, auto nx=ny so working set ≈ memFrac * device global mem
     bool cpuCheck = true;
     bool writeCsv = true;
     bool quietSteps = false;
@@ -107,6 +118,7 @@ Args parseArgs(int argc, char** argv)
             else if (p == "poly2") a.precond = Precond::Poly2;
             else die("--precond must be jacobi|poly2|rbgs");
         } else if (s == "--precond-sweeps") a.precondSweeps = std::stoi(need("--precond-sweeps"));
+        else if (s == "--mem-frac") a.memFrac = std::stod(need("--mem-frac"));
         else if (s == "--kernels") a.kernelPath = need("--kernels");
         else if (s == "--out") a.outCsv = need("--out");
         else if (s == "--no-csv") a.writeCsv = false;
@@ -116,6 +128,8 @@ Args parseArgs(int argc, char** argv)
             std::cout
                 << "laplaceOcl — device-resident diffusion (OpenCL)\n"
                 << "  --nx N --ny N --steps N --dt D --DT D\n"
+                << "  --mem-frac F   auto square mesh so device buffers ≈ F * GPU VRAM\n"
+                << "                 (e.g. 0.5 → ~50% of global mem)\n"
                 << "  --tol T --max-iters N --fixed-iters N\n"
                 << "      (fixed-iters>0: no residual host check each PCG iter)\n"
                 << "  --precond jacobi|poly2|rbgs   (default poly2; rbgs not SPD — weak with CG)\n"
@@ -130,7 +144,8 @@ Args parseArgs(int argc, char** argv)
         }
     }
     if (a.precondSweeps < 1) die("--precond-sweeps must be >= 1");
-    if (a.nx < 3 || a.ny < 3) die("nx,ny must be >= 3");
+    if (a.memFrac < 0.0 || a.memFrac > 0.95) die("--mem-frac must be in [0, 0.95]");
+    if (a.memFrac == 0.0 && (a.nx < 3 || a.ny < 3)) die("nx,ny must be >= 3");
     return a;
 }
 
@@ -161,6 +176,8 @@ struct Ocl {
     cl_context ctx{};
     cl_command_queue queue{};
     cl_program program{};
+    std::uint64_t globalMemBytes = 0;
+    std::uint64_t maxAllocBytes = 0;
 
     cl_kernel k_mark{};
     cl_kernel k_init{};
@@ -206,7 +223,15 @@ struct Ocl {
         clGetDeviceInfo(device, CL_DEVICE_NAME, sizeof(name), name, nullptr);
         char vendor[256] = {};
         clGetDeviceInfo(device, CL_DEVICE_VENDOR, sizeof(vendor), vendor, nullptr);
-        std::cout << "OpenCL device: " << name << " (" << vendor << ")\n";
+        cl_ulong gmem = 0;
+        clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(gmem), &gmem, nullptr);
+        cl_ulong maxAlloc = 0;
+        clGetDeviceInfo(device, CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(maxAlloc), &maxAlloc, nullptr);
+        globalMemBytes = static_cast<std::uint64_t>(gmem);
+        maxAllocBytes = static_cast<std::uint64_t>(maxAlloc);
+        std::cout << "OpenCL device: " << name << " (" << vendor << ")\n"
+                  << "  global_mem : " << (globalMemBytes / (1024.0 * 1024.0 * 1024.0)) << " GiB\n"
+                  << "  max_alloc  : " << (maxAllocBytes / (1024.0 * 1024.0 * 1024.0)) << " GiB\n";
 
         ctx = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &err);
         checkCl(err, "clCreateContext");
@@ -424,25 +449,63 @@ void cpuReference(const Args& a, std::vector<double>& T)
 int main(int argc, char** argv)
 {
     Args args = parseArgs(argc, argv);
-    const int nx = args.nx;
-    const int ny = args.ny;
-    const int n = nx * ny;
-    const double dx = args.Lx / (nx - 1);
-    const double dy = args.Ly / (ny - 1);
 
     const char* precondName =
         (args.precond == Precond::Jacobi) ? "jacobi" :
         (args.precond == Precond::Poly2) ? "poly2" : "rbgs";
-    std::cout << "laplaceOcl full-device lifecycle\n"
-              << "  mesh     : " << nx << " x " << ny << " (" << n << " cells)\n"
-              << "  steps    : " << args.steps << "  dt=" << args.dt << "  DT=" << args.DT << "\n"
-              << "  domain   : " << args.Lx << " x " << args.Ly << "  dx=" << dx << " dy=" << dy << "\n"
-              << "  precond  : " << precondName << "  sweeps=" << args.precondSweeps << "\n";
 
     const std::string kpath = findKernels(args);
-    std::cout << "  kernels  : " << kpath << "\n";
+    std::cout << "laplaceOcl full-device lifecycle\n"
+              << "  kernels  : " << kpath << "\n";
     Ocl ocl;
     ocl.init(readFile(kpath));
+
+    // Auto mesh to target a fraction of device global memory (working set).
+    if (args.memFrac > 0.0) {
+        if (ocl.globalMemBytes == 0) die("device global mem unknown");
+        const std::uint64_t target = static_cast<std::uint64_t>(args.memFrac * ocl.globalMemBytes);
+        // bytes ≈ 113 * n  → n ≈ target / 113; square mesh
+        std::uint64_t nTarget = target / 113;
+        if (nTarget < 9) nTarget = 9;
+        // Cap single double buffer under max alloc (n * 8 <= maxAlloc * 0.9)
+        if (ocl.maxAllocBytes > 0) {
+            const std::uint64_t maxN = static_cast<std::uint64_t>(ocl.maxAllocBytes * 0.9 / sizeof(double));
+            if (nTarget > maxN) nTarget = maxN;
+        }
+        int side = static_cast<int>(std::floor(std::sqrt(static_cast<double>(nTarget))));
+        if (side < 3) side = 3;
+        // keep even-ish for RB coloring comfort
+        if (side % 2) ++side;
+        args.nx = side;
+        args.ny = side;
+        // Huge meshes: CPU check is not practical
+        if (static_cast<std::uint64_t>(args.nx) * static_cast<std::uint64_t>(args.ny) > 2'000'000ULL
+            && args.cpuCheck) {
+            std::cout << "  note     : disabling CPU check (mesh too large for host PCG)\n";
+            args.cpuCheck = false;
+        }
+    }
+
+    const int nx = args.nx;
+    const int ny = args.ny;
+    const std::uint64_t n64 = static_cast<std::uint64_t>(nx) * static_cast<std::uint64_t>(ny);
+    if (n64 > static_cast<std::uint64_t>(std::numeric_limits<int>::max())) {
+        die("mesh too large for 32-bit cell index path");
+    }
+    const int n = static_cast<int>(n64);
+    const double dx = args.Lx / (nx - 1);
+    const double dy = args.Ly / (ny - 1);
+    const std::uint64_t devBytes = estimateDeviceBytes(n64);
+    const double memFracUsed =
+        ocl.globalMemBytes ? (static_cast<double>(devBytes) / ocl.globalMemBytes) : 0.0;
+
+    std::cout << "  mesh     : " << nx << " x " << ny << " (" << n << " cells)\n"
+              << "  steps    : " << args.steps << "  dt=" << args.dt << "  DT=" << args.DT << "\n"
+              << "  domain   : " << args.Lx << " x " << args.Ly << "  dx=" << dx << " dy=" << dy << "\n"
+              << "  precond  : " << precondName << "  sweeps=" << args.precondSweeps << "\n"
+              << "DEVICE_BUF_BYTES " << devBytes
+              << "  MEM_FRAC_USED " << memFracUsed
+              << "  (target_frac=" << args.memFrac << ")\n";
 
     const size_t bytes = static_cast<size_t>(n) * sizeof(double);
     const size_t bytesU = static_cast<size_t>(n) * sizeof(cl_uchar);

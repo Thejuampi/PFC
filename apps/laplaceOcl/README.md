@@ -38,8 +38,11 @@ Needs:
 Same matrix/RHS scheme is re-run on CPU; expect max |ΔT| ~ 1e-12 … 1e-15 on smoke meshes.
 
 ```powershell
-G:\dev\repos\PFC\scripts\test-laplace-ocl.ps1   # 64², MAX_ABS_ERR < 1e-9
+G:\dev\repos\PFC\scripts\test-laplace-ocl.ps1   # 256² CPU check + --mem-frac 0.5 VRAM stress
 G:\dev\repos\PFC\scripts\bench-laplace-ocl.ps1  # 100 / 500 / 2000 → docs/BENCH_LAPLACE_OCL.md
+
+# Fill ~50% of GPU VRAM (auto nx=ny from device global mem):
+.\apps\laplaceOcl\build\laplaceOcl.exe --mem-frac 0.5 --steps 2 --no-cpu-check --no-csv --kernels .\apps\laplaceOcl\kernels\laplace.cl
 ```
 
 ## Metrics (parseable)

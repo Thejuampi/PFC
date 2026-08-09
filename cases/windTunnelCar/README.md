@@ -47,21 +47,23 @@ Allrun / Allclean
 - Inlet: fixed U = (10, 0, 0); outlet: fixed p; ground + vehicle: walls
 - `forceCoeffs` on patch `vehicle` (`lRef=4.2`, `Aref≈1.9`)
 
-## Run (WSL + OpenFOAM v2512)
+## Run (OpenFOAM v2512-class)
+
+From the **repo root**, with OpenFOAM environment loaded:
 
 ```bash
-# from Windows
-wsl -d Ubuntu-OF -- openfoam2512 -c \
-  "cd /mnt/g/dev/repos/PFC/cases/windTunnelCar && sed -i 's/\r$//' Allrun Allclean && bash Allrun"
+cd cases/windTunnelCar
+sed -i 's/\r$//' Allrun Allclean 2>/dev/null || true
+bash Allrun
 ```
 
-Approx. wall time on this machine: snappy + 150 SIMPLE ≈ **40–50 min**.
+Approx. wall time: snappy + 150 SIMPLE ≈ **40–50 min** (depends on machine).
 
-Export + animate (Windows Python + ffmpeg):
+Export + animate (from repo root; needs Python `pyvista` + `ffmpeg`):
 
-```powershell
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnelCar && foamToVTK -latestTime"
-python cases\windTunnelCar\scripts\render_animation.py
+```bash
+( cd cases/windTunnelCar && foamToVTK -latestTime )
+python cases/windTunnelCar/scripts/render_animation.py
 ```
 
 Tune perceived air speed with `N_CYCLES` in `scripts/render_animation.py` (default **8**).
@@ -70,8 +72,8 @@ Tune perceived air speed with `N_CYCLES` in `scripts/render_animation.py` (defau
 
 `car.stl` is already committed. To rebuild from the Khronos GLB:
 
-```powershell
-python cases\windTunnelCar\_prep_car.py
+```bash
+python cases/windTunnelCar/_prep_car.py
 ```
 
 Requires `trimesh`. Downloads CarConcept.glb if missing  

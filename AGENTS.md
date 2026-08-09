@@ -16,10 +16,12 @@ Builds device apps, auto-downloads OpenCL headers into `deps/`, runs smokes.
 
 ### What to do (Mode A — only supported full path today)
 
+All paths relative to the **PFC clone root** (never hardcode a developer’s `G:\…` or `/mnt/g/…`).
+
 1. `make` on the GPU host.
-2. In OpenFOAM env: `wmake` → `apps/ofDumpCsr`.
-3. In the target case (mesh + fields): run `ofDumpCsr` → `matrix/of_p.mtx` + `matrix/of_p.rhs`.
-4. `build/csrOcl/csrOcl --mtx … --rhs … --kernels build/csrOcl/kernels/csr.cl`.
+2. OpenFOAM env active: `( cd apps/ofDumpCsr && wmake )`.
+3. Target case: `( cd cases/windTunnel3D && ofDumpCsr )` or any case with mesh + fields.
+4. `./build/csrOcl/csrOcl --mtx <case>/matrix/of_p.mtx --rhs <case>/matrix/of_p.rhs --kernels build/csrOcl/kernels/csr.cl`.
 5. Gate: log shows `RESIDUAL check   : OK` and process exit 0.
 
 ### What not to do

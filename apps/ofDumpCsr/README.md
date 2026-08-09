@@ -9,39 +9,40 @@ for [`csrOcl`](../csrOcl).
 ## Quick start
 
 ```bash
-# 1) Build (OpenFOAM environment)
-cd apps/ofDumpCsr && wmake
+# From PFC clone root
+
+# 1) Build dump utility (OpenFOAM environment active)
+( cd apps/ofDumpCsr && wmake )
 
 # 2) Run inside a case that has mesh + p,U fields
-cd /path/to/YOUR_CASE
-ofDumpCsr
+( cd /path/to/YOUR_CASE && ofDumpCsr )
 # → matrix/of_p.mtx  matrix/of_p.rhs
-```
 
-```powershell
-# 3) Solve on GPU host (repo root)
+# 3) Solve on GPU host (same clone root)
 make csrOcl
-.\build\csrOcl\csrOcl.exe `
-  --mtx \path\to\YOUR_CASE\matrix\of_p.mtx `
-  --rhs \path\to\YOUR_CASE\matrix\of_p.rhs `
-  --kernels build\csrOcl\kernels\csr.cl
+./build/csrOcl/csrOcl \
+  --mtx /path/to/YOUR_CASE/matrix/of_p.mtx \
+  --rhs /path/to/YOUR_CASE/matrix/of_p.rhs \
+  --kernels build/csrOcl/kernels/csr.cl
 ```
 
 Success: log line `RESIDUAL check   : OK`.
 
 ## This repo’s reference case
 
-```bash
-openfoam2512 -c "cd /mnt/g/dev/repos/PFC/apps/ofDumpCsr && wmake"
-openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnel3D && ofDumpCsr"
-```
+From the **clone root**:
 
-```powershell
+```bash
+# OpenFOAM env active
+( cd apps/ofDumpCsr && wmake )
+( cd cases/windTunnel3D && ofDumpCsr )
+
+# GPU host (same tree)
 make csrOcl
-.\build\csrOcl\csrOcl.exe `
-  --mtx cases\windTunnel3D\matrix\of_p.mtx `
-  --rhs cases\windTunnel3D\matrix\of_p.rhs `
-  --kernels build\csrOcl\kernels\csr.cl
+./build/csrOcl/csrOcl \
+  --mtx cases/windTunnel3D/matrix/of_p.mtx \
+  --rhs cases/windTunnel3D/matrix/of_p.rhs \
+  --kernels build/csrOcl/kernels/csr.cl
 ```
 
 ## Notes

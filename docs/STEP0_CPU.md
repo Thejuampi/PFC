@@ -16,20 +16,18 @@ Wall      : ~0.08 s ExecutionTime
 Command used:
 
 ```powershell
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC && bash scripts/run-laplace-cpu.sh"
+# From repo root, OpenFOAM env loaded:
+bash scripts/run-laplace-cpu.sh
 ```
 
-## Environment (G: only for distro)
+## Environment
 
-| Asset | Location |
-|-------|----------|
-| WSL distro | `Ubuntu-OF` |
-| VHDX | `G:\wsl\ubuntu-24.04\ext4.vhdx` |
-| Rootfs cache | `G:\wsl\cache\ubuntu-24.04.rootfs.tar.gz` |
-| OpenFOAM | inside VHDX: `/usr/lib/openfoam/openfoam2512` |
-| Case | `G:\dev\repos\PFC\cases\laplaceCpu` |
+| Asset | Notes |
+|-------|--------|
+| OpenFOAM | v2512-class (native Linux or WSL) |
+| Case | `cases/laplaceCpu` (relative to clone root) |
 
-C: delta after WSL import: **+0.03 GB used** (pass). OpenFOAM apt install grows **G: VHDX only**.
+Optional lab note (one developer machine kept distro off C:): see [`WSL_ON_G.md`](WSL_ON_G.md).
 
 ## What was modernized vs 2015
 
@@ -47,13 +45,13 @@ C: delta after WSL import: **+0.03 GB used** (pass). OpenFOAM apt install grows 
 
 ```powershell
 # medium mesh + GAMG
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC && MESH=500 SOLVER=GAMG bash scripts/run-laplace-cpu.sh"
+MESH=500 SOLVER=GAMG bash scripts/run-laplace-cpu.sh
 
 # thesis-sized mesh (slow on CPU; for timing only)
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC && MESH=2000 SOLVER=GAMG bash scripts/run-laplace-cpu.sh"
+MESH=2000 SOLVER=GAMG bash scripts/run-laplace-cpu.sh
 
 # custom timed pure-Laplace (after wmake inside OF env)
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/apps/laplaceTimed && wmake"
+( cd apps/laplaceTimed && wmake )
 ```
 
 ## Success criteria checklist

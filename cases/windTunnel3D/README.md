@@ -27,26 +27,23 @@ Later: air-like \(\nu\), finer mesh, STL body (Ahmed / CAD).
 
 Reference areas for forceCoeffs: `Aref = 1.6` m² (frontal), `lRef = 2` m (length).
 
-## Run (WSL + OpenFOAM on G:)
+## Run
 
-```powershell
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnel3D && sed -i 's/\r$//' Allrun Allclean && bash Allrun"
-```
-
-Or from WSL:
+From the **repo root**, with OpenFOAM environment loaded:
 
 ```bash
-cd /mnt/g/dev/repos/PFC/cases/windTunnel3D
+cd cases/windTunnel3D
+sed -i 's/\r$//' Allrun Allclean 2>/dev/null || true
 bash Allrun
 ```
 
 Typical wall time on a modest mesh: a few minutes.
 
-## Visualize (ParaView on Windows)
+## Visualize (ParaView)
 
-1. Install ParaView (Windows build).  
-2. Open: `G:\dev\repos\PFC\cases\windTunnel3D\case.foam`  
-   (or **OpenFOAM** reader on the case directory).  
+1. Install ParaView.  
+2. Open `cases/windTunnel3D/case.foam` (create with `touch case.foam` if needed)  
+   or use the OpenFOAM reader on the case directory.  
 3. Suggested views:
    - Slice at `z = 2` → color by `|U|` or `p`
    - Streamlines from inlet plane  

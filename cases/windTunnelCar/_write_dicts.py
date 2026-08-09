@@ -1,5 +1,5 @@
 from pathlib import Path
-dst = Path(r"G:/dev/repos/PFC/cases/windTunnelCar/system")
+dst = Path(__file__).resolve().parent / "system"
 banner = """/*--------------------------------*- C++ -*----------------------------------*\\
 | =========                 |                                                 |
 | \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |

@@ -3,8 +3,8 @@
 # distro VHDX (must be on G: — see docs/WSL_ON_G.md).
 #
 # Usage:
-#   wsl -d Ubuntu-OF
-#   bash /mnt/g/dev/repos/PFC/scripts/setup-openfoam-wsl.sh
+#   From this repo (inside WSL / Linux with network):
+#   bash scripts/setup-openfoam-wsl.sh
 set -euo pipefail
 
 if [[ "$(uname -s)" != "Linux" ]]; then
@@ -64,4 +64,4 @@ fi
 
 echo ""
 echo "Setup complete."
-echo "  Run case:  $WRAPPER -c 'cd /mnt/g/dev/repos/PFC && bash scripts/run-laplace-cpu.sh'"
+echo "  Run case from repo root:  bash scripts/run-laplace-cpu.sh"

@@ -46,13 +46,16 @@ Real concept-car body (**Khronos CarConcept**), `snappyHexMesh` + `simpleFoam` R
 
 **Video:** [`cases/windTunnelCar/images/windTunnelCar_airflow_30s_30fps.mp4`](cases/windTunnelCar/images/windTunnelCar_airflow_30s_30fps.mp4)
 
-```powershell
-# Full CFD (WSL OpenFOAM on G:)
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnelCar && sed -i 's/\r$//' Allrun Allclean && bash Allrun"
+```bash
+# From repo root, with OpenFOAM env loaded (Linux or WSL)
+cd cases/windTunnelCar
+sed -i 's/\r$//' Allrun Allclean 2>/dev/null || true   # if checkout had CRLF
+bash Allrun
+foamToVTK -latestTime
 
-# VTK + airflow animation (Windows)
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnelCar && foamToVTK -latestTime"
-python cases\windTunnelCar\scripts\render_animation.py
+# Optional animation (host Python + ffmpeg + pyvista)
+# from repo root:
+python cases/windTunnelCar/scripts/render_animation.py
 ```
 
 Details: [`cases/windTunnelCar/README.md`](cases/windTunnelCar/README.md)
@@ -69,8 +72,9 @@ Details: [`cases/windTunnelCar/README.md`](cases/windTunnelCar/README.md)
 
 Converges ~222 iters · **Cd ≈ 1.25**, **Cl ≈ 0.63** (bluff demo body, ν = 0.01).
 
-```powershell
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnel3D && sed -i 's/\r$//' Allrun Allclean && bash Allrun"
+```bash
+# From repo root, OpenFOAM env loaded
+cd cases/windTunnel3D && sed -i 's/\r$//' Allrun Allclean 2>/dev/null || true && bash Allrun
 ```
 
 ---
@@ -115,12 +119,11 @@ flowchart LR
 | [`apps/ofDumpCsr`](apps/ofDumpCsr) | Dump real OpenFOAM `laplacian(p)` → Matrix Market for the GPU |
 | [`scripts/polyMesh_to_mtx.py`](scripts/polyMesh_to_mtx.py) | polyMesh topology → CSR |
 
-```powershell
+```bash
+# From repo root (GPU host: g++, curl, OpenCL driver)
 make            # build + test (OpenCL headers auto-downloaded on first run)
 make run        # quick demo of both apps
 ```
-
-Needs: `g++`, `curl`, GPU OpenCL driver. No manual third-party install.
 
 ### Integrate with *your* OpenFOAM (people + agents)
 
@@ -129,16 +132,20 @@ Needs: `g++`, `curl`, GPU OpenCL driver. No manual third-party install.
 
 Supported **today** = **Mode A (export)**: dump the pressure system from any case, solve on the GPU. Not a silent drop-in `lduMatrix` replacement yet (that is primary v2 / Mode B–C).
 
-```powershell
-# 1) Device solver (once)
-make
+```bash
+# All paths relative to the clone root
+make                                          # 1) device solver
 
-# 2) OF bridge + dump (OpenFOAM env / WSL)
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/apps/ofDumpCsr && wmake"
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnel3D && ofDumpCsr"
+# 2) OF bridge + dump (OpenFOAM environment must be active)
+( cd apps/ofDumpCsr && wmake )
+( cd cases/windTunnel3D && ofDumpCsr )        # or: cd /path/to/YOUR_CASE && ofDumpCsr
 
 # 3) GPU solve
-.\build\csrOcl\csrOcl.exe --mtx cases\windTunnel3D\matrix\of_p.mtx --rhs cases\windTunnel3D\matrix\of_p.rhs --kernels build\csrOcl\kernels\csr.cl
+./build/csrOcl/csrOcl \
+  --mtx cases/windTunnel3D/matrix/of_p.mtx \
+  --rhs cases/windTunnel3D/matrix/of_p.rhs \
+  --kernels build/csrOcl/kernels/csr.cl
+# Windows: build\csrOcl\csrOcl.exe  (same relative args)
 ```
 
 Demonstrated: **n ≈ 77k, nnz ≈ 536k**, residual OK, solve **~70 ms** on GPU.
@@ -149,20 +156,21 @@ Roadmap: [`docs/AMD_GPU_ROADMAP.md`](docs/AMD_GPU_ROADMAP.md) · device segment:
 
 ---
 
-## Machine setup (this revival)
+## Requirements (generic)
 
-| Item | Value |
+| Need | Notes |
 |------|--------|
-| Distro | WSL2 **Ubuntu-OF** (24.04) |
-| Distro disk | **`G:\wsl\...`** (not C:) |
-| OpenFOAM | **v2512** |
-| CPU baseline | `cases/laplaceCpu` + stock `laplacianFoam` |
-| Policy | Keep heavy tooling off C: — [`docs/WSL_ON_G.md`](docs/WSL_ON_G.md) |
+| OpenFOAM | v2412/v2512-class; env loaded (`openfoam2512`, `source …/bashrc`, etc.) |
+| Device apps | `g++`, `curl`, OpenCL ICD; then `make` from repo root |
+| Optional viz | ParaView; animation: Python `pyvista` + `ffmpeg` |
 
-```powershell
-# CPU smoke
-wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC && bash scripts/run-laplace-cpu.sh"
+CPU baseline smoke (from **repo root**, OpenFOAM env active):
+
+```bash
+bash scripts/run-laplace-cpu.sh
 ```
+
+Machine-specific WSL-on-another-drive notes (optional): [`docs/WSL_ON_G.md`](docs/WSL_ON_G.md).
 
 ---
 

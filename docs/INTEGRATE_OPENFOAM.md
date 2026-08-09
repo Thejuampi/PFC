@@ -195,25 +195,18 @@ Writes:
 
 ### 3.4 Build and run the device solver
 
-On the GPU machine (repo root):
-
-```powershell
-make csrOcl
-.\build\csrOcl\csrOcl.exe `
-  --mtx \path\to\YOUR_CASE\matrix\of_p.mtx `
-  --rhs \path\to\YOUR_CASE\matrix\of_p.rhs `
-  --kernels build\csrOcl\kernels\csr.cl `
-  --tol 1e-8
-```
-
-Linux:
+On the GPU machine (from **this repo’s root**):
 
 ```bash
 make csrOcl
-./build/csrOcl/csrOcl --mtx /path/to/YOUR_CASE/matrix/of_p.mtx \
+./build/csrOcl/csrOcl \
+  --mtx /path/to/YOUR_CASE/matrix/of_p.mtx \
   --rhs /path/to/YOUR_CASE/matrix/of_p.rhs \
-  --kernels build/csrOcl/kernels/csr.cl --tol 1e-8
+  --kernels build/csrOcl/kernels/csr.cl \
+  --tol 1e-8
 ```
+
+(`YOUR_CASE` may be this repo’s `cases/windTunnel3D` or any external case that wrote `matrix/`.)
 
 ### 3.5 Success criteria (gate)
 
@@ -231,21 +224,20 @@ Copy the printed `n`, `nnz`, `PCG_ITERS`, `TIMING_MS solve=` into your notes/PR.
 
 ### 3.6 Reference recipe (this repo)
 
+All paths relative to the **clone root** (OpenFOAM env active where noted):
+
 ```bash
-# WSL OpenFOAM
-openfoam2512 -c "cd /mnt/g/dev/repos/PFC/apps/ofDumpCsr && wmake"
-openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnel3D && ofDumpCsr"
-```
+( cd apps/ofDumpCsr && wmake )
+( cd cases/windTunnel3D && ofDumpCsr )
 
-```powershell
 make csrOcl
-.\build\csrOcl\csrOcl.exe `
-  --mtx cases\windTunnel3D\matrix\of_p.mtx `
-  --rhs cases\windTunnel3D\matrix\of_p.rhs `
-  --kernels build\csrOcl\kernels\csr.cl
+./build/csrOcl/csrOcl \
+  --mtx cases/windTunnel3D/matrix/of_p.mtx \
+  --rhs cases/windTunnel3D/matrix/of_p.rhs \
+  --kernels build/csrOcl/kernels/csr.cl
 ```
 
-Demonstrated order of magnitude: **n ≈ 77k, nnz ≈ 536k**, residual OK, solve **~70 ms** (RX 6800 XT).
+Demonstrated order of magnitude: **n ≈ 77k, nnz ≈ 536k**, residual OK, solve **~70 ms** (RX 6800 XT class GPU).
 
 ---
 
@@ -378,7 +370,7 @@ Legacy 2015 code under `cpp/icoFoamOCL` / Paralution is **archive only** — do 
 |---------|-----|
 | `ofDumpCsr: command not found` | `wmake` in `apps/ofDumpCsr` with OF env; check `$FOAM_USER_APPBIN` on `PATH` |
 | Empty / singular dump | Need mesh + `p` field; utility sets pressure reference cell 0 |
-| `csrOcl` cannot open `.mtx` | Use path visible to the GPU host (WSL `/mnt/g/...` ↔ `G:\...`) |
+| `csrOcl` cannot open `.mtx` | Use a path the GPU process can open (same machine filesystem, or copy `matrix/` next to the binary) |
 | `OpenCL headers missing` | Run `make` once with network; headers land in `deps/` |
 | `OpenCL.dll` / no platform | Install GPU driver with OpenCL ICD |
 | Residual not OK | Loosen `--tol`, raise `--max-iters`, verify dump from latest time, check matrix not topology-only if you need physics |
@@ -404,16 +396,16 @@ Makefile                     ← make  (auto-deps + build + test)
 ## 10. One-page cheat sheet
 
 ```bash
-# 1) Device stack
+# From PFC clone root
 make
 
-# 2) OF bridge (in OpenFOAM env)
-wmake -C apps/ofDumpCsr          # or: cd apps/ofDumpCsr && wmake
-cd $YOUR_CASE && ofDumpCsr
+# OpenFOAM env active
+( cd apps/ofDumpCsr && wmake )
+( cd "$YOUR_CASE" && ofDumpCsr )    # e.g. cases/windTunnel3D or external path
 
-# 3) GPU solve
-./build/csrOcl/csrOcl --mtx $YOUR_CASE/matrix/of_p.mtx \
-  --rhs $YOUR_CASE/matrix/of_p.rhs \
+./build/csrOcl/csrOcl \
+  --mtx "$YOUR_CASE/matrix/of_p.mtx" \
+  --rhs "$YOUR_CASE/matrix/of_p.rhs" \
   --kernels build/csrOcl/kernels/csr.cl
 ```
 

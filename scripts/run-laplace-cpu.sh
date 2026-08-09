@@ -2,7 +2,8 @@
 # Step-0 CPU baseline: stock laplacianFoam, no GPU.
 #
 # Preferred invocation (from Windows or WSL):
-#   wsl -d Ubuntu-OF -- openfoam2512 -c 'cd /mnt/g/dev/repos/PFC && bash scripts/run-laplace-cpu.sh'
+#   From repo root (OpenFOAM env loaded):
+#   bash scripts/run-laplace-cpu.sh
 #
 # Or inside an already-loaded OpenFOAM shell:
 #   bash scripts/run-laplace-cpu.sh
@@ -35,7 +36,7 @@ fi
 
 if [[ -z "${WM_PROJECT_DIR:-}" ]]; then
     echo "ERROR: OpenFOAM environment not loaded."
-    echo "  wsl -d Ubuntu-OF -- openfoam2512 -c 'cd /mnt/g/dev/repos/PFC && bash scripts/setup-openfoam-wsl.sh'"
+    echo "  bash scripts/setup-openfoam-wsl.sh   # from repo root, inside OF-capable env"
     exit 1
 fi
 

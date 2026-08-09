@@ -49,6 +49,7 @@ cases/**/processor*
 cases/**/postProcessing
 cases/**/case.foam
 cases/**/log.*
+cases/**/VTK/
 cases/**/[1-9]*
 cases/**/0.*
 !cases/**/0/
@@ -61,6 +62,23 @@ cases/**/matrix/
 apps/ofDumpCsr/Make/linux*
 apps/ofDumpCsr/Make/linux64*
 apps/ofDumpCsr/lnInclude/
+
+# Animation intermediates (keep selected stills + final mp4)
+cases/**/images/frames/
+cases/**/images/frames_*/
+cases/**/images/stl_reset.png
+cases/**/images/stl_top.png
+cases/**/images/carconcept_top.png
+cases/**/images/windTunnelCar_30s_30fps.mp4
+
+# Large / experimental triSurface sources (keep car.stl + CarConcept.glb)
+cases/**/constant/triSurface/ferrari*
+cases/**/constant/triSurface/ToyCar*
+cases/**/constant/triSurface/motorBike*
+cases/**/constant/triSurface/car_rot*
+cases/**/constant/triSurface/car_scaled*
+cases/**/constant/triSurface/car_ahmed*
+cases/**/constant/triSurface/ahmed*
 
 # Local disk snapshot duplicates (keep dated dirs; ignore LATEST copies if desired)
 docs/snapshots/*-LATEST/

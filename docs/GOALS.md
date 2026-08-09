@@ -45,8 +45,13 @@ Secondary: laplaceOcl / device segment mature in parallel, then plug into 3D sol
 
 - [x] `cases/windTunnel3D` runs end-to-end on OpenFOAM v2512+ (`simpleFoam`)  
 - [x] 3D mesh with a **bluff body** (box “vehicle”) in a tunnel domain (`snappyHexMesh`)  
-- [x] Fields written (`U`, `p` at times 250/300 on first successful run)  
-- [x] Short doc: `cases/windTunnel3D/README.md` (ParaView recipe)  
+- [x] Fields written (`U`, `p`, `k`, …)  
+- [x] **RAS kEpsilon** + wall functions on vehicle/ground  
+- [x] **forceCoeffs** on patch `vehicle` (`postProcessing/forces/…/coefficient.dat`)  
+- [x] Short doc: `cases/windTunnel3D/README.md` (ParaView + Cd/Cl recipe)  
 - [x] Linked from root README as the main demo  
 
-**Still open for fidelity (not v1 blockers):** Ahmed/CAD body, RAS turbulence, force coefficients, GPU on this case.
+**Latest successful RAS run (demo numbers, not validation):**  
+converged ~222 SIMPLE iters; \(C_d \approx 1.25\), \(C_l \approx 0.63\) (box bluff body, \(\nu=0.01\)).
+
+**Still open for fidelity (not v1 blockers):** Ahmed/CAD body, air-like \(\nu\) + finer mesh, GPU on this case (S5).

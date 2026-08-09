@@ -1,7 +1,15 @@
-# S5 — couple full-device path into 3D flow
+# S5 / Primary v2 — device-resident OpenFOAM outer loop
 
-Primary demo (`cases/windTunnel3D`) already produces showable 3D CFD on **CPU OpenFOAM**.  
-S5 is when the **device-resident** linear algebra path accelerates the *same class* of solves.
+**Primary v1** (`cases/windTunnel3D` on CPU) is **done**.  
+**Primary v2** (see `docs/GOALS.md`): the **SIMPLE outer solve loop** for that class of case runs as a **full-device lifecycle** — because that is where the bottleneck hypothesis lives (assemble + sparse solve + field update every iteration), not mesh gen or ParaView.
+
+S5 is the **implementation spine** of primary v2:
+
+| Tier | Meaning |
+|------|---------|
+| v2a | One linear system (e.g. pressure) in the outer loop on GPU |
+| v2b | Full outer loop: U, p, turbulence assemble+solve on GPU |
+| v2c | Optional fidelity while keeping residency |
 
 ## Target lifecycle (unchanged)
 
@@ -22,8 +30,9 @@ Not: assemble on CPU → copy A → solve → copy x every iteration.
 | 3 | CSR SpMV + PCG full-device (unstructured-ready format) | **done** (`apps/csrOcl`, host CSR assemble + one upload) |
 | 3b | Import mesh topology CSR from polyMesh (graph Laplace) | **done** (`polyMesh_to_mtx.py` + `csrOcl --mtx`) — windTunnel 76k cells |
 | 3c | Import **coefficient** matrix from OF pressure Laplacian | **done** (`apps/ofDumpCsr` → `csrOcl --mtx`) — windTunnel n=76k, residual OK ~70 ms |
-| 4 | Replace *one* simpleFoam linear solve (e.g. pressure) with device segment | S5 mvp (next) |
-| 5 | Keep residual parity vs stock OF on windTunnel3D | gate |
+| 4 | **v2a:** one system (e.g. pressure) inside outer iter, device-resident | **next** |
+| 5 | Residual / field band vs stock OF on windTunnel3D | gate for v2a |
+| 6 | **v2b:** full SIMPLE outer loop (U, p, k/ε) assemble+solve on device | primary v2 done |
 
 ## Wind-tunnel coupling sketch (mvp)
 

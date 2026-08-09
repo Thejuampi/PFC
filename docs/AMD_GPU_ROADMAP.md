@@ -51,10 +51,12 @@ We do **not** block on “OpenCL is legacy, use HIP”.
 3. **Single load / single unload** — matrix stays on device; one `T` download at end (**done**). Residual scalars only for PCG control.  
 4. **Match CPU** — same scheme on host; smoke 100² max|Δ| ~ 1e-13; 500² ~ 1e-12 (**done**).  
 5. **Phase A (hardening)** — metrics, bench, smoke test, **poly2 preconditioner** (**done**).  
-6. **Primary product path** — `cases/windTunnel3D` (3D tunnel + body) on OpenFOAM.  
-   **Done (v1):** RAS kEpsilon + forceCoeffs; converges ~222 iters; showable U/p/k + Cd/Cl.  
-7. **Next (device)** — 3D structured Poisson on GPU → unstructured LDU segment → **S5** plug into 3D flow pressure/viscosity solves.  
-   Goals: `docs/GOALS.md`. PR #1.
+6. **Primary product path v1** — `cases/windTunnel3D` on OpenFOAM CPU.  
+   **Done:** RAS kEpsilon + forceCoeffs; showable U/p/k + Cd/Cl.  
+7. **Primary v2 (new north star)** — **outer SIMPLE loop device-resident** on GPU  
+   (assemble + solve + field update; one load / rare unload).  
+   Ladder: DIA → CSR → OF matrix dump (**done**) → in-loop v2a → full loop v2b.  
+   Goals: `docs/GOALS.md`, `docs/S5_DEVICE_SEGMENT.md`. PR #1.
 
 ## Explicit non-goals for the first GPU cut
 

@@ -5,10 +5,10 @@ GitHub: [Thejuampi/PFC](https://github.com/Thejuampi/PFC)
 
 ## Goals
 
-**Primary:** show **3D discrete CFD results** (wind-tunnel style: body in free stream → mesh → solve → ParaView).  
-**Secondary:** full-device OpenCL linear algebra (no hybrid CPU/GPU thrash), modern OpenFOAM baseline, scale, then couple GPU into the 3D loop.
+**Primary v1 (done):** showable **3D CFD** on CPU OpenFOAM (`cases/windTunnel3D`).  
+**Primary v2 (active):** the **SIMPLE outer solve loop** of that case runs **device-resident on GPU** (assemble + sparse solves + field updates — where the bottleneck hypothesis lives; not mesh/ParaView on GPU).
 
-See **`docs/GOALS.md`**.
+See **`docs/GOALS.md`**, `docs/S5_DEVICE_SEGMENT.md`.
 
 **Main demo case:** `cases/windTunnel3D` — 3D bluff body, **RAS kEpsilon**, **forceCoeffs** (Cd/Cl).  
 Solver experiments: `apps/laplaceOcl`, `cases/laplaceCpu`.

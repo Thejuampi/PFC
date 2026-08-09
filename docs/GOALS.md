@@ -1,57 +1,133 @@
 # Project goals
 
-## Primary goal (north star)
+## Primary goal v1 — **achieved**
 
-**Deliver a 3D discrete CFD simulation whose results can be inspected and shown** — same spirit as a vehicle in a wind tunnel: mesh → solve → fields (U, p, …) → visualization.
+**Showable 3D discrete CFD** (wind-tunnel style on stock OpenFOAM CPU).
 
-Not “only a linear solver on a cube of heat.” The solver work exists to enable and accelerate that simulation path (especially device-resident linear algebra later).
+| Check | Status |
+|-------|--------|
+| `cases/windTunnel3D` end-to-end (`simpleFoam`, OF v2512) | done |
+| 3D bluff body + tunnel (`snappyHexMesh`) | done |
+| Fields + RAS kEpsilon + forceCoeffs (Cd/Cl) | done |
+| Documented ParaView recipe | done |
 
-Concrete milestone for the revival:
+Demo numbers (not industrial validation): \(C_d \approx 1.25\), \(C_l \approx 0.63\).  
+**v1 is closed.** Fidelity extras (Ahmed/CAD, air \(\nu\), finer mesh) remain optional polish, not the north star.
 
-1. **3D wind-tunnel-style case** in this repo (body in a free-stream / channel).  
-2. **Runs on modern OpenFOAM** (CPU reference path).  
-3. **Post-processable results** (ParaView / VTK): velocity, pressure, streamlines / slices.  
-4. Documented “how to reproduce the show.”
+---
 
-A production-accurate full car (detailed CAD, DES/LES, force coefficients to industry standards) is **aspirational**; the primary goal is a **honest 3D external-flow demonstration** that matches the original project intent, then grow fidelity.
+## Primary goal v2 (new north star)
 
-## Secondary goals
+**Run the OpenFOAM *outer solve loop* for the 3D case as a full-device lifecycle on the GPU** — the place where the bottleneck hypothesis lives.
 
-| ID | Goal | Why |
-|----|------|-----|
-| S1 | **Full-device OpenCL segment** (assemble + solve in GPU memory; one load / one unload) | Original PFC insight; avoid hybrid CPU assemble / GPU solve thrash |
-| S2 | **CPU OpenFOAM baseline** on modern OF | Correctness and fair timing reference |
-| S3 | **Measurable residency & residuals** | Prove correctness and no matrix PCIe thrash |
-| S4 | **Scale** (large meshes / meaningful VRAM use) | Stress path toward real case sizes |
-| S5 | **Couple device path into the 3D simulation loop** | GPU accelerates the real goal, not a toy Laplace forever |
-| S6 | **Env on G:** (WSL/OF/distro not filling C:) | Lab machine constraint |
-| S7 | **Track work on PR** | Visible progress |
+### Bottleneck hypothesis (why this goal)
 
-## Non-goals (for now)
+In steady incompressible RANS (`simpleFoam`-class), wall time is dominated by the **repeated outer iterations**:
 
-- Full OEM vehicle aero validation suite  
+```text
+each SIMPLE iteration:
+  assemble momentum / pressure / turbulence operators
+  solve large sparse linear systems (PCG/GAMG/…)
+  update fields, fluxes, residuals
+```
+
+Not by: mesh generation once, writing VTK once, or starting the binary.
+
+The **2015/PFC trap** was hybrid thrash:
+
+```text
+every linear solve:  CPU assemble A → copy → GPU solve → copy x → CPU
+```
+
+That can make GPU *slower* than CPU even when the kernel is fast.  
+The **right cut** is residency:
+
+```text
+startup:   mesh topology + fields + constants → GPU   (once)
+outer loop: assemble + solve + update fields        entirely on GPU
+shutdown:  download fields / forces for I/O         (once / rare)
+```
+
+So: **yes — the new primary is “the loop on GPU”**, meaning the **CFD time-step / SIMPLE outer loop**, not “reimplement every OpenFOAM utility on GPU.”
+
+### Scope: what “whole loop on GPU” means here
+
+| In scope (must end on device) | Out of scope (stay on host / offline) |
+|-------------------------------|----------------------------------------|
+| Field state `U, p, φ, k, ε, …` resident on GPU across outer iters | `blockMesh` / `snappyHexMesh` / case setup |
+| Operator assembly for the equations we solve | ParaView, plots, force post I/O policy |
+| Linear solves (PCG + precond) for those systems | Rewriting all of OpenFOAM |
+| Residual norms / outer convergence control (scalars only) | MPI multi-GPU product |
+| Same *class* of physics as `windTunnel3D` (simpleFoam + RAS) | OEM validation suite |
+
+**Product statement:**  
+*A 3D wind-tunnel-style RANS run whose **iterative solve phase** does not thrash matrix/fields over PCIe; showable fields and Cd/Cl still match a CPU OpenFOAM reference within a stated band.*
+
+### Definition of done (primary v2)
+
+**MVP (v2a) — one equation in the loop**
+
+- [ ] At least the **pressure** (or dominant) linear solve of SIMPLE runs **device-resident** inside an outer iteration driven from the wind-tunnel case.  
+- [ ] Matrix/fields for that segment not re-uploaded every PCG iteration.  
+- [ ] Residual gate + traffic metrics (`h2d` after startup ≈ 0 for fields/matrix).  
+- [ ] Compare to stock OF residual / field band on `windTunnel3D` (or clone).
+
+**Full outer loop (v2b) — the actual goal**
+
+- [ ] Full SIMPLE outer iteration on device for the case equations: **U, p, (k, ε)** (or equivalent RAS set).  
+- [ ] Assemble **and** solve on GPU for those systems (not “GPU solve of host-built A only” as the end state).  
+- [ ] One load at start of solve phase, one unload of results for post.  
+- [ ] Cd/Cl (or forceCoeffs-equivalent) within agreed band vs CPU reference.  
+- [ ] Documented run path + bench table (CPU OF wall time vs device loop).
+
+**Aspirational (v2c, not required to claim v2)**
+
+- Finer mesh / air-like \(\nu\) / body CAD while keeping the device loop.  
+- More of the finite-volume machinery on device (grad/div schemes, limiters).
+
+### Relation to old secondary IDs
+
+| Old ID | Role under v2 |
+|--------|----------------|
+| S1–S4 | **Building blocks** (mostly done): full-device segment, metrics, scale |
+| S5 | **Becomes the spine of primary v2** (couple → then own the outer loop) |
+| S2 | CPU OpenFOAM remains the **correctness & timing reference** |
+| S6–S7 | Lab constraints / PR tracking — still apply |
+
+Ladder detail: `docs/S5_DEVICE_SEGMENT.md`.  
+Architecture: `docs/AMD_GPU_ROADMAP.md`.
+
+---
+
+## Secondary goals (supporting)
+
+| ID | Goal | Status / note |
+|----|------|----------------|
+| S1 | Full-device OpenCL segment | largely done (`laplaceOcl`, `csrOcl`) |
+| S2 | CPU OF baseline | done (`windTunnel3D`, laplaceCpu) |
+| S3 | Residuals + traffic metrics | done on device apps; keep for v2 |
+| S4 | Scale / VRAM | done smoke; re-check on full loop |
+| S5 | Device path in 3D loop | **active — core of primary v2** |
+| S6 | Env on G: | policy still on |
+| S7 | Track on PR | PR #1 |
+
+---
+
+## Non-goals (unchanged spirit)
+
+- Full OEM aero validation suite  
 - MPI multi-GPU cluster product  
-- Rewriting all of OpenFOAM on GPU  
-- 2D-only demos as the end state (2D may appear only as tiny unit tests)
+- **Rewriting all of OpenFOAM on GPU** (mesh tools, GUI, every model)  
+- Hybrid “plugin that copies A every call” as the architecture  
+- 2D-only as the end state  
+
+---
 
 ## Current direction of work
 
 ```text
-Primary:  cases/windTunnel3D  →  run  →  visualize
-Secondary: laplaceOcl / device segment mature in parallel, then plug into 3D solves
+Primary v1:  cases/windTunnel3D on CPU     →  ACHIEVED (showable 3D CFD)
+Primary v2:  same class of run, outer loop device-resident on GPU
+             v2a: one system in-loop  →  v2b: full SIMPLE (U,p,turb) on device
+Reference:   stock simpleFoam on CPU for residuals, Cd/Cl, wall time
 ```
-
-## Definition of “primary goal achieved” (v1)
-
-- [x] `cases/windTunnel3D` runs end-to-end on OpenFOAM v2512+ (`simpleFoam`)  
-- [x] 3D mesh with a **bluff body** (box “vehicle”) in a tunnel domain (`snappyHexMesh`)  
-- [x] Fields written (`U`, `p`, `k`, …)  
-- [x] **RAS kEpsilon** + wall functions on vehicle/ground  
-- [x] **forceCoeffs** on patch `vehicle` (`postProcessing/forces/…/coefficient.dat`)  
-- [x] Short doc: `cases/windTunnel3D/README.md` (ParaView + Cd/Cl recipe)  
-- [x] Linked from root README as the main demo  
-
-**Latest successful RAS run (demo numbers, not validation):**  
-converged ~222 SIMPLE iters; \(C_d \approx 1.25\), \(C_l \approx 0.63\) (box bluff body, \(\nu=0.01\)).
-
-**Still open for fidelity (not v1 blockers):** Ahmed/CAD body, air-like \(\nu\) + finer mesh, GPU on this case (S5).

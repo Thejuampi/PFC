@@ -156,11 +156,15 @@ Same three steps work for **any** case with mesh + `p`/`U` fields — see the in
 
 **Question:** on the **car wind-tunnel pressure system** (same \(A,b\)), how much faster is device CSR poly2-PCG than a **strong multi-thread CPU** of the *same* algorithm?
 
-- **Primary metric:** `SPEEDUP = CPU_MS / GPU_SOLVE_MS` with OpenMP host PCG (`make bench-speedup`)  
-- **Not the metric:** full `simpleFoam` wall vs one GPU solve (different work) — simpleFoam is **context only**  
-- **Protocol + verdict rules:** [`docs/CPU_GPU_SPEEDUP.md`](docs/CPU_GPU_SPEEDUP.md)  
-- Run only on an **idle** machine (no training jobs).
+| Arm | Time (pressure solve, n≈1.24e6) |
+|-----|----------------------------------|
+| CPU OpenMP poly2-PCG (20 threads) | **23.7 s** |
+| GPU `csrOcl` poly2-PCG (gfx1030) | **1.34 s** |
+| **SPEEDUP** | **~17.7×** → **WIN** |
 
+- Same 1006 PCG iters, residual ~1e‑8, max |Δx| ~1e‑12.  
+- **Not** the metric: full `simpleFoam` wall (~42 min) vs one GPU solve — simpleFoam is **context only**.  
+- Protocol: [`docs/CPU_GPU_SPEEDUP.md`](docs/CPU_GPU_SPEEDUP.md) · re-run: `make bench-speedup`
 Roadmap: [`docs/AMD_GPU_ROADMAP.md`](docs/AMD_GPU_ROADMAP.md) · device segment: [`docs/S5_DEVICE_SEGMENT.md`](docs/S5_DEVICE_SEGMENT.md) · goals: [`docs/GOALS.md`](docs/GOALS.md)
 
 ---

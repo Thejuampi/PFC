@@ -137,22 +137,37 @@ Control threads: `OMP_NUM_THREADS=8 make bench-speedup` (use physical cores; try
 
 | Item | Status |
 |------|--------|
-| Matrix dump windTunnelCar | available (`n≈1.24e6`) when generated |
-| GPU pressure solve | measured class ~**1.8 s** (idle-ish; re-check on clean run) |
-| OpenMP CPU vs GPU speedup | **re-measure on idle machine** (`make bench-speedup`) |
+| Matrix dump windTunnelCar | **done** (`n=1 244 327`, `nnz=8 608 083`) |
+| GPU pressure solve | **done** |
+| OpenMP CPU vs GPU speedup | **done** (idle machine) |
 | Full CFD on GPU speedup | **not claimed** until primary v2 |
 
-Fill this table after a clean bench:
+### Result — clean bench (primary claim)
 
 | Quantity | Value |
 |----------|-------|
-| `n` / `nnz` | |
-| `CPU_THREADS` | |
-| `CPU_MS` | |
-| `GPU_SOLVE_MS` | |
-| `SPEEDUP_vs_cpu` | |
-| `VERDICT_LINEAR_SOLVE` | |
-| Date / GPU / CPU model | |
+| Case | `cases/windTunnelCar` pressure Laplacian snapshot |
+| `n` / `nnz` | **1 244 327** / **8 608 083** |
+| Algorithm | CSR poly2-PCG, tol `1e-8`, same on CPU and GPU |
+| `PCG_ITERS` | **1006** (both arms) |
+| `CPU_THREADS` | **20** (OpenMP) |
+| `CPU_MS` | **23 717** (~23.7 s) |
+| `GPU_SOLVE_MS` | **1 339** (~1.34 s) |
+| `SPEEDUP_vs_cpu` | **17.7×** |
+| `MAX_ABS_ERR` | **1.7×10⁻¹²** |
+| `REL_RESIDUAL` | **9.7×10⁻⁹** |
+| `VERDICT_LINEAR_SOLVE` | **WIN** |
+| GPU | AMD gfx1030 (RX 6800 XT class) |
+| Date | 2026-08-09 (idle host; no concurrent AI training) |
+
+**Headline:** on the real car wind-tunnel pressure system, device-resident poly2-PCG is **~18× faster** than the same algorithm multi-threaded on CPU.
+
+### Context only (not the speedup denominator)
+
+| Quantity | Value |
+|----------|-------|
+| `simpleFoam` full case wall | ~**2542 s** / 150 outer iters (~17 s/outer) |
+| ofDumpCsr export | ~**38 s** (one-shot; not in SPEEDUP) |
 
 ---
 

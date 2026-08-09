@@ -1,84 +1,94 @@
-// Full-device Laplace / diffusion helpers for structured 2D grid.
-// Cell layout: i + j * nx,  i in [0,nx), j in [0,ny)
-// Boundary cells: Dirichlet (identity rows). Interior: 5-point stencil.
+// Full-device Laplace / diffusion helpers for structured 2D/3D grid.
+// Cell layout: i + j * nx + k * (nx*ny),  i in [0,nx), j in [0,ny), k in [0,nz)
+// nz==1 → pure 2D (5-point). nz>1 → 7-point stencil.
+// Boundary cells: Dirichlet (identity rows).
 
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-
-inline int idx(const int i, const int j, const int nx) { return i + j * nx; }
 
 // mark[c] = 1 interior, 0 boundary
 __kernel void mark_interior(
     __global uchar* mark,
     const int nx,
-    const int ny)
+    const int ny,
+    const int nz)
 {
     const int c = get_global_id(0);
-    const int n = nx * ny;
+    const int n = nx * ny * nz;
     if (c >= n) return;
+    const int nxy = nx * ny;
     const int i = c % nx;
-    const int j = c / nx;
-    const int interior = (i > 0 && i < nx - 1 && j > 0 && j < ny - 1) ? 1 : 0;
+    const int j = (c / nx) % ny;
+    const int k = c / nxy;
+    int interior = (i > 0 && i < nx - 1 && j > 0 && j < ny - 1) ? 1 : 0;
+    if (nz > 1) {
+        if (k == 0 || k == nz - 1) interior = 0;
+    }
     mark[c] = (uchar)interior;
 }
 
-// Initial T + boundary values matching cases/laplaceCpu (PFC geometry).
+// Initial T + boundary values matching cases/laplaceCpu (PFC geometry) in xy.
 // hPatch (j=ny-1): 573, cPatch (i=0): 373, fixedWalls (i=nx-1 or j=0): 273
+// For 3D, z=0 and z=nz-1 faces use T_wall (273) unless already set by xy edges.
 __kernel void init_temperature(
     __global double* T,
     const int nx,
     const int ny,
+    const int nz,
     const double T_init,
     const double T_h,
     const double T_c,
     const double T_wall)
 {
     const int c = get_global_id(0);
-    const int n = nx * ny;
+    const int n = nx * ny * nz;
     if (c >= n) return;
+    const int nxy = nx * ny;
     const int i = c % nx;
-    const int j = c / nx;
+    const int j = (c / nx) % ny;
+    const int k = c / nxy;
 
     double v = T_init;
-    // Corners: fixedWalls / cold / hot priority — walls & cold on edges
-    if (j == 0 || i == nx - 1) {
-        v = T_wall;
-    }
-    if (i == 0) {
-        v = T_c;
-    }
-    if (j == ny - 1) {
-        v = T_h;
-    }
-    // corner (0, ny-1): hot vs cold — use average-ish OpenFOAM order: last wins;
-    // match fixedValue per face: hot top takes top edge including corners with i=0?
-    // Use: top edge hot, left edge cold except top-left = hot (top overrides).
-    if (j == ny - 1) v = T_h;
+    // Match 2D BC on every z-slice for continuity with laplaceCpu when nz==1
+    if (j == 0 || i == nx - 1) v = T_wall;
     if (i == 0 && j != ny - 1) v = T_c;
+    if (j == ny - 1) v = T_h;
     if ((j == 0 || i == nx - 1) && j != ny - 1 && i != 0) v = T_wall;
+
+    if (nz > 1 && (k == 0 || k == nz - 1)) {
+        // z faces: wall, but keep top/hot and left/cold where they own the edge
+        if (j != ny - 1 && i != 0) v = T_wall;
+        if (j == ny - 1) v = T_h;
+        if (i == 0 && j != ny - 1) v = T_c;
+    }
 
     T[c] = v;
 }
 
 // Assemble constant DIA matrix for implicit Euler:
 // A = I/dt - DT * L,  L ≈ discrete Laplacian (negative diagonal).
-// Offsets order: 0:-nx  1:-1  2:0  3:+1  4:+nx
+// Offsets: 0:-nx  1:-1  2:0  3:+1  4:+nx  5:-nxy  6:+nxy
 __kernel void assemble_A_dia(
     __global double* dia0,   // -nx
     __global double* dia1,   // -1
     __global double* dia2,   //  0
     __global double* dia3,   // +1
     __global double* dia4,   // +nx
+    __global double* dia5,   // -nxy
+    __global double* dia6,   // +nxy
     __global double* invDiag,
     __global const uchar* mark,
     const int nx,
     const int ny,
+    const int nz,
     const double dx,
     const double dy,
+    const double dz,
     const double dt,
     const double DT)
 {
     const int c = get_global_id(0);
-    const int n = nx * ny;
+    const int nxy = nx * ny;
+    const int n = nxy * nz;
     if (c >= n) return;
 
     dia0[c] = 0.0;
@@ -86,9 +96,10 @@ __kernel void assemble_A_dia(
     dia2[c] = 0.0;
     dia3[c] = 0.0;
     dia4[c] = 0.0;
+    dia5[c] = 0.0;
+    dia6[c] = 0.0;
 
     if (!mark[c]) {
-        // Dirichlet row
         dia2[c] = 1.0;
         invDiag[c] = 1.0;
         return;
@@ -96,13 +107,18 @@ __kernel void assemble_A_dia(
 
     const double cx = DT / (dx * dx);
     const double cy = DT / (dy * dy);
-    const double center = (1.0 / dt) + 2.0 * cx + 2.0 * cy;
+    const double cz = (nz > 1) ? (DT / (dz * dz)) : 0.0;
+    const double center = (1.0 / dt) + 2.0 * cx + 2.0 * cy + 2.0 * cz;
 
     dia2[c] = center;
-    dia1[c] = -cx; // west  (c-1)
-    dia3[c] = -cx; // east  (c+1)
-    dia0[c] = -cy; // south (c-nx)
-    dia4[c] = -cy; // north (c+nx)
+    dia1[c] = -cx;
+    dia3[c] = -cx;
+    dia0[c] = -cy;
+    dia4[c] = -cy;
+    if (nz > 1) {
+        dia5[c] = -cz;
+        dia6[c] = -cz;
+    }
     invDiag[c] = 1.0 / center;
 }
 
@@ -129,19 +145,24 @@ __kernel void spmv_dia(
     __global const double* dia2,
     __global const double* dia3,
     __global const double* dia4,
+    __global const double* dia5,
+    __global const double* dia6,
     __global const double* x,
     __global double* y,
     const int nx,
+    const int nxy,
     const int n)
 {
     const int c = get_global_id(0);
     if (c >= n) return;
 
     double acc = dia2[c] * x[c];
-    if (c >= nx)           acc += dia0[c] * x[c - nx];
-    if ((c % nx) > 0)      acc += dia1[c] * x[c - 1];
-    if ((c % nx) < nx - 1) acc += dia3[c] * x[c + 1];
-    if (c + nx < n)        acc += dia4[c] * x[c + nx];
+    if (c >= nx)            acc += dia0[c] * x[c - nx];
+    if ((c % nx) > 0)       acc += dia1[c] * x[c - 1];
+    if ((c % nx) < nx - 1)  acc += dia3[c] * x[c + 1];
+    if (c + nx < n)         acc += dia4[c] * x[c + nx];
+    if (c >= nxy)           acc += dia5[c] * x[c - nxy];
+    if (c + nxy < n)        acc += dia6[c] * x[c + nxy];
     y[c] = acc;
 }
 
@@ -222,8 +243,7 @@ __kernel void poly2_combine(
 }
 
 // One red-black Gauss-Seidel sweep color for approximate solve A z ≈ rhs.
-// color: 0 = (i+j) even, 1 = (i+j) odd. Uses latest neighbor values of the other color.
-// DIA offsets: 0:-nx  1:-1  2:0  3:+1  4:+nx
+// color: 0 = (i+j+k) even, 1 = odd.
 __kernel void rbgs_sweep(
     __global double* z,
     __global const double* dia0,
@@ -231,9 +251,12 @@ __kernel void rbgs_sweep(
     __global const double* dia2,
     __global const double* dia3,
     __global const double* dia4,
+    __global const double* dia5,
+    __global const double* dia6,
     __global const double* rhs,
     __global const uchar* mark,
     const int nx,
+    const int nxy,
     const int n,
     const int color)
 {
@@ -241,10 +264,10 @@ __kernel void rbgs_sweep(
     if (c >= n) return;
 
     const int i = c % nx;
-    const int j = c / nx;
-    if (((i + j) & 1) != color) return;
+    const int j = (c / nx) % (nxy / nx);
+    const int k = c / nxy;
+    if (((i + j + k) & 1) != color) return;
 
-    // Dirichlet / identity rows: z = rhs
     if (!mark[c]) {
         z[c] = rhs[c];
         return;
@@ -255,8 +278,9 @@ __kernel void rbgs_sweep(
     if (i > 0)             sigma += dia1[c] * z[c - 1];
     if (i < nx - 1)        sigma += dia3[c] * z[c + 1];
     if (c + nx < n)        sigma += dia4[c] * z[c + nx];
+    if (c >= nxy)          sigma += dia5[c] * z[c - nxy];
+    if (c + nxy < n)       sigma += dia6[c] * z[c + nxy];
 
-    // A_ii * z_i + sigma = rhs_i  =>  z_i = (rhs - sigma) / A_ii
     z[c] = (rhs[c] - sigma) / dia2[c];
 }
 
@@ -272,7 +296,6 @@ __kernel void vec_residual(
     r[c] = b[c] - Ax[c];
 }
 
-// Partial squares: partial[gid] = sum of x[i]^2 over work-group
 __kernel void reduce_sum_sq(
     __global const double* x,
     __global double* partial,
@@ -296,7 +319,6 @@ __kernel void reduce_sum_sq(
     if (lid == 0) partial[get_group_id(0)] = scratch[0];
 }
 
-// Partial dot: partial[gid] = sum a[i]*b[i]
 __kernel void reduce_dot(
     __global const double* a,
     __global const double* b,

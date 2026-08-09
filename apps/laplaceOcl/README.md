@@ -1,12 +1,15 @@
 # laplaceOcl — full-device OpenCL diffusion
 
-Structured 2D implicit-Euler diffusion + Jacobi-PCG, **entirely on the GPU**.
+Structured **2D (5-point)** or **3D (7-point)** implicit-Euler diffusion + poly2-PCG, **entirely on the GPU**.
+
+- `--nz 1` (default): 2D mesh `nx × ny`  
+- `--nz N` (N≥3): 3D mesh `nx × ny × nz` — step toward S5 / pressure-like Poisson on device  
 
 ## Lifecycle
 
 1. Create device buffers  
 2. `mark_interior`, `init_temperature`, `assemble_A_dia` on GPU (**once**)  
-3. Each step: `build_rhs` → PCG (`spmv`, axpy, Jacobi) on GPU  
+3. Each step: `build_rhs` → PCG (`spmv`, axpy, poly2) on GPU  
 4. **One** `clEnqueueReadBuffer` of `T` at the end  
 
 Host only pulls a few scalar reductions per PCG iteration for residual checks (not the matrix). Use `--fixed-iters N` to skip residual host reads.
@@ -25,6 +28,9 @@ Host only pulls a few scalar reductions per PCG iteration for residual checks (n
 ```powershell
 G:\dev\repos\PFC\scripts\build-laplace-ocl.ps1
 G:\dev\repos\PFC\scripts\run-laplace-ocl.ps1 -Nx 100 -Ny 100 -Steps 10
+
+# 3D structured (7-point DIA):
+.\apps\laplaceOcl\build\laplaceOcl.exe --nx 32 --ny 32 --nz 32 --steps 5 --kernels .\apps\laplaceOcl\kernels\laplace.cl
 ```
 
 Needs:

@@ -52,7 +52,8 @@ We do **not** block on “OpenCL is legacy, use HIP”.
 4. **Match CPU** — same scheme on host; smoke 100² max|Δ| ~ 1e-13; 500² ~ 1e-12 (**done**).  
 5. **Phase A (hardening)** — metrics, bench, smoke test, **poly2 preconditioner** (**done**).  
 6. **Primary product path** — `cases/windTunnel3D` (3D tunnel + body) on OpenFOAM.  
-7. **Next (device)** — Phase B/C/D as needed, then **S5**: device segment on 3D flow solves.  
+   **Done (v1):** RAS kEpsilon + forceCoeffs; converges ~222 iters; showable U/p/k + Cd/Cl.  
+7. **Next (device)** — 3D structured Poisson on GPU → unstructured LDU segment → **S5** plug into 3D flow pressure/viscosity solves.  
    Goals: `docs/GOALS.md`. PR #1.
 
 ## Explicit non-goals for the first GPU cut

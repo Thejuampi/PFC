@@ -35,6 +35,19 @@ $r = Assert-Match $outSmall 'REL_RESIDUAL\s+([0-9.eE+-]+)' 'REL_RESIDUAL'
 if ([double]$r[1] -gt $tol * 10) { throw "small REL_RESIDUAL too large: $($r[1])" }
 Write-Host "Correctness OK (MAX_ABS_ERR=$err, REL_RESIDUAL=$($r[1]))"
 
+# --- 1b) 3D structured correctness ---
+Write-Host "=== correctness 32x32x32 3D (CPU check) ==="
+$out3d = & $exe --nx 32 --ny 32 --nz 32 --steps 3 --tol $tol --kernels $kernels --no-csv --quiet 2>&1 | Out-String
+Write-Host $out3d
+if ($LASTEXITCODE -ne 0) { throw "3d run exit $LASTEXITCODE" }
+$m3 = Assert-Match $out3d 'MAX_ABS_ERR\s+([0-9.eE+-]+)' 'MAX_ABS_ERR 3d'
+$err3 = [double]$m3[1]
+if ($err3 -ge 1e-9) { throw "3D MAX_ABS_ERR $err3 >= 1e-9" }
+$r3 = Assert-Match $out3d 'REL_RESIDUAL\s+([0-9.eE+-]+)' 'REL_RESIDUAL 3d'
+if ([double]$r3[1] -gt $tol * 10) { throw "3d REL_RESIDUAL too large: $($r3[1])" }
+if ($out3d -notmatch '\[3D\]') { throw "expected [3D] mesh tag" }
+Write-Host "3D correctness OK (MAX_ABS_ERR=$err3, REL_RESIDUAL=$($r3[1]))"
+
 # --- 2) Large mesh: residual validation (no host PCG) ---
 Write-Host "=== VRAM validate --mem-frac $memFrac (convergent PCG + residual) ==="
 $outFat = & $exe `

@@ -32,10 +32,10 @@ namespace {
 enum class Precond { Jacobi, Rbgs, Poly2 };
 
 // Device-side working set estimate (must match buffers allocated in main):
-// 14 double fields (T,b,x,r,z,p,Ap,invDiag,dia0..4,tmp) + mark uchar + partials.
+// 16 double fields (T,b,x,r,z,p,Ap,invDiag,dia0..6,tmp) + mark uchar + partials.
 inline std::uint64_t estimateDeviceBytes(std::uint64_t nCells)
 {
-    constexpr std::uint64_t kDoubles = 14;
+    constexpr std::uint64_t kDoubles = 16;
     constexpr std::uint64_t kPartials = 64; // reduction workspace
     return nCells * (kDoubles * sizeof(double) + 1) + kPartials * sizeof(double);
 }
@@ -43,18 +43,20 @@ inline std::uint64_t estimateDeviceBytes(std::uint64_t nCells)
 struct Args {
     int nx = 100;
     int ny = 100;
+    int nz = 1; // 1 → 2D (5-point); >1 → 3D (7-point)
     int steps = 10;
     double dt = 0.005;
     double DT = 4e-5;
     double Lx = 0.1;
     double Ly = 0.1;
+    double Lz = 0.1;
     double tol = 1e-8;
     int maxIters = 500;
     int fixedIters = 0; // if >0, skip residual host checks in PCG
     // poly2: Neumann / SPAI-ish M^{-1}≈ 2 D^{-1} - D^{-1} A D^{-1} (SPD-friendly for CG)
     Precond precond = Precond::Poly2;
     int precondSweeps = 2; // only for rbgs (not recommended with CG; kept for experiments)
-    double memFrac = 0.0; // if >0, auto nx=ny so working set ≈ memFrac * device global mem
+    double memFrac = 0.0; // if >0, auto nx=ny(=nz if 3d) so working set ≈ memFrac * VRAM
     bool cpuCheck = true;
     bool writeCsv = true;
     bool quietSteps = false;
@@ -105,9 +107,13 @@ Args parseArgs(int argc, char** argv)
         };
         if (s == "--nx") a.nx = std::stoi(need("--nx"));
         else if (s == "--ny") a.ny = std::stoi(need("--ny"));
+        else if (s == "--nz") a.nz = std::stoi(need("--nz"));
         else if (s == "--steps") a.steps = std::stoi(need("--steps"));
         else if (s == "--dt") a.dt = std::stod(need("--dt"));
         else if (s == "--DT") a.DT = std::stod(need("--DT"));
+        else if (s == "--Lx") a.Lx = std::stod(need("--Lx"));
+        else if (s == "--Ly") a.Ly = std::stod(need("--Ly"));
+        else if (s == "--Lz") a.Lz = std::stod(need("--Lz"));
         else if (s == "--tol") a.tol = std::stod(need("--tol"));
         else if (s == "--max-iters") a.maxIters = std::stoi(need("--max-iters"));
         else if (s == "--fixed-iters") a.fixedIters = std::stoi(need("--fixed-iters"));
@@ -127,8 +133,9 @@ Args parseArgs(int argc, char** argv)
         else if (s == "--help" || s == "-h") {
             std::cout
                 << "laplaceOcl — device-resident diffusion (OpenCL)\n"
-                << "  --nx N --ny N --steps N --dt D --DT D\n"
-                << "  --mem-frac F   auto square mesh so device buffers ≈ F * GPU VRAM\n"
+                << "  --nx N --ny N --nz N   (nz=1 default 2D; nz>1 → 3D 7-point)\n"
+                << "  --steps N --dt D --DT D --Lx --Ly --Lz\n"
+                << "  --mem-frac F   auto mesh so device buffers ≈ F * GPU VRAM\n"
                 << "                 (e.g. 0.5 → ~50% of global mem)\n"
                 << "  --tol T --max-iters N --fixed-iters N\n"
                 << "      (fixed-iters>0: no residual host check each PCG iter)\n"
@@ -145,7 +152,9 @@ Args parseArgs(int argc, char** argv)
     }
     if (a.precondSweeps < 1) die("--precond-sweeps must be >= 1");
     if (a.memFrac < 0.0 || a.memFrac > 0.95) die("--mem-frac must be in [0, 0.95]");
+    if (a.nz < 1) die("nz must be >= 1");
     if (a.memFrac == 0.0 && (a.nx < 3 || a.ny < 3)) die("nx,ny must be >= 3");
+    if (a.memFrac == 0.0 && a.nz > 1 && a.nz < 3) die("nz must be 1 (2D) or >= 3 (3D)");
     return a;
 }
 
@@ -321,42 +330,62 @@ void enqueue1D(cl_command_queue q, cl_kernel k, size_t n, size_t lws = 256)
 // --- CPU reference (same matrix/RHS) for validation ---
 void cpuReference(const Args& a, std::vector<double>& T)
 {
-    const int nx = a.nx, ny = a.ny, n = nx * ny;
+    const int nx = a.nx, ny = a.ny, nz = a.nz;
+    const int nxy = nx * ny;
+    const int n = nxy * nz;
     const double dx = a.Lx / (nx - 1);
     const double dy = a.Ly / (ny - 1);
+    const double dz = (nz > 1) ? a.Lz / (nz - 1) : 1.0;
     const double cx = a.DT / (dx * dx);
     const double cy = a.DT / (dy * dy);
+    const double cz = (nz > 1) ? a.DT / (dz * dz) : 0.0;
 
     auto isInterior = [&](int c) {
-        int i = c % nx, j = c / nx;
-        return i > 0 && i < nx - 1 && j > 0 && j < ny - 1;
+        const int i = c % nx;
+        const int j = (c / nx) % ny;
+        const int k = c / nxy;
+        if (i <= 0 || i >= nx - 1 || j <= 0 || j >= ny - 1) return false;
+        if (nz > 1 && (k <= 0 || k >= nz - 1)) return false;
+        return true;
     };
 
     auto initT = [&](int c) {
-        int i = c % nx, j = c / nx;
+        const int i = c % nx;
+        const int j = (c / nx) % ny;
+        const int k = c / nxy;
         double v = 273.0;
-        if (j == ny - 1) return 573.0;
-        if (i == 0) return 373.0;
-        if (j == 0 || i == nx - 1) return 273.0;
+        if (j == 0 || i == nx - 1) v = 273.0;
+        if (i == 0 && j != ny - 1) v = 373.0;
+        if (j == ny - 1) v = 573.0;
+        if ((j == 0 || i == nx - 1) && j != ny - 1 && i != 0) v = 273.0;
+        if (nz > 1 && (k == 0 || k == nz - 1)) {
+            if (j != ny - 1 && i != 0) v = 273.0;
+            if (j == ny - 1) v = 573.0;
+            if (i == 0 && j != ny - 1) v = 373.0;
+        }
         return v;
     };
 
     T.resize(n);
     for (int c = 0; c < n; ++c) T[c] = initT(c);
 
-    std::vector<double> dia0(n), dia1(n), dia2(n), dia3(n), dia4(n), invD(n);
+    std::vector<double> dia0(n), dia1(n), dia2(n), dia3(n), dia4(n), dia5(n), dia6(n), invD(n);
     for (int c = 0; c < n; ++c) {
         if (!isInterior(c)) {
             dia2[c] = 1.0;
             invD[c] = 1.0;
             continue;
         }
-        const double center = (1.0 / a.dt) + 2.0 * cx + 2.0 * cy;
+        const double center = (1.0 / a.dt) + 2.0 * cx + 2.0 * cy + 2.0 * cz;
         dia2[c] = center;
         dia1[c] = -cx;
         dia3[c] = -cx;
         dia0[c] = -cy;
         dia4[c] = -cy;
+        if (nz > 1) {
+            dia5[c] = -cz;
+            dia6[c] = -cz;
+        }
         invD[c] = 1.0 / center;
     }
 
@@ -367,6 +396,8 @@ void cpuReference(const Args& a, std::vector<double>& T)
             if ((c % nx) > 0) acc += dia1[c] * x[c - 1];
             if ((c % nx) < nx - 1) acc += dia3[c] * x[c + 1];
             if (c + nx < n) acc += dia4[c] * x[c + nx];
+            if (c >= nxy) acc += dia5[c] * x[c - nxy];
+            if (c + nxy < n) acc += dia6[c] * x[c + nxy];
             y[c] = acc;
         }
     };
@@ -377,20 +408,19 @@ void cpuReference(const Args& a, std::vector<double>& T)
             return;
         }
         if (a.precond == Precond::Poly2) {
-            // z = 2 D^{-1} r - D^{-1} A D^{-1} r
             std::vector<double> t(n), w(n);
             for (int c = 0; c < n; ++c) t[c] = invD[c] * r[c];
             spmv(t, w);
             for (int c = 0; c < n; ++c) z[c] = 2.0 * t[c] - invD[c] * w[c];
             return;
         }
-        // RBGS (experimental; not SPD — may hurt CG)
         std::fill(z.begin(), z.end(), 0.0);
         auto oneColor = [&](int color) {
             for (int c = 0; c < n; ++c) {
                 const int i = c % nx;
-                const int j = c / nx;
-                if (((i + j) & 1) != color) continue;
+                const int j = (c / nx) % ny;
+                const int k = c / nxy;
+                if (((i + j + k) & 1) != color) continue;
                 if (!isInterior(c)) {
                     z[c] = r[c];
                     continue;
@@ -400,6 +430,8 @@ void cpuReference(const Args& a, std::vector<double>& T)
                 if (i > 0) sigma += dia1[c] * z[c - 1];
                 if (i < nx - 1) sigma += dia3[c] * z[c + 1];
                 if (c + nx < n) sigma += dia4[c] * z[c + nx];
+                if (c >= nxy) sigma += dia5[c] * z[c - nxy];
+                if (c + nxy < n) sigma += dia6[c] * z[c + nxy];
                 z[c] = (r[c] - sigma) / dia2[c];
             }
         };
@@ -464,23 +496,31 @@ int main(int argc, char** argv)
     if (args.memFrac > 0.0) {
         if (ocl.globalMemBytes == 0) die("device global mem unknown");
         const std::uint64_t target = static_cast<std::uint64_t>(args.memFrac * ocl.globalMemBytes);
-        // bytes ≈ 113 * n  → n ≈ target / 113; square mesh
-        std::uint64_t nTarget = target / 113;
+        // bytes ≈ 129 * n (16 doubles + mark) → n ≈ target / 129
+        std::uint64_t nTarget = target / 129;
         if (nTarget < 9) nTarget = 9;
-        // Cap single double buffer under max alloc (n * 8 <= maxAlloc * 0.9)
         if (ocl.maxAllocBytes > 0) {
             const std::uint64_t maxN = static_cast<std::uint64_t>(ocl.maxAllocBytes * 0.9 / sizeof(double));
             if (nTarget > maxN) nTarget = maxN;
         }
-        int side = static_cast<int>(std::floor(std::sqrt(static_cast<double>(nTarget))));
-        if (side < 3) side = 3;
-        // keep even-ish for RB coloring comfort
-        if (side % 2) ++side;
-        args.nx = side;
-        args.ny = side;
-        // Huge meshes: CPU check is not practical
-        if (static_cast<std::uint64_t>(args.nx) * static_cast<std::uint64_t>(args.ny) > 2'000'000ULL
-            && args.cpuCheck) {
+        if (args.nz > 1) {
+            int side = static_cast<int>(std::floor(std::cbrt(static_cast<double>(nTarget))));
+            if (side < 3) side = 3;
+            if (side % 2) ++side;
+            args.nx = side;
+            args.ny = side;
+            args.nz = side;
+        } else {
+            int side = static_cast<int>(std::floor(std::sqrt(static_cast<double>(nTarget))));
+            if (side < 3) side = 3;
+            if (side % 2) ++side;
+            args.nx = side;
+            args.ny = side;
+            args.nz = 1;
+        }
+        const std::uint64_t nCells =
+            static_cast<std::uint64_t>(args.nx) * args.ny * static_cast<std::uint64_t>(args.nz);
+        if (nCells > 2'000'000ULL && args.cpuCheck) {
             std::cout << "  note     : disabling CPU check (mesh too large for host PCG)\n";
             args.cpuCheck = false;
         }
@@ -488,20 +528,26 @@ int main(int argc, char** argv)
 
     const int nx = args.nx;
     const int ny = args.ny;
-    const std::uint64_t n64 = static_cast<std::uint64_t>(nx) * static_cast<std::uint64_t>(ny);
+    const int nz = args.nz;
+    const int nxy = nx * ny;
+    const std::uint64_t n64 =
+        static_cast<std::uint64_t>(nx) * static_cast<std::uint64_t>(ny) * static_cast<std::uint64_t>(nz);
     if (n64 > static_cast<std::uint64_t>(std::numeric_limits<int>::max())) {
         die("mesh too large for 32-bit cell index path");
     }
     const int n = static_cast<int>(n64);
     const double dx = args.Lx / (nx - 1);
     const double dy = args.Ly / (ny - 1);
+    const double dz = (nz > 1) ? args.Lz / (nz - 1) : 0.0;
     const std::uint64_t devBytes = estimateDeviceBytes(n64);
     const double memFracUsed =
         ocl.globalMemBytes ? (static_cast<double>(devBytes) / ocl.globalMemBytes) : 0.0;
 
-    std::cout << "  mesh     : " << nx << " x " << ny << " (" << n << " cells)\n"
+    std::cout << "  mesh     : " << nx << " x " << ny << " x " << nz << " (" << n << " cells)"
+              << (nz == 1 ? " [2D]" : " [3D]") << "\n"
               << "  steps    : " << args.steps << "  dt=" << args.dt << "  DT=" << args.DT << "\n"
-              << "  domain   : " << args.Lx << " x " << args.Ly << "  dx=" << dx << " dy=" << dy << "\n"
+              << "  domain   : " << args.Lx << " x " << args.Ly << " x " << args.Lz
+              << "  dx=" << dx << " dy=" << dy << " dz=" << dz << "\n"
               << "  precond  : " << precondName << "  sweeps=" << args.precondSweeps << "\n"
               << "DEVICE_BUF_BYTES " << devBytes
               << "  MEM_FRAC_USED " << memFracUsed
@@ -525,6 +571,8 @@ int main(int argc, char** argv)
     cl_mem d2 = mkBuf(ocl.ctx, CL_MEM_READ_WRITE, bytes);
     cl_mem d3 = mkBuf(ocl.ctx, CL_MEM_READ_WRITE, bytes);
     cl_mem d4 = mkBuf(ocl.ctx, CL_MEM_READ_WRITE, bytes);
+    cl_mem d5 = mkBuf(ocl.ctx, CL_MEM_READ_WRITE, bytes);
+    cl_mem d6 = mkBuf(ocl.ctx, CL_MEM_READ_WRITE, bytes);
 
     const size_t lws = 256;
     const size_t gwsRed = 256 * 64; // 64 groups
@@ -540,16 +588,18 @@ int main(int argc, char** argv)
     set(ocl.k_mark, 0, dMark);
     set(ocl.k_mark, 1, nx);
     set(ocl.k_mark, 2, ny);
+    set(ocl.k_mark, 3, nz);
     enqueue1D(ocl.queue, ocl.k_mark, n, lws);
 
     const double T_init = 273.0, T_h = 573.0, T_c = 373.0, T_wall = 273.0;
     set(ocl.k_init, 0, dT);
     set(ocl.k_init, 1, nx);
     set(ocl.k_init, 2, ny);
-    set(ocl.k_init, 3, T_init);
-    set(ocl.k_init, 4, T_h);
-    set(ocl.k_init, 5, T_c);
-    set(ocl.k_init, 6, T_wall);
+    set(ocl.k_init, 3, nz);
+    set(ocl.k_init, 4, T_init);
+    set(ocl.k_init, 5, T_h);
+    set(ocl.k_init, 6, T_c);
+    set(ocl.k_init, 7, T_wall);
     enqueue1D(ocl.queue, ocl.k_init, n, lws);
 
     // assemble A once
@@ -558,14 +608,18 @@ int main(int argc, char** argv)
     set(ocl.k_assemble, 2, d2);
     set(ocl.k_assemble, 3, d3);
     set(ocl.k_assemble, 4, d4);
-    set(ocl.k_assemble, 5, dInv);
-    set(ocl.k_assemble, 6, dMark);
-    set(ocl.k_assemble, 7, nx);
-    set(ocl.k_assemble, 8, ny);
-    set(ocl.k_assemble, 9, dx);
-    set(ocl.k_assemble, 10, dy);
-    set(ocl.k_assemble, 11, args.dt);
-    set(ocl.k_assemble, 12, args.DT);
+    set(ocl.k_assemble, 5, d5);
+    set(ocl.k_assemble, 6, d6);
+    set(ocl.k_assemble, 7, dInv);
+    set(ocl.k_assemble, 8, dMark);
+    set(ocl.k_assemble, 9, nx);
+    set(ocl.k_assemble, 10, ny);
+    set(ocl.k_assemble, 11, nz);
+    set(ocl.k_assemble, 12, dx);
+    set(ocl.k_assemble, 13, dy);
+    set(ocl.k_assemble, 14, dz);
+    set(ocl.k_assemble, 15, args.dt);
+    set(ocl.k_assemble, 16, args.DT);
     enqueue1D(ocl.queue, ocl.k_assemble, n, lws);
 
     checkCl(clFinish(ocl.queue), "clFinish setup");
@@ -577,10 +631,13 @@ int main(int argc, char** argv)
         set(ocl.k_spmv, 2, d2);
         set(ocl.k_spmv, 3, d3);
         set(ocl.k_spmv, 4, d4);
-        set(ocl.k_spmv, 5, x);
-        set(ocl.k_spmv, 6, y);
-        set(ocl.k_spmv, 7, nx);
-        set(ocl.k_spmv, 8, n);
+        set(ocl.k_spmv, 5, d5);
+        set(ocl.k_spmv, 6, d6);
+        set(ocl.k_spmv, 7, x);
+        set(ocl.k_spmv, 8, y);
+        set(ocl.k_spmv, 9, nx);
+        set(ocl.k_spmv, 10, nxy);
+        set(ocl.k_spmv, 11, n);
         enqueue1D(ocl.queue, ocl.k_spmv, n, lws);
     };
 
@@ -622,11 +679,14 @@ int main(int argc, char** argv)
         set(ocl.k_rbgs, 3, d2);
         set(ocl.k_rbgs, 4, d3);
         set(ocl.k_rbgs, 5, d4);
-        set(ocl.k_rbgs, 6, rhs);
-        set(ocl.k_rbgs, 7, dMark);
-        set(ocl.k_rbgs, 8, nx);
-        set(ocl.k_rbgs, 9, n);
-        set(ocl.k_rbgs, 10, color);
+        set(ocl.k_rbgs, 6, d5);
+        set(ocl.k_rbgs, 7, d6);
+        set(ocl.k_rbgs, 8, rhs);
+        set(ocl.k_rbgs, 9, dMark);
+        set(ocl.k_rbgs, 10, nx);
+        set(ocl.k_rbgs, 11, nxy);
+        set(ocl.k_rbgs, 12, n);
+        set(ocl.k_rbgs, 13, color);
         enqueue1D(ocl.queue, ocl.k_rbgs, n, lws);
     };
 
@@ -797,20 +857,24 @@ int main(int argc, char** argv)
               << "PCG_ITERS total=" << totalPcgIters << "\n"
               << "T range         : [" << tmin << ", " << tmax << "]  mean=" << (tsum / n) << "\n";
 
-    // Hybrid-2015 estimate for contrast: each step would bounce A(5*n) + x + b + x_sol
+    // Hybrid-2015 estimate: bounce A (5 or 7 diags) + x + b + sol every step
+    const int nDia = (nz > 1) ? 7 : 5;
     const std::uint64_t hybridPerStep =
-        static_cast<std::uint64_t>(n) * sizeof(double) * (5 /*A dia*/ + 1 /*x*/ + 1 /*b*/ + 1 /*sol*/);
+        static_cast<std::uint64_t>(n) * sizeof(double) * (nDia + 1 /*x*/ + 1 /*b*/ + 1 /*sol*/);
     const std::uint64_t hybridEst = hybridPerStep * static_cast<std::uint64_t>(args.steps);
     std::cout << "HYBRID_EST_BYTES_per_run≈" << hybridEst
               << "  (if A,x,b recopied every step; not what we do)\n";
 
     if (args.writeCsv) {
         std::ofstream out(args.outCsv);
-        out << "i,j,T\n";
+        out << "i,j,k,T\n";
         const int stride = n > 200000 ? 4 : 1;
-        for (int j = 0; j < ny; j += stride) {
-            for (int i = 0; i < nx; i += stride) {
-                out << i << "," << j << "," << Tgpu[i + j * nx] << "\n";
+        for (int k = 0; k < nz; k += stride) {
+            for (int j = 0; j < ny; j += stride) {
+                for (int i = 0; i < nx; i += stride) {
+                    out << i << "," << j << "," << k << ","
+                        << Tgpu[i + j * nx + k * nxy] << "\n";
+                }
             }
         }
         std::cout << "Wrote " << args.outCsv << "\n";
@@ -852,7 +916,7 @@ int main(int argc, char** argv)
     }
 
     // release buffers
-    cl_mem all[] = {dT, dB, dX, dR, dZ, dP, dAp, dMark, dInv, d0, d1, d2, d3, d4, dPartial, dTmp};
+    cl_mem all[] = {dT, dB, dX, dR, dZ, dP, dAp, dMark, dInv, d0, d1, d2, d3, d4, d5, d6, dPartial, dTmp};
     for (cl_mem m : all) clReleaseMemObject(m);
 
     std::cout << "Done (full-device assemble+solve; single final unload).\n";

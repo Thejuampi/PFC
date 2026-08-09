@@ -10,8 +10,15 @@ GitHub: [Thejuampi/PFC](https://github.com/Thejuampi/PFC)
 
 See **`docs/GOALS.md`**.
 
-**Main demo case:** `cases/windTunnel3D` (3D bluff body in a tunnel).  
+**Main demo case:** `cases/windTunnel3D` — 3D bluff body, **RAS kEpsilon**, **forceCoeffs** (Cd/Cl).  
 Solver experiments: `apps/laplaceOcl`, `cases/laplaceCpu`.
+
+```powershell
+# Primary demo (WSL OpenFOAM on G:)
+wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnel3D && sed -i 's/\r$//' Allrun Allclean && bash Allrun"
+# ParaView: G:\dev\repos\PFC\cases\windTunnel3D\case.foam
+# Cd/Cl:    cases/windTunnel3D/postProcessing/forces/*/coefficient.dat
+```
 
 ## Step 0 status (this machine)
 

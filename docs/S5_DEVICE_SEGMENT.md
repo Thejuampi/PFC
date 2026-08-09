@@ -22,7 +22,17 @@ loop:     assemble operators + PCG/precond + field update  on GPU
 shutdown: download fields / forces for I/O               (once / rare)
 ```
 
+```mermaid
+flowchart LR
+  S["startup<br/>topology+fields → GPU"] --> L["outer loop on device<br/>assemble · solve · update"]
+  L --> L
+  L --> E["shutdown<br/>D2H fields / forces"]
+  style L fill:#1a3a2a,stroke:#3d8,color:#fff
+```
+
 Not: assemble on CPU → copy A → solve → copy x every iteration.
+
+Integration picture (Mode A today → v2 later): [`INTEGRATE_OPENFOAM.md`](INTEGRATE_OPENFOAM.md).
 
 ## Ladder toward S5
 

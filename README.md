@@ -79,6 +79,35 @@ wsl -d Ubuntu-OF -- openfoam2512 -c "cd /mnt/g/dev/repos/PFC/cases/windTunnel3D 
 
 Windows host + **AMD Radeon RX 6800 XT**. One upload → assemble + PCG on device → one download of the solution.
 
+### Architecture
+
+```mermaid
+flowchart LR
+  subgraph OF["OpenFOAM host (WSL/Linux)"]
+    Case["Your case<br/>mesh + fields"]
+    Dump["ofDumpCsr"]
+    Case --> Dump
+    Dump --> MTX["matrix/of_p.mtx<br/>matrix/of_p.rhs"]
+  end
+
+  subgraph GPU["GPU host (OpenCL)"]
+    Make["make<br/>auto-deps + build"]
+    CSR["csrOcl<br/>CSR SpMV + poly2-PCG"]
+    Dev["Device memory<br/>A, b, x resident"]
+    Make --> CSR
+    CSR -->|"H2D once"| Dev
+    Dev -->|"PCG loop on GPU"| Dev
+    Dev -->|"D2H once"| X["solution x<br/>residual OK"]
+  end
+
+  MTX --> CSR
+
+  style Dev fill:#1a3a2a,stroke:#3d8,color:#fff
+  style CSR fill:#1a2a3a,stroke:#48f,color:#fff
+```
+
+**Rule:** matrix/fields live on the GPU for the whole solve — not copy-per-iteration (that was the 2015 trap).
+
 | App | Role |
 |-----|------|
 | [`apps/laplaceOcl`](apps/laplaceOcl) | Structured 2D/3D DIA Laplace, poly2, residual gate, VRAM stress |
@@ -99,10 +128,6 @@ Needs: `g++`, `curl`, GPU OpenCL driver. No manual third-party install.
 **→ Agent checklist: [`AGENTS.md`](AGENTS.md)**
 
 Supported **today** = **Mode A (export)**: dump the pressure system from any case, solve on the GPU. Not a silent drop-in `lduMatrix` replacement yet (that is primary v2 / Mode B–C).
-
-```text
-your case  →  ofDumpCsr  →  matrix/of_p.{mtx,rhs}  →  csrOcl  →  residual OK
-```
 
 ```powershell
 # 1) Device solver (once)

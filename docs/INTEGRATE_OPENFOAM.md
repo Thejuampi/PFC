@@ -6,6 +6,71 @@ Read this before wiring PFC into any OpenFOAM case, fork, or custom solver.
 
 ---
 
+## Architecture (big picture)
+
+```mermaid
+flowchart TB
+  subgraph show["Primary v1 — showable CFD (CPU)"]
+    WT["cases/windTunnel3D · windTunnelCar<br/>simpleFoam RAS + forceCoeffs"]
+  end
+
+  subgraph bridge["Bridge — Mode A today"]
+    OFC["OpenFOAM case<br/>polyMesh + p, U, …"]
+    DUMP["apps/ofDumpCsr<br/>LDU → Matrix Market"]
+    FILES["of_p.mtx + of_p.rhs"]
+    OFC --> DUMP --> FILES
+  end
+
+  subgraph device["Device stack — full-device lifecycle"]
+    MAKE["make  →  deps/ + build/"]
+    LAP["laplaceOcl<br/>structured DIA ref"]
+    CSR["csrOcl<br/>CSR SpMV + poly2-PCG"]
+    GPU["GPU OpenCL<br/>A,b,x resident"]
+    MAKE --> LAP
+    MAKE --> CSR
+    CSR -->|"upload once"| GPU
+    GPU -->|"PCG / SpMV / axpy"| GPU
+    GPU -->|"download once"| OUT["x + REL_RESIDUAL"]
+  end
+
+  FILES --> CSR
+  show -.->|"reference residuals / Cd,Cl"| OUT
+
+  subgraph future["Primary v2 — roadmap"]
+    B["Mode B: pressure solve in SIMPLE loop"]
+    C["Mode C: full outer loop U,p,turb on GPU"]
+    B --> C
+  end
+
+  CSR -.->|"next"| B
+
+  style GPU fill:#1a3a2a,stroke:#3d8,color:#fff
+  style DUMP fill:#3a2a1a,stroke:#c80,color:#fff
+  style future fill:#222,stroke:#666,color:#aaa,stroke-dasharray: 5 5
+```
+
+**Data residency (correct):**
+
+```mermaid
+sequenceDiagram
+  participant Host as Host / OpenFOAM
+  participant Dev as GPU (OpenCL)
+
+  Host->>Dev: H2D topology + A + b  (once)
+  loop PCG iterations
+    Dev->>Dev: SpMV, axpy, precond, residual
+  end
+  Dev->>Host: D2H solution x  (once)
+```
+
+**Anti-pattern (forbidden thrash):**
+
+```text
+each iter:  CPU assemble A → H2D(A) → GPU kernel → D2H(x)   ✗
+```
+
+---
+
 ## 0. What “the library” is today (honest scope)
 
 PFC is **not** yet a drop-in `libPfcOcl.so` that silently replaces every `lduMatrix` solve inside stock `simpleFoam`.
@@ -44,20 +109,12 @@ If your integration re-uploads the full matrix every call, you are **not** using
 
 Use this to prove that *your* case’s pressure (or other) system is solvable on the device.
 
-```text
-Your OF case (mesh + fields)
-        │
-        ▼
-   ofDumpCsr          ← runs *inside* OpenFOAM env (WSL/Linux)
-        │
-        ├── matrix/of_p.mtx
-        └── matrix/of_p.rhs
-        │
-        ▼
-   csrOcl --mtx … --rhs …   ← Windows host or Linux with OpenCL
-        │
-        ▼
-   REL_RESIDUAL / x  (compare band vs OF)
+```mermaid
+flowchart LR
+  A["Your OF case<br/>mesh + fields"] --> B["ofDumpCsr<br/>OF env"]
+  B --> C[".mtx + .rhs"]
+  C --> D["csrOcl<br/>GPU host"]
+  D --> E["RESIDUAL OK"]
 ```
 
 **This is the default path for external users and agents today.**

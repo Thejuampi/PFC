@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# 3D wind-tunnel demo: bluff body in free stream (simpleFoam, laminar v1)
+set -euo pipefail
+
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$CASE_DIR"
+
+if [[ -z "${WM_PROJECT_DIR:-}" ]]; then
+    if [[ -x /usr/bin/openfoam2512 ]]; then
+        exec /usr/bin/openfoam2512 -c "cd '$CASE_DIR' && bash ./Allrun"
+    fi
+    echo "ERROR: OpenFOAM env not loaded"
+    exit 1
+fi
+
+echo "OpenFOAM ${WM_PROJECT_VERSION}  case=$CASE_DIR"
+
+bash ./Allclean >/dev/null 2>&1 || true
+
+if [[ ! -f 0/U ]]; then
+    echo "ERROR: missing 0/U (case incomplete)"
+    exit 1
+fi
+
+echo "==> blockMesh"
+blockMesh > log.blockMesh 2>&1
+
+echo "==> snappyHexMesh (3D vehicle box)"
+snappyHexMesh -overwrite > log.snappyHexMesh 2>&1
+
+echo "==> checkMesh"
+checkMesh > log.checkMesh 2>&1 || true
+
+echo "==> simpleFoam"
+simpleFoam > log.simpleFoam 2>&1
+
+echo "Done. Time dirs:"
+ls -d [0-9]* 2>/dev/null | tail -8 || true
+touch case.foam
+echo "ParaView: $CASE_DIR/case.foam"

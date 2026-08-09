@@ -51,8 +51,9 @@ We do **not** block on “OpenCL is legacy, use HIP”.
 3. **Single load / single unload** — matrix stays on device; one `T` download at end (**done**). Residual scalars only for PCG control.  
 4. **Match CPU** — same scheme on host; smoke 100² max|Δ| ~ 1e-13; 500² ~ 1e-12 (**done**).  
 5. **Phase A (hardening)** — metrics, bench, smoke test, **poly2 preconditioner** (**done**).  
-6. **Next** — Phase B OF parity → C modules → D unstructured → E flow.  
-   See full plan tracked on PR #1 / session plan.
+6. **Primary product path** — `cases/windTunnel3D` (3D tunnel + body) on OpenFOAM.  
+7. **Next (device)** — Phase B/C/D as needed, then **S5**: device segment on 3D flow solves.  
+   Goals: `docs/GOALS.md`. PR #1.
 
 ## Explicit non-goals for the first GPU cut
 

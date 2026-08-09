@@ -1,9 +1,17 @@
-# PFC — Linear solvers / GPGPU ideas for OpenFOAM (revival)
+# PFC — 3D CFD + device-resident solvers (revival)
 
 Original project (2015): *Análisis e Implementación de Resolutores Lineales en GPGPU aplicados a OpenFOAM®*  
 GitHub: [Thejuampi/PFC](https://github.com/Thejuampi/PFC)
 
-This checkout modernizes a **step-0 traditional CPU baseline** on current OpenFOAM, without GPU plugins.
+## Goals
+
+**Primary:** show **3D discrete CFD results** (wind-tunnel style: body in free stream → mesh → solve → ParaView).  
+**Secondary:** full-device OpenCL linear algebra (no hybrid CPU/GPU thrash), modern OpenFOAM baseline, scale, then couple GPU into the 3D loop.
+
+See **`docs/GOALS.md`**.
+
+**Main demo case:** `cases/windTunnel3D` (3D bluff body in a tunnel).  
+Solver experiments: `apps/laplaceOcl`, `cases/laplaceCpu`.
 
 ## Step 0 status (this machine)
 

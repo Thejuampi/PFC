@@ -1,19 +1,18 @@
 # third_party
 
-- `OpenCL-Headers/` — **minimal** Khronos OpenCL C headers (`cl.h` + platform + version only). Not a full upstream clone.
-- `opencl-lib/` — MinGW import library for Windows `OpenCL.dll`.
+**Nothing is vendored in-tree.** OpenCL headers and the Windows import library are
+fetched/generated at build time:
 
-Refresh headers from upstream when needed:
-
-```powershell
-# copy CL/cl.h CL/cl_platform.h CL/cl_version.h + LICENSE from
-# https://github.com/KhronosGroup/OpenCL-Headers
+```bash
+make deps      # → deps/OpenCL-Headers + deps/opencl-lib (Windows)
+make build     # uses deps/
 ```
 
-Regenerate import lib (64-bit MinGW):
+See the root `Makefile` (`OPENCL_HEADERS_REF`, `DEPS_DIR`).
 
-```powershell
-cd G:\dev\repos\PFC\third_party\opencl-lib
-gendef C:\Windows\System32\OpenCL.dll
-dlltool -l libOpenCL.a -d OpenCL.def -k
-```
+| Path (generated) | Source |
+|------------------|--------|
+| `deps/OpenCL-Headers/` | [KhronosGroup/OpenCL-Headers](https://github.com/KhronosGroup/OpenCL-Headers) (pinned tag) |
+| `deps/opencl-lib/libOpenCL.a` | `gendef` + `dlltool` against `OpenCL.dll` (Windows only) |
+
+On Linux/macOS the apps link with system `-lOpenCL` (install `ocl-icd` / vendor ICD).

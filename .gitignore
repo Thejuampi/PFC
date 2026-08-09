@@ -58,6 +58,12 @@ apps/**/Make/linux*
 apps/**/Make/linux64*
 apps/laplaceOcl/build/
 apps/csrOcl/build/
+build/
+deps/
+
+# Generated third_party leftovers (use make deps → deps/)
+third_party/OpenCL-Headers/
+third_party/opencl-lib/
 cases/**/matrix/
 apps/ofDumpCsr/Make/linux*
 apps/ofDumpCsr/Make/linux64*

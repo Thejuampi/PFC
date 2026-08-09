@@ -11,13 +11,15 @@ Connectivity is still structured (5/7-point Poisson) but **stored as CSR** — t
 
 ## Build / run
 
+From repo root (downloads OpenCL headers on first build):
+
 ```powershell
-mkdir apps\csrOcl\build -Force
-cd apps\csrOcl\build
-cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-cmake --build .
-.\csrOcl.exe --nx 64 --ny 64 --kernels ..\kernels\csr.cl
-.\csrOcl.exe --nx 24 --ny 24 --nz 24 --kernels ..\kernels\csr.cl
+make csrOcl
+make test-csr
+make run-csr
+# or:
+.\build\csrOcl\csrOcl.exe --nx 64 --ny 64 --kernels build\csrOcl\kernels\csr.cl
+.\build\csrOcl\csrOcl.exe --nx 24 --ny 24 --nz 24 --kernels build\csrOcl\kernels\csr.cl
 ```
 
 ## Metrics
@@ -35,10 +37,10 @@ MAX_ABS_ERR ...   # vs host CSR PCG
 # needs existing polyMesh (run Allrun once)
 python scripts/polyMesh_to_mtx.py cases/windTunnel3D/constant/polyMesh cases/windTunnel3D/matrix/windTunnel3D_graphL.mtx
 
-.\apps\csrOcl\build\csrOcl.exe `
+.\build\csrOcl\csrOcl.exe `
   --mtx cases/windTunnel3D/matrix/windTunnel3D_graphL.mtx `
   --rhs cases/windTunnel3D/matrix/windTunnel3D_graphL.rhs `
-  --kernels apps/csrOcl/kernels/csr.cl
+  --kernels build/csrOcl/kernels/csr.cl
 ```
 
 Validated on RX 6800 XT: **n=76764, nnz=536124**, poly2-PCG ~125 iters, REL_RESIDUAL ~1e-8, solve ~60 ms.

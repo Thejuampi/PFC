@@ -57,6 +57,7 @@ apps/**/Make/linux*
 apps/**/Make/linux64*
 apps/laplaceOcl/build/
 apps/csrOcl/build/
+cases/**/matrix/
 
 # Local disk snapshot duplicates (keep dated dirs; ignore LATEST copies if desired)
 docs/snapshots/*-LATEST/

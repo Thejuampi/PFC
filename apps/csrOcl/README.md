@@ -29,7 +29,21 @@ TRAFFIC_BYTES h2d=... d2h_field=... d2h_scalar=...
 MAX_ABS_ERR ...   # vs host CSR PCG
 ```
 
+## Import real mesh topology (windTunnel3D)
+
+```powershell
+# needs existing polyMesh (run Allrun once)
+python scripts/polyMesh_to_mtx.py cases/windTunnel3D/constant/polyMesh cases/windTunnel3D/matrix/windTunnel3D_graphL.mtx
+
+.\apps\csrOcl\build\csrOcl.exe `
+  --mtx cases/windTunnel3D/matrix/windTunnel3D_graphL.mtx `
+  --rhs cases/windTunnel3D/matrix/windTunnel3D_graphL.rhs `
+  --kernels apps/csrOcl/kernels/csr.cl
+```
+
+Validated on RX 6800 XT: **n=76764, nnz=536124**, poly2-PCG ~125 iters, REL_RESIDUAL ~1e-8, solve ~60 ms.
+
 ## Next
 
-- Import CSR from OpenFOAM (dump / `lduMatrix` export).  
-- Use on pressure systems from `cases/windTunnel3D` (S5 mvp).
+- Import **coefficient** CSR from OpenFOAM pressure matrix (not just graph topology).  
+- S5 mvp: replace one SIMPLE pressure solve with device CSR PCG.

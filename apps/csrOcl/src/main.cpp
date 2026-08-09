@@ -31,6 +31,8 @@ struct Args {
     bool poly2 = true;
     bool cpuCheck = true;
     std::string kernelPath;
+    std::string mtxPath; // if set: load Matrix Market instead of building stencil
+    std::string rhsPath; // optional dense RHS (n lines of values); else ones
 };
 
 void die(const std::string& msg)
@@ -75,20 +77,25 @@ Args parseArgs(int argc, char** argv)
         else if (s == "--poly2") a.poly2 = true;
         else if (s == "--no-cpu-check") a.cpuCheck = false;
         else if (s == "--kernels") a.kernelPath = need("--kernels");
+        else if (s == "--mtx") a.mtxPath = need("--mtx");
+        else if (s == "--rhs") a.rhsPath = need("--rhs");
         else if (s == "--help" || s == "-h") {
             std::cout
                 << "csrOcl — device-resident CSR Poisson (OpenCL)\n"
                 << "  --nx N --ny N --nz N   (nz=1 → 2D 5-pt; nz>=3 → 3D 7-pt as CSR)\n"
+                << "  --mtx file.mtx [--rhs file.rhs]  load Matrix Market (from polyMesh)\n"
                 << "  --tol T --max-iters N --poly2|--jacobi --no-cpu-check\n"
                 << "  --kernels path/to/csr.cl\n"
-                << "Lifecycle: host CSR assemble once → upload once → PCG on GPU → one x download.\n";
+                << "Lifecycle: host CSR assemble/import once → upload once → PCG on GPU → one x download.\n";
             std::exit(0);
         } else {
             die("unknown arg: " + s);
         }
     }
-    if (a.nx < 3 || a.ny < 3) die("nx,ny >= 3");
-    if (a.nz < 1 || (a.nz > 1 && a.nz < 3)) die("nz must be 1 or >= 3");
+    if (a.mtxPath.empty()) {
+        if (a.nx < 3 || a.ny < 3) die("nx,ny >= 3");
+        if (a.nz < 1 || (a.nz > 1 && a.nz < 3)) die("nz must be 1 or >= 3");
+    }
     return a;
 }
 
@@ -107,6 +114,90 @@ std::string findKernels(const Args& a)
     }
     die("cannot find kernels/csr.cl (pass --kernels)");
     return {};
+}
+
+// Load coordinate Matrix Market (general real) → CSR + invDiag from diagonal.
+void loadMatrixMarket(
+    const std::string& path,
+    std::vector<int>& rowPtr,
+    std::vector<int>& colInd,
+    std::vector<double>& vals,
+    std::vector<double>& invDiag)
+{
+    std::ifstream in(path);
+    if (!in) die("cannot open mtx " + path);
+    std::string line;
+    int nRows = 0, nCols = 0, nnz = 0;
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '%') continue;
+        std::istringstream hs(line);
+        if (!(hs >> nRows >> nCols >> nnz)) die("bad mtx header dims");
+        break;
+    }
+    if (nRows <= 0 || nRows != nCols) die("mtx must be square");
+    std::vector<std::vector<std::pair<int, double>>> rows(nRows);
+    int read = 0;
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '%') continue;
+        std::istringstream ls(line);
+        int r = 0, c = 0;
+        double v = 0.0;
+        if (!(ls >> r >> c >> v)) continue;
+        --r;
+        --c;
+        if (r < 0 || r >= nRows || c < 0 || c >= nCols) die("mtx index OOB");
+        rows[r].push_back({c, v});
+        ++read;
+    }
+    if (read != nnz) {
+        std::cerr << "warning: mtx nnz header " << nnz << " read " << read << "\n";
+    }
+    rowPtr.assign(nRows + 1, 0);
+    colInd.clear();
+    vals.clear();
+    invDiag.assign(nRows, 1.0);
+    colInd.reserve(static_cast<size_t>(read));
+    vals.reserve(static_cast<size_t>(read));
+    for (int i = 0; i < nRows; ++i) {
+        auto& ents = rows[i];
+        std::sort(ents.begin(), ents.end(),
+            [](const auto& a, const auto& b) { return a.first < b.first; });
+        rowPtr[i] = static_cast<int>(colInd.size());
+        double diag = 0.0;
+        bool hasDiag = false;
+        for (const auto& e : ents) {
+            colInd.push_back(e.first);
+            vals.push_back(e.second);
+            if (e.first == i) {
+                diag = e.second;
+                hasDiag = true;
+            }
+        }
+        if (!hasDiag || std::abs(diag) < 1e-30) die("missing/zero diagonal row " + std::to_string(i));
+        invDiag[i] = 1.0 / diag;
+    }
+    rowPtr[nRows] = static_cast<int>(colInd.size());
+}
+
+void loadRhs(const std::string& path, int n, std::vector<double>& b)
+{
+    std::ifstream in(path);
+    if (!in) die("cannot open rhs " + path);
+    b.assign(n, 1.0);
+    int declared = 0;
+    if (!(in >> declared)) die("bad rhs");
+    if (declared != n) {
+        // allow raw n values without count
+        in.clear();
+        in.seekg(0);
+        for (int i = 0; i < n; ++i) {
+            if (!(in >> b[i])) die("rhs too short");
+        }
+        return;
+    }
+    for (int i = 0; i < n; ++i) {
+        if (!(in >> b[i])) die("rhs too short");
+    }
 }
 
 // Build -Laplace CSR with Dirichlet identity on boundary; b = 1 on interior.
@@ -343,16 +434,36 @@ int main(int argc, char** argv)
 
     std::vector<int> rowPtr, colInd;
     std::vector<double> vals, invDiag, b;
-    buildPoissonCsr(args.nx, args.ny, args.nz, rowPtr, colInd, vals, invDiag, b);
+    if (!args.mtxPath.empty()) {
+        loadMatrixMarket(args.mtxPath, rowPtr, colInd, vals, invDiag);
+        const int nLoad = static_cast<int>(invDiag.size());
+        if (!args.rhsPath.empty()) {
+            loadRhs(args.rhsPath, nLoad, b);
+        } else {
+            b.assign(nLoad, 1.0);
+        }
+        // Large imported systems: skip host PCG by default unless small
+        if (nLoad > 20000 && args.cpuCheck) {
+            std::cout << "  note    : disabling CPU check (large imported matrix)\n";
+            args.cpuCheck = false;
+        }
+    } else {
+        buildPoissonCsr(args.nx, args.ny, args.nz, rowPtr, colInd, vals, invDiag, b);
+    }
 
     const int n = static_cast<int>(b.size());
     const int nnz = static_cast<int>(vals.size());
     std::cout << "csrOcl full-device CSR PCG\n"
-              << "  kernels : " << kpath << "\n"
-              << "  mesh    : " << args.nx << "x" << args.ny << "x" << args.nz
-              << "  n=" << n << "  nnz=" << nnz
-              << (args.nz == 1 ? " [2D CSR]" : " [3D CSR]") << "\n"
-              << "  precond : " << (args.poly2 ? "poly2" : "jacobi") << "\n";
+              << "  kernels : " << kpath << "\n";
+    if (!args.mtxPath.empty()) {
+        std::cout << "  source  : " << args.mtxPath << "\n"
+                  << "  n=" << n << "  nnz=" << nnz << " [imported CSR]\n";
+    } else {
+        std::cout << "  mesh    : " << args.nx << "x" << args.ny << "x" << args.nz
+                  << "  n=" << n << "  nnz=" << nnz
+                  << (args.nz == 1 ? " [2D CSR]" : " [3D CSR]") << "\n";
+    }
+    std::cout << "  precond : " << (args.poly2 ? "poly2" : "jacobi") << "\n";
 
     Ocl ocl;
     ocl.init(readFile(kpath));

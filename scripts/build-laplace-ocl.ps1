@@ -1,7 +1,5 @@
-# Thin wrapper: Makefile is the source of truth
+# Wrapper — preferred entrypoint is just: make
 $ErrorActionPreference = "Stop"
-$root = Split-Path $PSScriptRoot -Parent
-Set-Location $root
-make laplaceOcl
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-Write-Host "OK: $root\build\laplaceOcl\laplaceOcl.exe"
+Set-Location (Split-Path $PSScriptRoot -Parent)
+make build
+exit $LASTEXITCODE

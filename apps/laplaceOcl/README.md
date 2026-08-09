@@ -1,82 +1,34 @@
 # laplaceOcl — full-device OpenCL diffusion
 
-Structured **2D (5-point)** or **3D (7-point)** implicit-Euler diffusion + poly2-PCG, **entirely on the GPU**.
+Structured 2D/3D DIA Laplace: assemble + poly2-PCG on the GPU, one final download of `T`.
 
-- `--nz 1` (default): 2D mesh `nx × ny`  
-- `--nz N` (N≥3): 3D mesh `nx × ny × nz` — step toward S5 / pressure-like Poisson on device  
+## Build / test / run
 
-## Lifecycle
-
-1. Create device buffers  
-2. `mark_interior`, `init_temperature`, `assemble_A_dia` on GPU (**once**)  
-3. Each step: `build_rhs` → PCG (`spmv`, axpy, poly2) on GPU  
-4. **One** `clEnqueueReadBuffer` of `T` at the end  
-
-Host only pulls a few scalar reductions per PCG iteration for residual checks (not the matrix). Use `--fixed-iters N` to skip residual host reads.
-
-## BCs (PFC laplace case)
-
-| Edge | T |
-|------|---|
-| top `j=ny-1` (hPatch) | 573 |
-| left `i=0` (cPatch) | 373 |
-| bottom / right (fixedWalls) | 273 |
-| interior init | 273 |
-
-## Build / run (Windows, MinGW)
+From the **repo root** (no setup step for headers):
 
 ```powershell
-G:\dev\repos\PFC\scripts\build-laplace-ocl.ps1
-G:\dev\repos\PFC\scripts\run-laplace-ocl.ps1 -Nx 100 -Ny 100 -Steps 10
-
-# 3D structured (7-point DIA):
-.\apps\laplaceOcl\build\laplaceOcl.exe --nx 32 --ny 32 --nz 32 --steps 5 --kernels .\apps\laplaceOcl\kernels\laplace.cl
+make              # builds this app + csrOcl, runs smokes
+make laplaceOcl   # this binary only
+make run-laplace
 ```
 
-Needs:
+Binary: `build/laplaceOcl/laplaceOcl.exe`
 
-- `third_party/OpenCL-Headers`
-- `third_party/opencl-lib/libOpenCL.a` (from system `OpenCL.dll`)
-- AMD GPU OpenCL driver (verified: gfx1030 / RX 6800 XT)
+Requires a working OpenCL ICD (e.g. AMD GPU driver). Headers and the MinGW
+import lib are pulled into `deps/` on first compile.
 
-## Validation
-
-Same matrix/RHS scheme is re-run on CPU; expect max |ΔT| ~ 1e-12 … 1e-15 on smoke meshes.
+## Example
 
 ```powershell
-G:\dev\repos\PFC\scripts\test-laplace-ocl.ps1   # 256² CPU check + --mem-frac 0.5 VRAM stress
-G:\dev\repos\PFC\scripts\bench-laplace-ocl.ps1  # 100 / 500 / 2000 → docs/BENCH_LAPLACE_OCL.md
-
-# Fill ~50% of GPU VRAM (auto nx=ny from device global mem):
-.\apps\laplaceOcl\build\laplaceOcl.exe --mem-frac 0.5 --steps 2 --no-cpu-check --no-csv --kernels .\apps\laplaceOcl\kernels\laplace.cl
+.\build\laplaceOcl\laplaceOcl.exe --nx 256 --ny 256 --steps 10 --kernels build\laplaceOcl\kernels\laplace.cl
+.\build\laplaceOcl\laplaceOcl.exe --nx 32 --ny 32 --nz 32 --steps 5 --kernels build\laplaceOcl\kernels\laplace.cl
 ```
 
-## Metrics (parseable)
-
-Each run prints:
+## Metrics printed
 
 ```text
-TIMING_MS setup=... solve=... download=... total=...
-TRAFFIC_BYTES h2d=0 d2h_field=... d2h_scalar=... scalar_reads=...
-PCG_ITERS total=...
-MAX_ABS_ERR ...          # if CPU check on
-HYBRID_EST_BYTES_per_run≈...
+REL_RESIDUAL ...
+MAX_ABS_ERR ...      # vs host reference (unless --no-cpu-check)
+TRAFFIC_BYTES h2d=0 ...
+MEM_FRAC_USED ...
 ```
-
-### `--precond jacobi|poly2|rbgs`
-
-| Precond | Notes |
-|---------|--------|
-| **poly2** (default) | `M^{-1} ≈ 2 D^{-1} - D^{-1} A D^{-1}` — SPD-friendly, fewer CG iters than Jacobi |
-| **jacobi** | `M^{-1} = D^{-1}` — baseline |
-| **rbgs** | Red-black GS (experimental). Not SPD → often **hurts** CG; kept for research |
-
-On 500² / 10 steps (this machine): poly2 ~202 PCG iters / ~77 ms solve vs jacobi ~387 iters / ~147 ms.
-
-### `--fixed-iters N`
-
-Runs exactly N PCG iterations per step **without** residual norm host checks (only the dots needed for PCG itself still read small reduction buffers). Use when measuring pure device throughput; correctness mode keeps default residual-based exit.
-
-### `--no-csv` / `--quiet`
-
-Skip field CSV and per-step logs (useful for benches/tests).

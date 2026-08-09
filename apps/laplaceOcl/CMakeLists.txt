@@ -5,24 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(PFC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
-# Prefer make-fetched deps/; fall back to legacy third_party/ if present
-if(DEFINED ENV{PFC_DEPS_DIR})
-    set(DEPS_DIR "$ENV{PFC_DEPS_DIR}")
-else()
-    set(DEPS_DIR "${PFC_ROOT}/deps")
-endif()
-set(OPENCL_HEADERS_DIR "${DEPS_DIR}/OpenCL-Headers")
-if(NOT EXISTS "${OPENCL_HEADERS_DIR}/CL/cl.h")
-    set(OPENCL_HEADERS_DIR "${PFC_ROOT}/third_party/OpenCL-Headers")
-endif()
-set(OPENCL_LIB_DIR "${DEPS_DIR}/opencl-lib")
-if(NOT EXISTS "${OPENCL_LIB_DIR}/libOpenCL.a")
-    set(OPENCL_LIB_DIR "${PFC_ROOT}/third_party/opencl-lib")
-endif()
-
-if(NOT EXISTS "${OPENCL_HEADERS_DIR}/CL/cl.h")
-    message(FATAL_ERROR "OpenCL headers missing. Run: make deps  (from repo root)")
-endif()
+include("${PFC_ROOT}/cmake/EnsureOpenCLDeps.cmake")
 
 add_executable(laplaceOcl src/main.cpp)
 
@@ -32,7 +15,6 @@ if(WIN32)
 endif()
 target_link_libraries(laplaceOcl PRIVATE OpenCL)
 
-# Keep kernels next to the binary for easy --kernels default
 add_custom_command(TARGET laplaceOcl POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:laplaceOcl>/kernels"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different

@@ -36,3 +36,28 @@ Needs:
 ## Validation
 
 Same matrix/RHS scheme is re-run on CPU; expect max |ΔT| ~ 1e-12 … 1e-15 on smoke meshes.
+
+```powershell
+G:\dev\repos\PFC\scripts\test-laplace-ocl.ps1   # 64², MAX_ABS_ERR < 1e-9
+G:\dev\repos\PFC\scripts\bench-laplace-ocl.ps1  # 100 / 500 / 2000 → docs/BENCH_LAPLACE_OCL.md
+```
+
+## Metrics (parseable)
+
+Each run prints:
+
+```text
+TIMING_MS setup=... solve=... download=... total=...
+TRAFFIC_BYTES h2d=0 d2h_field=... d2h_scalar=... scalar_reads=...
+PCG_ITERS total=...
+MAX_ABS_ERR ...          # if CPU check on
+HYBRID_EST_BYTES_per_run≈...
+```
+
+### `--fixed-iters N`
+
+Runs exactly N PCG iterations per step **without** residual norm host checks (only the dots needed for PCG itself still read small reduction buffers). Use when measuring pure device throughput; correctness mode keeps default residual-based exit.
+
+### `--no-csv` / `--quiet`
+
+Skip field CSV and per-step logs (useful for benches/tests).

@@ -40,8 +40,18 @@ struct Args {
     int maxIters = 500;
     int fixedIters = 0; // if >0, skip residual host checks in PCG
     bool cpuCheck = true;
+    bool writeCsv = true;
+    bool quietSteps = false;
     std::string kernelPath;
     std::string outCsv = "T_gpu.csv";
+};
+
+// Host↔device traffic accounting (matrix/fields stay on device).
+struct Traffic {
+    std::uint64_t h2dBytes = 0;       // intentional uploads (0 in full-device path)
+    std::uint64_t d2hFieldBytes = 0;  // final T download
+    std::uint64_t d2hScalarBytes = 0; // residual / reduction partials
+    std::uint64_t scalarReads = 0;    // number of reduction readbacks
 };
 
 void die(const std::string& msg)
@@ -87,14 +97,19 @@ Args parseArgs(int argc, char** argv)
         else if (s == "--fixed-iters") a.fixedIters = std::stoi(need("--fixed-iters"));
         else if (s == "--kernels") a.kernelPath = need("--kernels");
         else if (s == "--out") a.outCsv = need("--out");
+        else if (s == "--no-csv") a.writeCsv = false;
         else if (s == "--no-cpu-check") a.cpuCheck = false;
+        else if (s == "--quiet") a.quietSteps = true;
         else if (s == "--help" || s == "-h") {
             std::cout
                 << "laplaceOcl — device-resident diffusion (OpenCL)\n"
                 << "  --nx N --ny N --steps N --dt D --DT D\n"
                 << "  --tol T --max-iters N --fixed-iters N\n"
-                << "  --kernels path/to/laplace.cl --out T_gpu.csv\n"
-                << "  --no-cpu-check\n";
+                << "      (fixed-iters>0: no residual host check each PCG iter)\n"
+                << "  --kernels path/to/laplace.cl --out T_gpu.csv --no-csv\n"
+                << "  --no-cpu-check --quiet\n"
+                << "\nLifecycle: assemble+solve on GPU; one field download at end.\n"
+                << "Residual control may still read small reduction buffers (not the matrix).\n";
             std::exit(0);
         } else {
             die("unknown arg: " + s);
@@ -259,18 +274,6 @@ void enqueue1D(cl_command_queue q, cl_kernel k, size_t n, size_t lws = 256)
     checkCl(clEnqueueNDRangeKernel(q, k, 1, nullptr, &gws, &lws, 0, nullptr, nullptr), "enqueue");
 }
 
-double reduceHost(cl_command_queue q, cl_kernel kRed, cl_mem partial, cl_uint nPart,
-    size_t localBytes, size_t gws, size_t lws)
-{
-    // kernel args 0.. already set except scratch and n handled by caller
-    checkCl(clSetKernelArg(kRed, 2, localBytes, nullptr), "local scratch");
-    checkCl(clEnqueueNDRangeKernel(q, kRed, 1, nullptr, &gws, &lws, 0, nullptr, nullptr), "reduce enqueue");
-    std::vector<double> h(nPart);
-    checkCl(clEnqueueReadBuffer(q, partial, CL_TRUE, 0, nPart * sizeof(double), h.data(), 0, nullptr, nullptr),
-        "read partial");
-    return std::accumulate(h.begin(), h.end(), 0.0);
-}
-
 // --- CPU reference (same matrix/RHS) for validation ---
 void cpuReference(const Args& a, std::vector<double>& T)
 {
@@ -404,6 +407,9 @@ int main(int argc, char** argv)
     const cl_uint nPart = 64;
     cl_mem dPartial = mkBuf(ocl.ctx, CL_MEM_READ_WRITE, nPart * sizeof(double));
 
+    Traffic traffic;
+    // Full-device path: mesh/fields generated on GPU → intentional H2D field uploads = 0.
+
     auto t0 = std::chrono::steady_clock::now();
 
     // mark + init on device
@@ -437,6 +443,9 @@ int main(int argc, char** argv)
     set(ocl.k_assemble, 11, args.dt);
     set(ocl.k_assemble, 12, args.DT);
     enqueue1D(ocl.queue, ocl.k_assemble, n, lws);
+
+    checkCl(clFinish(ocl.queue), "clFinish setup");
+    auto tSetup = std::chrono::steady_clock::now();
 
     auto spmv = [&](cl_mem x, cl_mem y) {
         set(ocl.k_spmv, 0, d0);
@@ -482,12 +491,9 @@ int main(int argc, char** argv)
         enqueue1D(ocl.queue, ocl.k_jacobi, n, lws);
     };
 
-    auto sumsq = [&](cl_mem x) -> double {
-        set(ocl.k_sumsq, 0, x);
-        set(ocl.k_sumsq, 1, dPartial);
-        // arg2 local
-        set(ocl.k_sumsq, 3, n);
-        return reduceHost(ocl.queue, ocl.k_sumsq, dPartial, nPart, lws * sizeof(double), gwsRed, lws);
+    auto noteScalarRead = [&]() {
+        traffic.d2hScalarBytes += static_cast<std::uint64_t>(nPart) * sizeof(double);
+        traffic.scalarReads += 1;
     };
 
     auto dot = [&](cl_mem a, cl_mem b) -> double {
@@ -495,16 +501,15 @@ int main(int argc, char** argv)
         set(ocl.k_dot, 1, b);
         set(ocl.k_dot, 2, dPartial);
         set(ocl.k_dot, 4, n);
-        // fix arg indices: reduce_dot(a,b,partial,scratch,n) -> 0,1,2,local,4
         checkCl(clSetKernelArg(ocl.k_dot, 3, lws * sizeof(double), nullptr), "dot local");
         checkCl(clEnqueueNDRangeKernel(ocl.queue, ocl.k_dot, 1, nullptr, &gwsRed, &lws, 0, nullptr, nullptr), "dot");
         std::vector<double> h(nPart);
         checkCl(clEnqueueReadBuffer(ocl.queue, dPartial, CL_TRUE, 0, nPart * sizeof(double), h.data(), 0, nullptr, nullptr),
             "dot read");
+        noteScalarRead();
         return std::accumulate(h.begin(), h.end(), 0.0);
     };
 
-    // fix sumsq local arg index: reduce_sum_sq(x, partial, scratch, n) = 0,1,local,3
     auto sumsq2 = [&](cl_mem x) -> double {
         set(ocl.k_sumsq, 0, x);
         set(ocl.k_sumsq, 1, dPartial);
@@ -514,6 +519,7 @@ int main(int argc, char** argv)
         std::vector<double> h(nPart);
         checkCl(clEnqueueReadBuffer(ocl.queue, dPartial, CL_TRUE, 0, nPart * sizeof(double), h.data(), 0, nullptr, nullptr),
             "sumsq read");
+        noteScalarRead();
         return std::accumulate(h.begin(), h.end(), 0.0);
     };
 
@@ -569,22 +575,27 @@ int main(int argc, char** argv)
         totalPcgIters += itUsed;
         copy(dT, dX);
 
-        if ((step + 1) % std::max(1, args.steps / 5) == 0 || step == args.steps - 1) {
+        if (!args.quietSteps &&
+            ((step + 1) % std::max(1, args.steps / 5) == 0 || step == args.steps - 1)) {
             std::cout << "  step " << (step + 1) << "/" << args.steps
                       << "  pcgIters=" << itUsed << "\n";
         }
     }
 
-    checkCl(clFinish(ocl.queue), "clFinish");
-    auto t1 = std::chrono::steady_clock::now();
-    const double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    checkCl(clFinish(ocl.queue), "clFinish solve");
+    auto tSolve = std::chrono::steady_clock::now();
 
-    // ---- single download ----
+    // ---- single field download ----
     std::vector<double> Tgpu(n);
     checkCl(clEnqueueReadBuffer(ocl.queue, dT, CL_TRUE, 0, bytes, Tgpu.data(), 0, nullptr, nullptr), "download T");
+    traffic.d2hFieldBytes += static_cast<std::uint64_t>(bytes);
 
-    auto t2 = std::chrono::steady_clock::now();
-    const double msDl = std::chrono::duration<double, std::milli>(t2 - t1).count();
+    auto tEnd = std::chrono::steady_clock::now();
+
+    const double msSetup = std::chrono::duration<double, std::milli>(tSetup - t0).count();
+    const double msSolve = std::chrono::duration<double, std::milli>(tSolve - tSetup).count();
+    const double msDl = std::chrono::duration<double, std::milli>(tEnd - tSolve).count();
+    const double msTotal = std::chrono::duration<double, std::milli>(tEnd - t0).count();
 
     double tmin = Tgpu[0], tmax = Tgpu[0], tsum = 0.0;
     for (double v : Tgpu) {
@@ -592,12 +603,26 @@ int main(int argc, char** argv)
         tmax = std::max(tmax, v);
         tsum += v;
     }
-    std::cout << "Device work wall: " << ms << " ms  (download " << msDl << " ms)\n"
-              << "Total PCG iters : " << totalPcgIters << "\n"
+
+    std::cout << "TIMING_MS setup=" << msSetup
+              << " solve=" << msSolve
+              << " download=" << msDl
+              << " total=" << msTotal << "\n"
+              << "TRAFFIC_BYTES h2d=" << traffic.h2dBytes
+              << " d2h_field=" << traffic.d2hFieldBytes
+              << " d2h_scalar=" << traffic.d2hScalarBytes
+              << " scalar_reads=" << traffic.scalarReads << "\n"
+              << "PCG_ITERS total=" << totalPcgIters << "\n"
               << "T range         : [" << tmin << ", " << tmax << "]  mean=" << (tsum / n) << "\n";
 
-    // write CSV sample (every cell is fine for 100^2; subsample if huge)
-    {
+    // Hybrid-2015 estimate for contrast: each step would bounce A(5*n) + x + b + x_sol
+    const std::uint64_t hybridPerStep =
+        static_cast<std::uint64_t>(n) * sizeof(double) * (5 /*A dia*/ + 1 /*x*/ + 1 /*b*/ + 1 /*sol*/);
+    const std::uint64_t hybridEst = hybridPerStep * static_cast<std::uint64_t>(args.steps);
+    std::cout << "HYBRID_EST_BYTES_per_run≈" << hybridEst
+              << "  (if A,x,b recopied every step; not what we do)\n";
+
+    if (args.writeCsv) {
         std::ofstream out(args.outCsv);
         out << "i,j,T\n";
         const int stride = n > 200000 ? 4 : 1;
@@ -609,6 +634,7 @@ int main(int argc, char** argv)
         std::cout << "Wrote " << args.outCsv << "\n";
     }
 
+    int exitCode = 0;
     if (args.cpuCheck) {
         std::cout << "CPU reference (same scheme)...\n";
         auto c0 = std::chrono::steady_clock::now();
@@ -622,13 +648,13 @@ int main(int argc, char** argv)
             maxAbs = std::max(maxAbs, e);
             maxRel = std::max(maxRel, e / (std::abs(Tcpu[c]) + 1e-30));
         }
-        std::cout << "CPU wall         : " << msCpu << " ms\n"
-                  << "max |Tgpu-Tcpu|  : " << maxAbs << "\n"
-                  << "max rel err      : " << maxRel << "\n";
+        std::cout << "CPU_MS " << msCpu << "\n"
+                  << "MAX_ABS_ERR " << maxAbs << "\n"
+                  << "MAX_REL_ERR " << maxRel << "\n"
+                  << "SPEEDUP_vs_cpu " << (msCpu / std::max(msTotal, 1e-9)) << "\n";
         if (maxAbs > 1e-4) {
             std::cerr << "WARNING: GPU vs CPU disagree beyond 1e-4\n";
-            // still exit 0 if order-of-magnitude OK; fail hard if broken
-            if (maxAbs > 1.0) return 2;
+            if (maxAbs > 1.0) exitCode = 2;
         } else {
             std::cout << "CPU check        : OK\n";
         }
@@ -639,5 +665,5 @@ int main(int argc, char** argv)
     for (cl_mem m : all) clReleaseMemObject(m);
 
     std::cout << "Done (full-device assemble+solve; single final unload).\n";
-    return 0;
+    return exitCode;
 }

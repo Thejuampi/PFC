@@ -20,6 +20,10 @@
 #include <string>
 #include <vector>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace {
 
 struct Args {
@@ -30,6 +34,7 @@ struct Args {
     int maxIters = 2000;
     bool poly2 = true;
     bool cpuCheck = true;
+    bool forceCpuCheck = false; // even for large imported systems (bench)
     std::string kernelPath;
     std::string mtxPath; // if set: load Matrix Market instead of building stencil
     std::string rhsPath; // optional dense RHS (n lines of values); else ones
@@ -76,7 +81,10 @@ Args parseArgs(int argc, char** argv)
         else if (s == "--jacobi") a.poly2 = false;
         else if (s == "--poly2") a.poly2 = true;
         else if (s == "--no-cpu-check") a.cpuCheck = false;
-        else if (s == "--kernels") a.kernelPath = need("--kernels");
+        else if (s == "--force-cpu-check") {
+            a.cpuCheck = true;
+            a.forceCpuCheck = true;
+        } else if (s == "--kernels") a.kernelPath = need("--kernels");
         else if (s == "--mtx") a.mtxPath = need("--mtx");
         else if (s == "--rhs") a.rhsPath = need("--rhs");
         else if (s == "--help" || s == "-h") {
@@ -84,7 +92,8 @@ Args parseArgs(int argc, char** argv)
                 << "csrOcl — device-resident CSR Poisson (OpenCL)\n"
                 << "  --nx N --ny N --nz N   (nz=1 → 2D 5-pt; nz>=3 → 3D 7-pt as CSR)\n"
                 << "  --mtx file.mtx [--rhs file.rhs]  load Matrix Market (from polyMesh)\n"
-                << "  --tol T --max-iters N --poly2|--jacobi --no-cpu-check\n"
+                << "  --tol T --max-iters N --poly2|--jacobi\n"
+                << "  --no-cpu-check | --force-cpu-check  (bench: time host PCG on same A,b)\n"
                 << "  --kernels path/to/csr.cl\n"
                 << "Lifecycle: host CSR assemble/import once → upload once → PCG on GPU → one x download.\n";
             std::exit(0);
@@ -106,7 +115,7 @@ std::string findKernels(const Args& a)
         "kernels/csr.cl",
         "../kernels/csr.cl",
         "apps/csrOcl/kernels/csr.cl",
-        "G:/dev/repos/PFC/apps/csrOcl/kernels/csr.cl",
+        "build/csrOcl/kernels/csr.cl",
     };
     for (const char* c : candidates) {
         std::ifstream in(c);
@@ -368,6 +377,8 @@ cl_mem mkBuf(cl_context ctx, cl_mem_flags flags, size_t bytes, void* host = null
     return m;
 }
 
+// Host CSR PCG — same algorithm as device (poly2). SpMV/axpy use OpenMP when built with -fopenmp.
+// This is the fair "efficient CPU baseline" for algorithm-matched speedup, not a weak single-thread strawman.
 void cpuPcg(
     const std::vector<int>& rowPtr,
     const std::vector<int>& colInd,
@@ -377,10 +388,14 @@ void cpuPcg(
     std::vector<double>& x,
     bool poly2,
     double tol,
-    int maxIters)
+    int maxIters,
+    int* outIters = nullptr)
 {
     const int n = static_cast<int>(b.size());
     auto spmv = [&](const std::vector<double>& v, std::vector<double>& y) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
         for (int i = 0; i < n; ++i) {
             double acc = 0.0;
             for (int k = rowPtr[i]; k < rowPtr[i + 1]; ++k)
@@ -390,39 +405,60 @@ void cpuPcg(
     };
     auto pre = [&](std::vector<double>& z, const std::vector<double>& r) {
         if (!poly2) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
             for (int i = 0; i < n; ++i) z[i] = invDiag[i] * r[i];
             return;
         }
         std::vector<double> t(n), w(n);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
         for (int i = 0; i < n; ++i) t[i] = invDiag[i] * r[i];
         spmv(t, w);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
         for (int i = 0; i < n; ++i) z[i] = 2.0 * t[i] - invDiag[i] * w[i];
     };
 
     x.assign(n, 0.0);
     std::vector<double> r(n), z(n), p(n), Ap(n);
     spmv(x, Ap);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
     for (int i = 0; i < n; ++i) r[i] = b[i] - Ap[i];
     pre(z, r);
     p = z;
     double rzOld = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
     const double bnorm = std::sqrt(std::inner_product(b.begin(), b.end(), b.begin(), 0.0)) + 1e-30;
+    int itUsed = 0;
     for (int it = 0; it < maxIters; ++it) {
         spmv(p, Ap);
         double pAp = std::inner_product(p.begin(), p.end(), Ap.begin(), 0.0);
         const double alpha = rzOld / (pAp + 1e-300);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
         for (int i = 0; i < n; ++i) {
             x[i] += alpha * p[i];
             r[i] -= alpha * Ap[i];
         }
         double r2 = std::inner_product(r.begin(), r.end(), r.begin(), 0.0);
+        itUsed = it + 1;
         if (std::sqrt(r2) / bnorm < tol) break;
         pre(z, r);
         double rzNew = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
         const double beta = rzNew / (rzOld + 1e-300);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
         for (int i = 0; i < n; ++i) p[i] = z[i] + beta * p[i];
         rzOld = rzNew;
     }
+    if (outIters) *outIters = itUsed;
 }
 
 } // namespace
@@ -442,9 +478,9 @@ int main(int argc, char** argv)
         } else {
             b.assign(nLoad, 1.0);
         }
-        // Large imported systems: skip host PCG by default unless small
-        if (nLoad > 20000 && args.cpuCheck) {
-            std::cout << "  note    : disabling CPU check (large imported matrix)\n";
+        // Large imported systems: skip host PCG by default (slow) unless forced for bench
+        if (nLoad > 20000 && args.cpuCheck && !args.forceCpuCheck) {
+            std::cout << "  note    : disabling CPU check (large imported matrix; use --force-cpu-check to bench)\n";
             args.cpuCheck = false;
         }
     } else {
@@ -653,11 +689,38 @@ int main(int argc, char** argv)
 
     if (args.cpuCheck) {
         std::vector<double> xcpu;
-        cpuPcg(rowPtr, colInd, vals, invDiag, b, xcpu, args.poly2, args.tol, args.maxIters);
+        int cpuIters = 0;
+#ifdef _OPENMP
+        int nthreads = 0;
+#pragma omp parallel
+        {
+#pragma omp master
+            nthreads = omp_get_num_threads();
+        }
+        std::cout << "CPU_THREADS " << nthreads << "  (OpenMP host CSR PCG, same poly2 algorithm)\n";
+#else
+        std::cout << "CPU_THREADS 1  (built without OpenMP — rebuild with -fopenmp for fair CPU)\n";
+#endif
+        auto tCpu0 = std::chrono::steady_clock::now();
+        cpuPcg(rowPtr, colInd, vals, invDiag, b, xcpu, args.poly2, args.tol, args.maxIters, &cpuIters);
+        auto tCpu1 = std::chrono::steady_clock::now();
+        const double msCpu = std::chrono::duration<double, std::milli>(tCpu1 - tCpu0).count();
         double maxAbs = 0.0;
         for (int i = 0; i < n; ++i)
             maxAbs = std::max(maxAbs, std::abs(xgpu[i] - xcpu[i]));
-        std::cout << "MAX_ABS_ERR " << maxAbs << "\n";
+        const double speedup = msCpu / std::max(msSolve, 1e-9);
+        std::cout << "CPU_MS " << msCpu << "\n"
+                  << "CPU_PCG_ITERS " << cpuIters << "\n"
+                  << "GPU_SOLVE_MS " << msSolve << "\n"
+                  << "GPU_PCG_ITERS " << itUsed << "\n"
+                  << "SPEEDUP_vs_cpu " << speedup << "\n"
+                  << "MAX_ABS_ERR " << maxAbs << "\n";
+        // Primary scientific claim for Mode A: same A,b, same poly2-PCG, GPU vs efficient multi-thread CPU
+        if (speedup > 1.0) {
+            std::cout << "VERDICT_LINEAR_SOLVE WIN  (GPU faster than host OpenMP CSR poly2-PCG on same A,b)\n";
+        } else {
+            std::cout << "VERDICT_LINEAR_SOLVE LOSE (GPU not faster than host OpenMP CSR poly2-PCG on same A,b)\n";
+        }
         if (maxAbs > 1e-6) {
             std::cerr << "WARNING: GPU vs CPU disagree\n";
             if (maxAbs > 1e-2) exitCode = 2;

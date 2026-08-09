@@ -17,8 +17,9 @@ HDR_CL    := $(HDR_DIR)/CL
 HDR_STAMP := $(HDR_DIR)/.fetched-$(OPENCL_HEADERS_REF)
 
 CXX       ?= g++
-CXXFLAGS  ?= -std=c++17 -O2 -Wall -Wextra -I"$(HDR_DIR)"
-LDFLAGS   ?=
+# OpenMP: fair multi-thread CPU baseline in csrOcl (--force-cpu-check)
+CXXFLAGS  ?= -std=c++17 -O2 -Wall -Wextra -fopenmp -I"$(HDR_DIR)"
+LDFLAGS   ?= -fopenmp
 
 ifeq ($(OS),Windows_NT)
   EXE         := .exe
@@ -51,7 +52,8 @@ CSR_OUT     := $(BUILD_DIR)/csrOcl
 CSR_BIN     := $(CSR_OUT)/csrOcl$(EXE)
 
 .PHONY: all build test check laplaceOcl csrOcl test-laplace test-csr test-vram \
-        run run-laplace run-csr clean distclean help deps headers opencl-lib
+        run run-laplace run-csr clean distclean help deps headers opencl-lib \
+        bench-speedup
 
 # One-command happy path: build (auto-deps) then smoke tests
 all: test
@@ -65,8 +67,10 @@ help:
 	@echo   make run       quick demo run of both apps
 	@echo   make clean     remove build/
 	@echo   make distclean remove build/ and cached deps/
+	@echo   make bench-speedup   GPU vs OpenMP CPU on windTunnelCar pressure (idle machine!)
 	@echo.
 	@echo Headers and the Windows OpenCL import lib are fetched on first build.
+	@echo See docs/CPU_GPU_SPEEDUP.md for the scientific comparison protocol.
 
 build: laplaceOcl csrOcl
 
@@ -148,6 +152,17 @@ run-laplace: $(LAPLACE_BIN)
 
 run-csr: $(CSR_BIN)
 	@"$(CSR_BIN)" --nx 64 --ny 64 --kernels "$(CSR_OUT)/kernels/csr.cl"
+
+# Fair GPU vs multi-thread CPU on the car tunnel pressure system (same A,b).
+# Requires: cases/windTunnelCar/matrix/of_p.{mtx,rhs}  (ofDumpCsr once).
+# Run only on an IDLE machine (no AI training / heavy load).
+bench-speedup: $(CSR_BIN)
+	@echo === bench-speedup: windTunnelCar pressure CSR  GPU vs OpenMP CPU ===
+	@echo Protocol: docs/CPU_GPU_SPEEDUP.md
+	@"$(CSR_BIN)" --mtx "$(ROOT)/cases/windTunnelCar/matrix/of_p.mtx" \
+		--rhs "$(ROOT)/cases/windTunnelCar/matrix/of_p.rhs" \
+		--kernels "$(CSR_OUT)/kernels/csr.cl" \
+		--force-cpu-check --tol 1e-8 --max-iters 5000
 
 # ---------------------------------------------------------------------------
 # Clean

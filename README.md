@@ -148,9 +148,18 @@ make                                          # 1) device solver
 # Windows: build\csrOcl\csrOcl.exe  (same relative args)
 ```
 
-Demonstrated: **n ≈ 77k, nnz ≈ 536k**, residual OK, solve **~70 ms** on GPU.
+Demonstrated (box tunnel matrix class): residual OK; car tunnel pressure on GPU is ~**1–2 s**/solve class (re-bench when idle).
 
 Same three steps work for **any** case with mesh + `p`/`U` fields — see the integration doc.
+
+### GPU vs CPU speedup (the scientific question)
+
+**Question:** on the **car wind-tunnel pressure system** (same \(A,b\)), how much faster is device CSR poly2-PCG than a **strong multi-thread CPU** of the *same* algorithm?
+
+- **Primary metric:** `SPEEDUP = CPU_MS / GPU_SOLVE_MS` with OpenMP host PCG (`make bench-speedup`)  
+- **Not the metric:** full `simpleFoam` wall vs one GPU solve (different work) — simpleFoam is **context only**  
+- **Protocol + verdict rules:** [`docs/CPU_GPU_SPEEDUP.md`](docs/CPU_GPU_SPEEDUP.md)  
+- Run only on an **idle** machine (no training jobs).
 
 Roadmap: [`docs/AMD_GPU_ROADMAP.md`](docs/AMD_GPU_ROADMAP.md) · device segment: [`docs/S5_DEVICE_SEGMENT.md`](docs/S5_DEVICE_SEGMENT.md) · goals: [`docs/GOALS.md`](docs/GOALS.md)
 

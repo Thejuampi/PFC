@@ -10,6 +10,15 @@ Builds device apps, auto-downloads OpenCL headers into `deps/`, runs smokes.
 **Do not** tell users to install or vendor OpenCL headers manually.  
 **Do not** require a separate `make deps` step.
 
+## GPU vs CPU speedup (scientific claim)
+
+Canonical protocol: [`docs/CPU_GPU_SPEEDUP.md`](docs/CPU_GPU_SPEEDUP.md).
+
+- **Compare:** same windTunnelCar pressure \(A,b\); GPU `csrOcl` vs **OpenMP** host poly2-PCG.  
+- **Do not** use full `simpleFoam` wall as the speedup denominator (context only).  
+- **Do not** bench under AI training / heavy load.  
+- Command: `make bench-speedup` → report `SPEEDUP_vs_cpu` + `VERDICT_LINEAR_SOLVE`.
+
 ## Integrating with OpenFOAM
 
 **Canonical guide:** [`docs/INTEGRATE_OPENFOAM.md`](docs/INTEGRATE_OPENFOAM.md)

@@ -71,6 +71,16 @@ each iter:  CPU assemble A → H2D(A) → GPU kernel → D2H(x)   ✗
 
 ---
 
+## GPU vs CPU speedup (what counts)
+
+Primary scientific question and fair protocol: **[`CPU_GPU_SPEEDUP.md`](CPU_GPU_SPEEDUP.md)**.
+
+- Same car-tunnel pressure \(A,b\); GPU poly2-PCG vs **OpenMP** host poly2-PCG.  
+- `simpleFoam` wall = **context only**, not the speedup denominator.  
+- `make bench-speedup` on an **idle** machine.
+
+---
+
 ## 0. What “the library” is today (honest scope)
 
 PFC is **not** yet a drop-in `libPfcOcl.so` that silently replaces every `lduMatrix` solve inside stock `simpleFoam`.

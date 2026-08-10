@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# 3D wind-tunnel demo: bluff body in free stream (simpleFoam + RAS kEpsilon)
+set -euo pipefail
+
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$CASE_DIR"
+
+if [[ -z "${WM_PROJECT_DIR:-}" ]]; then
+    if [[ -x /usr/bin/openfoam2512 ]]; then
+        exec /usr/bin/openfoam2512 -c "cd '$CASE_DIR' && bash ./Allrun"
+    fi
+    echo "ERROR: OpenFOAM env not loaded"
+    exit 1
+fi
+
+echo "OpenFOAM ${WM_PROJECT_VERSION}  case=$CASE_DIR  (RAS kEpsilon + forceCoeffs)"
+
+bash ./Allclean >/dev/null 2>&1 || true
+
+for f in 0/U 0/p 0/k 0/epsilon 0/nut; do
+    if [[ ! -f "$f" ]]; then
+        echo "ERROR: missing $f (case incomplete)"
+        exit 1
+    fi
+done
+
+echo "==> blockMesh"
+blockMesh > log.blockMesh 2>&1
+
+echo "==> snappyHexMesh (3D vehicle box)"
+snappyHexMesh -overwrite > log.snappyHexMesh 2>&1
+
+echo "==> checkMesh"
+checkMesh > log.checkMesh 2>&1 || true
+
+echo "==> simpleFoam (RAS kEpsilon)"
+simpleFoam > log.simpleFoam 2>&1
+
+echo "Done. Time dirs:"
+ls -d [0-9]* 2>/dev/null | tail -8 || true
+
+if [[ -d postProcessing/forces ]]; then
+    echo "forceCoeffs (last lines):"
+    find postProcessing/forces -name 'coefficient.dat' -print0 2>/dev/null \
+        | xargs -0 tail -n 5 2>/dev/null || true
+fi
+
+# residual summary
+if [[ -f log.simpleFoam ]]; then
+    echo "--- residual tail ---"
+    grep -E 'Solving for|Time =|End' log.simpleFoam | tail -30 || true
+fi
+
+touch case.foam
+echo "ParaView: $CASE_DIR/case.foam"
+echo "Forces:   $CASE_DIR/postProcessing/forces/"

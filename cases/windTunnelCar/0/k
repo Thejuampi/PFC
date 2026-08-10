@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2512                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Freestream: I=5%, U=10 → k = 1.5*(U*I)^2 = 0.375
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0.375;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 0.375;
+    }
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 0.375;
+        value           uniform 0.375;
+    }
+    ground
+    {
+        type            kqRWallFunction;
+        value           uniform 0.375;
+    }
+    top
+    {
+        type            zeroGradient;
+    }
+    side1
+    {
+        type            zeroGradient;
+    }
+    side2
+    {
+        type            zeroGradient;
+    }
+    vehicle
+    {
+        type            kqRWallFunction;
+        value           uniform 0.375;
+    }
+}
+
+// ************************************************************************* //

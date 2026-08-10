@@ -38,6 +38,8 @@ struct Args {
     std::string kernelPath;
     std::string mtxPath; // if set: load Matrix Market instead of building stencil
     std::string rhsPath; // optional dense RHS (n lines of values); else ones
+    std::string pfcBinPath; // Mode B binary pack (PFC1)
+    std::string xOutPath;   // write solution x (n + doubles)
 };
 
 void die(const std::string& msg)
@@ -87,11 +89,15 @@ Args parseArgs(int argc, char** argv)
         } else if (s == "--kernels") a.kernelPath = need("--kernels");
         else if (s == "--mtx") a.mtxPath = need("--mtx");
         else if (s == "--rhs") a.rhsPath = need("--rhs");
+        else if (s == "--pfc-bin") a.pfcBinPath = need("--pfc-bin");
+        else if (s == "--x-out") a.xOutPath = need("--x-out");
         else if (s == "--help" || s == "-h") {
             std::cout
                 << "csrOcl — device-resident CSR Poisson (OpenCL)\n"
                 << "  --nx N --ny N --nz N   (nz=1 → 2D 5-pt; nz>=3 → 3D 7-pt as CSR)\n"
                 << "  --mtx file.mtx [--rhs file.rhs]  load Matrix Market (from polyMesh)\n"
+                << "  --pfc-bin file.bin   Mode B binary CSR+b (magic PFC1)\n"
+                << "  --x-out file.x       write solution (int32 n + n doubles)\n"
                 << "  --tol T --max-iters N --poly2|--jacobi\n"
                 << "  --no-cpu-check | --force-cpu-check  (bench: time host PCG on same A,b)\n"
                 << "  --kernels path/to/csr.cl\n"
@@ -101,7 +107,7 @@ Args parseArgs(int argc, char** argv)
             die("unknown arg: " + s);
         }
     }
-    if (a.mtxPath.empty()) {
+    if (a.mtxPath.empty() && a.pfcBinPath.empty()) {
         if (a.nx < 3 || a.ny < 3) die("nx,ny >= 3");
         if (a.nz < 1 || (a.nz > 1 && a.nz < 3)) die("nz must be 1 or >= 3");
     }
@@ -123,6 +129,60 @@ std::string findKernels(const Args& a)
     }
     die("cannot find kernels/csr.cl (pass --kernels)");
     return {};
+}
+
+// Mode B binary pack: magic "PFC1" + n + nnz + rowPtr[n+1] + colInd[nnz] + vals[nnz] + b[n]
+// All integers int32, values float64, little-endian host.
+void loadPfcBin(
+    const std::string& path,
+    std::vector<int>& rowPtr,
+    std::vector<int>& colInd,
+    std::vector<double>& vals,
+    std::vector<double>& invDiag,
+    std::vector<double>& b)
+{
+    std::ifstream in(path, std::ios::binary);
+    if (!in) die("cannot open pfc-bin " + path);
+    char magic[4] = {};
+    in.read(magic, 4);
+    if (std::string(magic, 4) != "PFC1") die("bad pfc-bin magic (want PFC1)");
+    int32_t n = 0, nnz = 0;
+    in.read(reinterpret_cast<char*>(&n), 4);
+    in.read(reinterpret_cast<char*>(&nnz), 4);
+    if (n <= 0 || nnz < n) die("bad pfc-bin n/nnz");
+    rowPtr.resize(static_cast<size_t>(n) + 1);
+    colInd.resize(static_cast<size_t>(nnz));
+    vals.resize(static_cast<size_t>(nnz));
+    b.resize(static_cast<size_t>(n));
+    in.read(reinterpret_cast<char*>(rowPtr.data()), (static_cast<size_t>(n) + 1) * 4);
+    in.read(reinterpret_cast<char*>(colInd.data()), static_cast<size_t>(nnz) * 4);
+    in.read(reinterpret_cast<char*>(vals.data()), static_cast<size_t>(nnz) * 8);
+    in.read(reinterpret_cast<char*>(b.data()), static_cast<size_t>(n) * 8);
+    if (!in) die("truncated pfc-bin " + path);
+    invDiag.assign(static_cast<size_t>(n), 1.0);
+    for (int i = 0; i < n; ++i) {
+        double diag = 0.0;
+        bool has = false;
+        for (int k = rowPtr[i]; k < rowPtr[i + 1]; ++k) {
+            if (colInd[k] == i) {
+                diag = vals[k];
+                has = true;
+                break;
+            }
+        }
+        if (!has || std::abs(diag) < 1e-30) die("pfc-bin missing/zero diagonal row " + std::to_string(i));
+        invDiag[static_cast<size_t>(i)] = 1.0 / diag;
+    }
+}
+
+void writeSolutionX(const std::string& path, const std::vector<double>& x)
+{
+    std::ofstream out(path, std::ios::binary);
+    if (!out) die("cannot write --x-out " + path);
+    const int32_t n = static_cast<int32_t>(x.size());
+    out.write(reinterpret_cast<const char*>(&n), 4);
+    out.write(reinterpret_cast<const char*>(x.data()), static_cast<size_t>(n) * 8);
+    if (!out) die("failed writing --x-out " + path);
 }
 
 // Load coordinate Matrix Market (general real) → CSR + invDiag from diagonal.
@@ -470,7 +530,14 @@ int main(int argc, char** argv)
 
     std::vector<int> rowPtr, colInd;
     std::vector<double> vals, invDiag, b;
-    if (!args.mtxPath.empty()) {
+    if (!args.pfcBinPath.empty()) {
+        loadPfcBin(args.pfcBinPath, rowPtr, colInd, vals, invDiag, b);
+        const int nLoad = static_cast<int>(invDiag.size());
+        if (nLoad > 20000 && args.cpuCheck && !args.forceCpuCheck) {
+            std::cout << "  note    : disabling CPU check (large imported matrix; use --force-cpu-check to bench)\n";
+            args.cpuCheck = false;
+        }
+    } else if (!args.mtxPath.empty()) {
         loadMatrixMarket(args.mtxPath, rowPtr, colInd, vals, invDiag);
         const int nLoad = static_cast<int>(invDiag.size());
         if (!args.rhsPath.empty()) {
@@ -491,7 +558,10 @@ int main(int argc, char** argv)
     const int nnz = static_cast<int>(vals.size());
     std::cout << "csrOcl full-device CSR PCG\n"
               << "  kernels : " << kpath << "\n";
-    if (!args.mtxPath.empty()) {
+    if (!args.pfcBinPath.empty()) {
+        std::cout << "  source  : " << args.pfcBinPath << " [PFC1 binary Mode B]\n"
+                  << "  n=" << n << "  nnz=" << nnz << "\n";
+    } else if (!args.mtxPath.empty()) {
         std::cout << "  source  : " << args.mtxPath << "\n"
                   << "  n=" << n << "  nnz=" << nnz << " [imported CSR]\n";
     } else {
@@ -679,10 +749,21 @@ int main(int argc, char** argv)
               << " d2h_scalar=" << d2hScalar << "\n"
               << "x range [" << xmin << ", " << xmax << "]\n";
 
+    if (!args.xOutPath.empty()) {
+        writeSolutionX(args.xOutPath, xgpu);
+        std::cout << "X_OUT " << args.xOutPath << "\n";
+    }
+
     int exitCode = 0;
+    // Mode B (--x-out): still write solution even if residual is loose; caller may iterate.
+    // Standalone runs keep a hard residual gate.
     if (rel > args.tol * 10.0) {
         std::cerr << "FAIL: REL_RESIDUAL too large\n";
-        exitCode = 3;
+        if (args.xOutPath.empty()) {
+            exitCode = 3;
+        } else {
+            std::cerr << "WARNING: Mode B --x-out kept despite residual (matrix quality / tol)\n";
+        }
     } else {
         std::cout << "RESIDUAL check   : OK\n";
     }

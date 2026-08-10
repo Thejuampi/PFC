@@ -131,6 +131,7 @@ flowchart LR
 | [`apps/laplaceOcl`](apps/laplaceOcl) | Structured 2D/3D DIA Laplace, poly2, residual gate, VRAM stress |
 | [`apps/csrOcl`](apps/csrOcl) | Unstructured-ready **CSR** SpMV + PCG |
 | [`apps/simpleOcl`](apps/simpleOcl) | **SIMPLE outer loop** on GPU (v2 skeleton → then PIMPLE) |
+| [`apps/pfcSimpleFoam`](apps/pfcSimpleFoam) | OpenFOAM **SIMPLE + Mode B GPU pressure** (`PFC_GPU_PRESSURE=1`) |
 | [`apps/ofDumpCsr`](apps/ofDumpCsr) | Dump real OpenFOAM `laplacian(p)` → Matrix Market for the GPU |
 | [`scripts/polyMesh_to_mtx.py`](scripts/polyMesh_to_mtx.py) | polyMesh topology → CSR |
 

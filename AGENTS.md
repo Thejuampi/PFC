@@ -45,10 +45,11 @@ All paths relative to the **PFC clone root** (never hardcode a developer’s `G:
 | ID | Meaning | Status |
 |----|---------|--------|
 | Primary v1 | Showable 3D CFD CPU | done (`windTunnel3D`, `windTunnelCar`) |
-| Primary v2 | **SIMPLE** outer loop device-resident | active (`apps/simpleOcl` skeleton) |
+| Primary v2 | **SIMPLE** outer loop device-resident | active (`simpleOcl` + Mode B `pfcSimpleFoam`) |
 | Primary v3 | **PIMPLE** on GPU | **after** v2b green — see `docs/SIMPLE_GPU.md` |
-| Mode A | Export matrix → `csrOcl` | **use this for integrations** |
-| Mode B/C | In-loop / full SIMPLE | see `docs/S5_DEVICE_SEGMENT.md` |
+| Mode A | Export matrix → `csrOcl` | still the offline integration path |
+| Mode B | In-loop GPU pressure | `pfcSimpleFoam` + `scripts/pfc_gpu_worker.ps1` |
+| Mode C | Full SIMPLE on GPU | not yet |
 
 ## Repo map for agents
 
@@ -56,7 +57,9 @@ All paths relative to the **PFC clone root** (never hardcode a developer’s `G:
 |------|-----|
 | `Makefile` | build/test device apps |
 | `apps/csrOcl` | device CSR PCG |
-| `apps/simpleOcl` | device-resident SIMPLE outer loop (v2) |
+| `apps/simpleOcl` | device-resident SIMPLE outer loop skeleton |
+| `apps/pfcSimpleFoam` | simpleFoam + Mode B GPU pressure |
+| `scripts/pfc_gpu_worker.ps1` | Windows GPU worker for Mode B |
 | `docs/SIMPLE_GPU.md` | SIMPLE GPU then PIMPLE GPU roadmap |
 | `apps/ofDumpCsr` | OF LDU → Matrix Market |
 | `apps/laplaceOcl` | structured DIA reference |

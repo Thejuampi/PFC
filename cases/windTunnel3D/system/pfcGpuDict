@@ -1,0 +1,15 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      pfcGpuDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Mode B: pressure linear solve on GPU via csrOcl (scripts/pfc_gpu_pcg.sh)
+// Override with env PFC_GPU_PRESSURE=0/1
+enabled         false;
+
+// ************************************************************************* //

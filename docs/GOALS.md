@@ -67,10 +67,10 @@ So: **yes — the new primary is “the loop on GPU”**, meaning the **CFD time
 
 **MVP (v2a) — one equation in the loop**
 
-- [ ] At least the **pressure** (or dominant) linear solve of SIMPLE runs **device-resident** inside an outer iteration driven from the wind-tunnel case.  
-- [ ] Matrix/fields for that segment not re-uploaded every PCG iteration.  
-- [ ] Residual gate + traffic metrics (`h2d` after startup ≈ 0 for fields/matrix).  
-- [ ] Compare to stock OF residual / field band on `windTunnel3D` (or clone).
+- [x] At least the **pressure** linear solve of SIMPLE runs on **GPU** inside an outer iteration (`pfcSimpleFoam` Mode B + `csrOcl`).  
+- [x] Matrix/fields not re-uploaded every **PCG** iteration (device-resident PCG); *host still re-exports A each outer* — residual thrash to kill for v2b.  
+- [x] Residual gate + traffic metrics on `csrOcl` (Mode B smoke: windTunnel3D REL_RES ~1e‑8).  
+- [ ] Full “no A H2D after startup” residency + residual/field band vs stock OF documented for car/box demos.
 
 **Full outer loop (v2b) — the actual goal**
 

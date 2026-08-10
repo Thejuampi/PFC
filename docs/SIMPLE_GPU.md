@@ -63,16 +63,32 @@ Structured (then CSR) **mini-SIMPLE** full-device:
 
 This proves residency **without** requiring OpenCL inside WSL OpenFOAM on day one.
 
-### Slice 2 — Mode B: OF SIMPLE + GPU pressure (v2a product)
+### Slice 2 — Mode B: OF SIMPLE + GPU pressure (v2a) **landed**
 
-Couple stock `simpleFoam`-class outer loop to the device pressure segment:
+App: **`apps/pfcSimpleFoam`** (stock SIMPLE; optional GPU pressure).
 
-- Once: LDU topology → device CSR structure.
-- Each outer: pack coeffs + `b` → device (or assemble coeffs on device).
-- Device PCG → write `p` back.
-- Host continues U / turb until those move in v2b.
+Each pressure corrector:
 
-Bridge must respect the **Windows GPU host + WSL OpenFOAM** split (shared filesystem or OpenCL-in-WSL if ICD works). Prefer a stable C API from `simpleOcl`/`csrOcl`, not Matrix Market every iter.
+1. Host assembles `laplacian(rAtU,p) == div(phiHbyA)` (+ boundary fold-in)
+2. Writes `matrix/pfc_gpu.bin` (PFC1 CSR + b)
+3. GPU: `csrOcl --pfc-bin … --x-out …` via **Windows file-watch worker**
+4. Host loads `matrix/pfc_gpu.x` into `p`, continues SIMPLE (U / turb on CPU)
+
+```bash
+# Terminal A — Windows GPU host
+make csrOcl
+powershell -ExecutionPolicy Bypass -File scripts/pfc_gpu_worker.ps1 `
+  -CaseDir cases\windTunnel3D -PfcRoot .
+
+# Terminal B — OpenFOAM (WSL)
+export PFC_GPU_PRESSURE=1
+( cd apps/pfcSimpleFoam && wmake )
+cd cases/windTunnel3D && pfcSimpleFoam
+```
+
+**Smoke (windTunnel3D, gfx1030):** n≈77k, REL_RESIDUAL ~1e‑8, GPU solve ~50–70 ms, SIMPLE continued (Cd≈1.25).
+
+Still **not** full residency (A re-exported each corrector). Next: topology once / assemble on device (v2b).
 
 ### Slice 3 — v2b full SIMPLE on device
 

@@ -13,7 +13,8 @@ Two tracks, one repo:
 | Track | Goal | Status |
 |-------|------|--------|
 | **Primary v1** | Showable **3D wind-tunnel CFD** on stock OpenFOAM | **done** |
-| **Primary v2** | That same solve loop **device-resident on GPU** (assemble + sparse solves + field updates) | **active** |
+| **Primary v2** | **SIMPLE** outer loop **device-resident on GPU** | **active** (`apps/simpleOcl` skeleton) |
+| **Primary v3** | **PIMPLE** on GPU (after v2 works) | planned — [`docs/SIMPLE_GPU.md`](docs/SIMPLE_GPU.md) |
 | Secondary | Full-device OpenCL Laplace / CSR PCG ladder toward v2 | **done** (building blocks) |
 
 Not a hybrid “offload one kernel per iteration” design — the 2015 lesson was that **CPU↔GPU thrash** kills you. See [`docs/GOALS.md`](docs/GOALS.md) and [`docs/S5_DEVICE_SEGMENT.md`](docs/S5_DEVICE_SEGMENT.md).
@@ -129,6 +130,7 @@ flowchart LR
 |-----|------|
 | [`apps/laplaceOcl`](apps/laplaceOcl) | Structured 2D/3D DIA Laplace, poly2, residual gate, VRAM stress |
 | [`apps/csrOcl`](apps/csrOcl) | Unstructured-ready **CSR** SpMV + PCG |
+| [`apps/simpleOcl`](apps/simpleOcl) | **SIMPLE outer loop** on GPU (v2 skeleton → then PIMPLE) |
 | [`apps/ofDumpCsr`](apps/ofDumpCsr) | Dump real OpenFOAM `laplacian(p)` → Matrix Market for the GPU |
 | [`scripts/polyMesh_to_mtx.py`](scripts/polyMesh_to_mtx.py) | polyMesh topology → CSR |
 

@@ -85,6 +85,22 @@ So: **yes — the new primary is “the loop on GPU”**, meaning the **CFD time
 - Finer mesh / air-like \(\nu\) / body CAD while keeping the device loop.  
 - More of the finite-volume machinery on device (grad/div schemes, limiters).
 
+### After SIMPLE works — primary v3: **PIMPLE on GPU**
+
+**Order is fixed by product decision:**
+
+```text
+1) SIMPLE on GPU   (v2a → v2b)     ← now
+2) PIMPLE on GPU   (v3)            ← only after SIMPLE device loop is green
+```
+
+| Phase | Solver class | Why later |
+|-------|--------------|-----------|
+| **v2** | Steady **SIMPLE** (`simpleFoam`-class) | Fewer moving parts; same tunnel demos; proves assemble+solve+update residency |
+| **v3** | Transient **PIMPLE** (`pimpleFoam`-class) | Reuses v2 device segments (momentum, pressure Poisson, correctors) inside time + outer correctors |
+
+PIMPLE is **not** a parallel track that rewrites everything — it is SIMPLE’s device machinery plus time advancement and PISO/PIMPLE corrector loops. Do not start v3 until v2b residual/field band vs CPU is accepted.
+
 ### Relation to old secondary IDs
 
 | Old ID | Role under v2 |

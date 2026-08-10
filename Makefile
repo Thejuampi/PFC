@@ -51,9 +51,14 @@ CSR_CL      := $(ROOT)/apps/csrOcl/kernels/csr.cl
 CSR_OUT     := $(BUILD_DIR)/csrOcl
 CSR_BIN     := $(CSR_OUT)/csrOcl$(EXE)
 
-.PHONY: all build test check laplaceOcl csrOcl test-laplace test-csr test-vram \
-        run run-laplace run-csr clean distclean help deps headers opencl-lib \
-        bench-speedup
+SIMPLE_SRC  := $(ROOT)/apps/simpleOcl/src/main.cpp
+SIMPLE_CL   := $(ROOT)/apps/simpleOcl/kernels/simple.cl
+SIMPLE_OUT  := $(BUILD_DIR)/simpleOcl
+SIMPLE_BIN  := $(SIMPLE_OUT)/simpleOcl$(EXE)
+
+.PHONY: all build test check laplaceOcl csrOcl simpleOcl test-laplace test-csr test-simple \
+        test-vram run run-laplace run-csr run-simple clean distclean help deps headers \
+        opencl-lib bench-speedup
 
 # One-command happy path: build (auto-deps) then smoke tests
 all: test
@@ -62,24 +67,27 @@ help:
 	@echo PFC — nothing to configure for OpenCL third-party bits.
 	@echo.
 	@echo   make           build + test  (recommended first command)
-	@echo   make build     compile laplaceOcl + csrOcl only
+	@echo   make build     compile laplaceOcl + csrOcl + simpleOcl
 	@echo   make test      same as make  (build if needed, then smokes)
-	@echo   make run       quick demo run of both apps
+	@echo   make run       quick demo run of apps
+	@echo   make simpleOcl device-resident SIMPLE skeleton (primary v2)
 	@echo   make clean     remove build/
 	@echo   make distclean remove build/ and cached deps/
 	@echo   make bench-speedup   GPU vs OpenMP CPU on windTunnelCar pressure (idle machine!)
 	@echo.
 	@echo Headers and the Windows OpenCL import lib are fetched on first build.
-	@echo See docs/CPU_GPU_SPEEDUP.md for the scientific comparison protocol.
+	@echo See docs/SIMPLE_GPU.md  (SIMPLE on GPU first, then PIMPLE).
+	@echo See docs/CPU_GPU_SPEEDUP.md for the linear-solve comparison protocol.
 
-build: laplaceOcl csrOcl
+build: laplaceOcl csrOcl simpleOcl
 
-check test: test-laplace test-csr
+check test: test-laplace test-csr test-simple
 	@echo.
 	@echo All tests passed.
 
 laplaceOcl: $(LAPLACE_BIN)
 csrOcl: $(CSR_BIN)
+simpleOcl: $(SIMPLE_BIN)
 
 # ---------------------------------------------------------------------------
 # Auto deps (internal — triggered by binary rules, not a user step)
@@ -126,6 +134,12 @@ $(CSR_BIN): $(CSR_SRC) $(CSR_CL) $(HDR_STAMP) $(DEPS_LINK)
 	@$(CXX) $(CXXFLAGS) -o "$(CSR_BIN)" "$(CSR_SRC)" $(LDFLAGS) $(OCL_LINK)
 	@$(call CP,$(CSR_CL),$(CSR_OUT)/kernels/csr.cl)
 
+$(SIMPLE_BIN): $(SIMPLE_SRC) $(SIMPLE_CL) $(HDR_STAMP) $(DEPS_LINK)
+	@$(call MKDIR,$(SIMPLE_OUT)/kernels)
+	@echo [build] simpleOcl
+	@$(CXX) $(CXXFLAGS) -o "$(SIMPLE_BIN)" "$(SIMPLE_SRC)" $(LDFLAGS) $(OCL_LINK)
+	@$(call CP,$(SIMPLE_CL),$(SIMPLE_OUT)/kernels/simple.cl)
+
 # ---------------------------------------------------------------------------
 # Test / run
 # ---------------------------------------------------------------------------
@@ -142,16 +156,23 @@ test-csr: $(CSR_BIN)
 	@echo [test] csrOcl 16x16x16
 	@"$(CSR_BIN)" --nx 16 --ny 16 --nz 16 --tol 1e-8 --kernels "$(CSR_OUT)/kernels/csr.cl"
 
+test-simple: $(SIMPLE_BIN)
+	@echo [test] simpleOcl 32x32 x 10 outers
+	@"$(SIMPLE_BIN)" --nx 32 --ny 32 --outers 10 --tol 1e-8 --kernels "$(SIMPLE_OUT)/kernels/simple.cl" --quiet
+
 test-vram: $(LAPLACE_BIN)
 	@"$(LAPLACE_BIN)" --mem-frac 0.5 --steps 1 --tol 1e-8 --max-iters 5000 --precond poly2 --kernels "$(LAPLACE_OUT)/kernels/laplace.cl" --no-csv --quiet --no-cpu-check
 
-run: run-laplace run-csr
+run: run-laplace run-csr run-simple
 
 run-laplace: $(LAPLACE_BIN)
 	@"$(LAPLACE_BIN)" --nx 100 --ny 100 --steps 10 --kernels "$(LAPLACE_OUT)/kernels/laplace.cl"
 
 run-csr: $(CSR_BIN)
 	@"$(CSR_BIN)" --nx 64 --ny 64 --kernels "$(CSR_OUT)/kernels/csr.cl"
+
+run-simple: $(SIMPLE_BIN)
+	@"$(SIMPLE_BIN)" --nx 64 --ny 64 --outers 20 --kernels "$(SIMPLE_OUT)/kernels/simple.cl"
 
 # Fair GPU vs multi-thread CPU on the car tunnel pressure system (same A,b).
 # Requires: cases/windTunnelCar/matrix/of_p.{mtx,rhs}  (ofDumpCsr once).
@@ -172,6 +193,7 @@ clean:
 	-$(call RM_RF,$(BUILD_DIR))
 	-$(call RM_RF,$(ROOT)/apps/laplaceOcl/build)
 	-$(call RM_RF,$(ROOT)/apps/csrOcl/build)
+	-$(call RM_RF,$(ROOT)/apps/simpleOcl/build)
 
 distclean: clean
 	-$(call RM_RF,$(DEPS_DIR))

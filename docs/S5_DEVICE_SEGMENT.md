@@ -10,9 +10,10 @@ S5 is the **implementation spine** of primary v2:
 
 | Tier | Meaning |
 |------|---------|
-| v2a | One linear system (e.g. pressure) in the outer loop on GPU |
-| v2b | Full outer loop: U, p, turbulence assemble+solve on GPU |
+| v2a | One linear system (e.g. pressure) in the **SIMPLE** outer loop on GPU |
+| v2b | Full **SIMPLE** outer loop: U, p, turbulence assemble+solve on GPU |
 | v2c | Optional fidelity while keeping residency |
+| **v3** | **PIMPLE** on GPU (time + correctors) — **only after v2b is green** |
 
 ## Target lifecycle (unchanged)
 
@@ -43,9 +44,10 @@ Integration picture (Mode A today → v2 later): [`INTEGRATE_OPENFOAM.md`](INTEG
 | 3 | CSR SpMV + PCG full-device (unstructured-ready format) | **done** (`apps/csrOcl`, host CSR assemble + one upload) |
 | 3b | Import mesh topology CSR from polyMesh (graph Laplace) | **done** (`polyMesh_to_mtx.py` + `csrOcl --mtx`) — windTunnel 76k cells |
 | 3c | Import **coefficient** matrix from OF pressure Laplacian | **done** (`apps/ofDumpCsr` → `csrOcl --mtx`) — windTunnel n=76k, residual OK ~70 ms |
-| 4 | **v2a:** one system (e.g. pressure) inside outer iter, device-resident | **next** |
+| 4 | **v2a:** pressure (or dominant) system inside **SIMPLE** outer iter, device-resident | **next / in progress** |
 | 5 | Residual / field band vs stock OF on windTunnel3D | gate for v2a |
-| 6 | **v2b:** full SIMPLE outer loop (U, p, k/ε) assemble+solve on device | primary v2 done |
+| 6 | **v2b:** full **SIMPLE** outer loop (U, p, k/ε) assemble+solve on device | primary v2 done |
+| 7 | **v3:** **PIMPLE** device loop (reuse v2 kernels + time/correctors) | after v2b |
 
 ## Wind-tunnel coupling sketch (mvp)
 

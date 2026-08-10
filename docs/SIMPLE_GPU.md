@@ -12,7 +12,8 @@ v2b               full SIMPLE: U + p + (k,ε) assemble+solve+update on GPU
 v3                PIMPLE on GPU (time + PISO/PIMPLE correctors) — reuse v2
 ```
 
-Canonical goals: [`GOALS.md`](GOALS.md) · ladder: [`S5_DEVICE_SEGMENT.md`](S5_DEVICE_SEGMENT.md).
+Canonical goals: [`GOALS.md`](GOALS.md) · ladder: [`S5_DEVICE_SEGMENT.md`](S5_DEVICE_SEGMENT.md).  
+**Full GPU (v2b) plan:** [`FULL_GPU_PLAN.md`](FULL_GPU_PLAN.md).
 
 ---
 

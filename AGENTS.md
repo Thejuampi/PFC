@@ -61,6 +61,7 @@ All paths relative to the **PFC clone root** (never hardcode a developer’s `G:
 | `apps/pfcSimpleFoam` | simpleFoam + Mode B GPU pressure |
 | `scripts/pfc_gpu_worker.ps1` | Windows GPU worker for Mode B |
 | `docs/SIMPLE_GPU.md` | SIMPLE GPU then PIMPLE GPU roadmap |
+| `docs/FULL_GPU_PLAN.md` | **v2b plan** — work packages after PR #1 |
 | `apps/ofDumpCsr` | OF LDU → Matrix Market |
 | `apps/laplaceOcl` | structured DIA reference |
 | `cases/windTunnelCar` | main visual demo |

@@ -112,6 +112,7 @@ PIMPLE is **not** a parallel track that rewrites everything — it is SIMPLE’s
 
 Ladder detail: `docs/S5_DEVICE_SEGMENT.md`.  
 Architecture: `docs/AMD_GPU_ROADMAP.md`.  
+**Full GPU plan (v2b work packages):** `docs/FULL_GPU_PLAN.md`.  
 **Integration (your OpenFOAM / agents):** `docs/INTEGRATE_OPENFOAM.md` · `AGENTS.md`.
 
 ---
